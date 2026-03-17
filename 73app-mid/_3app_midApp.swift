@@ -6,12 +6,19 @@
 //
 
 import SwiftUI
+import SwiftData
 
 @main
 struct _3app_midApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            MainTabView()
         }
+        .modelContainer(for: [
+            MileageAccount.self,
+            Transaction.self,
+            FlightGoal.self,
+            CreditCardRule.self
+        ])
     }
 }

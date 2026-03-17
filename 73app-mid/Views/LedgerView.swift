@@ -1,0 +1,540 @@
+//
+//  LedgerView.swift
+//  73app-mid
+//
+//  Created by Ray Hsu on 2026/3/16.
+//
+
+import SwiftUI
+import SwiftData
+
+struct LedgerView: View {
+    @Environment(\.colorScheme) var colorScheme
+    @Bindable var viewModel: MileageViewModel
+    @State private var showingAddTransaction = false
+    @State private var selectedMonth = Date()
+    @State private var editMode: EditMode = .inactive
+    
+    var filteredTransactions: [Transaction] {
+        viewModel.transactions.filter { transaction in
+            Calendar.current.isDate(transaction.date, equalTo: selectedMonth, toGranularity: .month)
+        }
+    }
+    
+    // 按類別統計
+    var categoryStats: [(source: MileageSource, amount: Decimal, miles: Int)] {
+        let grouped = Dictionary(grouping: filteredTransactions) { $0.source }
+        return grouped.map { source, transactions in
+            let amount = transactions.reduce(Decimal(0)) { $0 + $1.amount }
+            let miles = transactions.reduce(0) { $0 + $1.earnedMiles }
+            return (source, amount, miles)
+        }.sorted { $0.miles > $1.miles } // 按哩程數排序
+    }
+    
+    var monthlyTotal: (amount: Decimal, miles: Int) {
+        let amount = filteredTransactions.reduce(Decimal(0)) { $0 + $1.amount }
+        let miles = filteredTransactions.reduce(0) { $0 + $1.earnedMiles }
+        return (amount, miles)
+    }
+    
+    var body: some View {
+        NavigationStack {
+            ZStack {
+                // 航空風格背景
+                AviationTheme.Gradients.dashboardBackground(colorScheme)
+                    .ignoresSafeArea()
+                
+                VStack(spacing: 0) {
+                    // 月份選擇器與統計 - 固定在頂部
+                    VStack(spacing: 0) {
+                        // 月份選擇器
+                        MonthPicker(selectedMonth: $selectedMonth)
+                            .padding(AviationTheme.Spacing.md)
+                        
+                        // 本月統計卡片 - 總哩程和類別統計
+                        VStack(spacing: 0) {
+                            if categoryStats.isEmpty {
+                                // 沒有類別統計時,總哩程居中顯示
+                                VStack(spacing: AviationTheme.Spacing.xs) {
+                                    HStack(spacing: 6) {
+                                        Image(systemName: "airplane.circle.fill")
+                                            .font(.caption)
+                                            .foregroundColor(AviationTheme.Colors.success)
+                                        Text("本月總哩程")
+                                            .font(AviationTheme.Typography.caption)
+                                            .foregroundColor(AviationTheme.Colors.secondaryText(colorScheme))
+                                    }
+                                    Text("\(monthlyTotal.miles.formatted())")
+                                        .font(AviationTheme.Typography.title2)
+                                        .fontWeight(.bold)
+                                        .foregroundColor(AviationTheme.Colors.success)
+                                    + Text(" 哩")
+                                        .font(AviationTheme.Typography.subheadline)
+                                        .foregroundColor(AviationTheme.Colors.success)
+                                }
+                                .frame(maxWidth: .infinity)
+                                .padding(AviationTheme.Spacing.md)
+                            } else {
+                                // 有類別統計時,並排顯示
+                                HStack(alignment: .top, spacing: AviationTheme.Spacing.lg) {
+                                    // 左側：總哩程顯示
+                                    VStack(alignment: .leading, spacing: AviationTheme.Spacing.xs) {
+                                        HStack(spacing: 6) {
+                                            Image(systemName: "airplane.circle.fill")
+                                                .font(.caption)
+                                                .foregroundColor(AviationTheme.Colors.success)
+                                            Text("本月總哩程")
+                                                .font(AviationTheme.Typography.caption)
+                                                .foregroundColor(AviationTheme.Colors.secondaryText(colorScheme))
+                                        }
+                                        Text("\(monthlyTotal.miles.formatted())")
+                                            .font(AviationTheme.Typography.title2)
+                                            .fontWeight(.bold)
+                                            .foregroundColor(AviationTheme.Colors.success)
+                                        + Text(" 哩")
+                                            .font(AviationTheme.Typography.subheadline)
+                                            .foregroundColor(AviationTheme.Colors.success)
+                                    }
+                                    
+                                    // 右側：類別統計細項
+                                    VStack(alignment: .leading, spacing: AviationTheme.Spacing.xs) {
+                                        ForEach(categoryStats, id: \.source) { stat in
+                                            CompactCategoryStatRow(
+                                                source: stat.source,
+                                                amount: stat.amount,
+                                                miles: stat.miles,
+                                                colorScheme: colorScheme
+                                            )
+                                        }
+                                    }
+                                }
+                                .padding(AviationTheme.Spacing.md)
+                            }
+                        }
+                        .glassmorphism()
+                        .padding(.horizontal, AviationTheme.Spacing.md)
+                        .padding(.bottom, AviationTheme.Spacing.sm)
+                    }
+                    .background(
+                        colorScheme == .dark
+                            ? AviationTheme.Colors.cardBackground(colorScheme).opacity(0.95)
+                            : AviationTheme.Colors.surfaceBackground(colorScheme)
+                    )
+                    
+                    // 交易列表
+                    if filteredTransactions.isEmpty {
+                        VStack(spacing: AviationTheme.Spacing.lg) {
+                            Spacer()
+                            
+                            ZStack {
+                                Circle()
+                                    .fill(
+                                        colorScheme == .dark
+                                            ? Color.white.opacity(0.05)
+                                            : AviationTheme.Colors.lightBeige
+                                    )
+                                    .frame(width: 100, height: 100)
+                                
+                                Image(systemName: "doc.text")
+                                    .font(.system(size: 50))
+                                    .foregroundColor(AviationTheme.Colors.tertiaryText(colorScheme))
+                            }
+                            
+                            VStack(spacing: AviationTheme.Spacing.sm) {
+                                Text("本月尚無交易記錄")
+                                    .font(AviationTheme.Typography.headline)
+                                    .foregroundColor(AviationTheme.Colors.primaryText(colorScheme))
+                                
+                                Text("點擊下方按鈕開始記帳")
+                                    .font(AviationTheme.Typography.subheadline)
+                                    .foregroundColor(AviationTheme.Colors.secondaryText(colorScheme))
+                            }
+                            
+                            Button {
+                                showingAddTransaction = true
+                            } label: {
+                                HStack(spacing: 6) {
+                                    Image(systemName: "plus.circle.fill")
+                                        .font(.subheadline)
+                                    Text("新增交易")
+                                        .font(AviationTheme.Typography.subheadline)
+                                        .fontWeight(.semibold)
+                                }
+                                .padding(.horizontal, 20)
+                                .padding(.vertical, 10)
+                                .background(AviationTheme.Gradients.cathayJade)
+                                .foregroundColor(.white)
+                                .cornerRadius(AviationTheme.CornerRadius.md)
+                                .shadow(color: AviationTheme.Colors.cathayJade.opacity(0.3), radius: 8)
+                            }
+                            
+                            Spacer()
+                        }
+                    } else {
+                        List {
+                            ForEach(groupedTransactions(), id: \.0) { date, transactions in
+                                Section {
+                                    ForEach(transactions, id: \.id) { transaction in
+                                        TransactionDetailRow(transaction: transaction)
+                                            .listRowBackground(
+                                                colorScheme == .dark
+                                                    ? Color.white.opacity(0.03)
+                                                    : Color.white.opacity(0.5)
+                                            )
+                                    }
+                                    .onDelete { indexSet in
+                                        deleteTransactions(at: indexSet, from: transactions)
+                                    }
+                                } header: {
+                                    HStack {
+                                        Image(systemName: "calendar")
+                                            .font(.caption)
+                                            .foregroundColor(AviationTheme.Colors.cathayJade)
+                                        Text(date.formatted(date: .abbreviated, time: .omitted))
+                                            .font(AviationTheme.Typography.subheadline)
+                                            .foregroundColor(AviationTheme.Colors.secondaryText(colorScheme))
+                                    }
+                                }
+                            }
+                        }
+                        .listStyle(.insetGrouped)
+                        .scrollContentBackground(.hidden)
+                        .environment(\.editMode, $editMode)
+                    }
+                }
+            }
+            .navigationTitle("哩程記帳本")
+            .navigationBarTitleDisplayMode(.large) // 使用 large 模式，滾動時會自動縮小
+            .toolbarBackground(
+                colorScheme == .dark
+                    ? AviationTheme.Colors.background(colorScheme).opacity(0.95)
+                    : AviationTheme.Colors.surfaceBackground(colorScheme),
+                for: .navigationBar
+            )
+            .toolbarColorScheme(colorScheme == .dark ? .dark : .light, for: .navigationBar)
+            .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    if !filteredTransactions.isEmpty {
+                        Button {
+                            withAnimation {
+                                editMode = editMode == .active ? .inactive : .active
+                            }
+                        } label: {
+                            Text(editMode == .active ? "完成" : "編輯")
+                                .foregroundColor(AviationTheme.Colors.cathayJade)
+                        }
+                    }
+                }
+                
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button {
+                        showingAddTransaction = true
+                    } label: {
+                        Image(systemName: "plus.circle.fill")
+                            .foregroundColor(AviationTheme.Colors.cathayJade)
+                    }
+                }
+            }
+            .sheet(isPresented: $showingAddTransaction) {
+                CalculatorLedgerView(viewModel: viewModel)
+            }
+        }
+    }
+    
+    // 將交易按日期分組
+    func groupedTransactions() -> [(Date, [Transaction])] {
+        let grouped = Dictionary(grouping: filteredTransactions) { transaction in
+            Calendar.current.startOfDay(for: transaction.date)
+        }
+        return grouped.sorted { $0.key > $1.key }
+    }
+    
+    // 刪除交易
+    func deleteTransactions(at offsets: IndexSet, from transactions: [Transaction]) {
+        for index in offsets {
+            let transaction = transactions[index]
+            viewModel.deleteTransaction(transaction)
+        }
+    }
+}
+
+// MARK: - 精簡版類別統計列（用於統計卡片右側）
+struct CompactCategoryStatRow: View {
+    let source: MileageSource
+    let amount: Decimal
+    let miles: Int
+    let colorScheme: ColorScheme
+    
+    var hasAmount: Bool {
+        amount > 0
+    }
+    
+    var body: some View {
+        HStack(spacing: 6) {
+            // 圖標
+            Image(systemName: source.icon)
+                .font(.caption2)
+                .foregroundColor(AviationTheme.Colors.cathayJade)
+                .frame(width: 16)
+            
+            // 類別名稱
+            VStack(alignment: .leading, spacing: 1) {
+                Text(source.rawValue)
+                    .font(AviationTheme.Typography.caption)
+                    .foregroundColor(AviationTheme.Colors.primaryText(colorScheme))
+                    .lineLimit(1)
+                
+                // 只在有金額時顯示
+                if hasAmount {
+                    Text("NT$ \((amount as NSDecimalNumber).intValue.formatted())")
+                        .font(.system(size: 10))
+                        .foregroundColor(AviationTheme.Colors.tertiaryText(colorScheme))
+                }
+            }
+            
+            Spacer()
+            
+            // 哩程
+            Text("\(miles.formatted())")
+                .font(AviationTheme.Typography.subheadline)
+                .fontWeight(.semibold)
+                .foregroundColor(AviationTheme.Colors.cathayJade)
+            + Text(" 哩")
+                .font(AviationTheme.Typography.caption)
+                .foregroundColor(AviationTheme.Colors.cathayJade)
+        }
+        .padding(.vertical, 2)
+    }
+}
+
+// MARK: - 類別統計列
+struct CategoryStatRow: View {
+    let source: MileageSource
+    let amount: Decimal
+    let miles: Int
+    let colorScheme: ColorScheme
+    
+    var hasAmount: Bool {
+        amount > 0
+    }
+    
+    var body: some View {
+        HStack(spacing: AviationTheme.Spacing.sm) {
+            // 圖標
+            ZStack {
+                Circle()
+                    .fill(AviationTheme.Gradients.cathayJade.opacity(0.2))
+                    .frame(width: 32, height: 32)
+                
+                Image(systemName: source.icon)
+                    .font(.caption)
+                    .foregroundColor(AviationTheme.Colors.cathayJade)
+            }
+            
+            // 類別名稱
+            VStack(alignment: .leading, spacing: 2) {
+                Text(source.rawValue)
+                    .font(AviationTheme.Typography.body)
+                    .fontWeight(.medium)
+                    .foregroundColor(AviationTheme.Colors.primaryText(colorScheme))
+                
+                // 只在有金額時顯示
+                if hasAmount {
+                    Text("NT$ \((amount as NSDecimalNumber).intValue.formatted())")
+                        .font(AviationTheme.Typography.caption)
+                        .foregroundColor(AviationTheme.Colors.secondaryText(colorScheme))
+                }
+            }
+            
+            Spacer()
+            
+            // 哩程
+            HStack(spacing: 3) {
+                Text("\(miles.formatted())")
+                    .font(AviationTheme.Typography.title3)
+                    .fontWeight(.bold)
+                Text("哩")
+                    .font(AviationTheme.Typography.subheadline)
+            }
+            .foregroundColor(AviationTheme.Colors.cathayJade)
+        }
+        .padding(.vertical, AviationTheme.Spacing.sm)
+    }
+}
+
+// MARK: - 月份選擇器（航空風格）
+struct MonthPicker: View {
+    @Environment(\.colorScheme) var colorScheme
+    @Binding var selectedMonth: Date
+    
+    var body: some View {
+        HStack(spacing: AviationTheme.Spacing.md) {
+            Button {
+                selectedMonth = Calendar.current.date(byAdding: .month, value: -1, to: selectedMonth) ?? selectedMonth
+            } label: {
+                ZStack {
+                    Circle()
+                        .fill(AviationTheme.Gradients.cathayJade)
+                        .frame(width: 36, height: 36)
+                        .shadow(color: AviationTheme.Colors.cathayJade.opacity(0.3), radius: 5)
+                    
+                    Image(systemName: "chevron.left")
+                        .font(.body)
+                        .fontWeight(.semibold)
+                        .foregroundColor(.white)
+                }
+            }
+            
+            Spacer()
+            
+            VStack(spacing: 2) {
+                Text(selectedMonth.formatted(.dateTime.year()))
+                    .font(AviationTheme.Typography.caption)
+                    .foregroundColor(AviationTheme.Colors.secondaryText(colorScheme))
+                
+                Text(selectedMonth.formatted(.dateTime.month(.wide)))
+                    .font(AviationTheme.Typography.title3)
+                    .fontWeight(.bold)
+                    .foregroundColor(AviationTheme.Colors.primaryText(colorScheme))
+            }
+            
+            Spacer()
+            
+            Button {
+                let nextMonth = Calendar.current.date(byAdding: .month, value: 1, to: selectedMonth) ?? selectedMonth
+                if nextMonth <= Date() {
+                    selectedMonth = nextMonth
+                }
+            } label: {
+                ZStack {
+                    if canGoNext {
+                        Circle()
+                            .fill(AviationTheme.Gradients.cathayJade)
+                            .frame(width: 36, height: 36)
+                            .shadow(color: AviationTheme.Colors.cathayJade.opacity(0.3), radius: 5)
+                    } else {
+                        Circle()
+                            .fill(
+                                colorScheme == .dark
+                                    ? Color.white.opacity(0.1)
+                                    : Color.black.opacity(0.1)
+                            )
+                            .frame(width: 36, height: 36)
+                    }
+                    
+                    Image(systemName: "chevron.right")
+                        .font(.body)
+                        .fontWeight(.semibold)
+                        .foregroundColor(
+                            canGoNext
+                                ? .white
+                                : AviationTheme.Colors.tertiaryText(colorScheme)
+                        )
+                }
+            }
+            .disabled(!canGoNext)
+        }
+    }
+    
+    var canGoNext: Bool {
+        let nextMonth = Calendar.current.date(byAdding: .month, value: 1, to: selectedMonth) ?? Date()
+        return nextMonth <= Date()
+    }
+}
+
+// MARK: - 交易詳細列（航空風格）
+struct TransactionDetailRow: View {
+    @Environment(\.colorScheme) var colorScheme
+    let transaction: Transaction
+    
+    var hasAmount: Bool {
+        transaction.amount > 0
+    }
+    
+    var body: some View {
+        HStack(spacing: AviationTheme.Spacing.md) {
+            // 圖標
+            ZStack {
+                Circle()
+                    .fill(AviationTheme.Gradients.cathayJade)
+                    .frame(width: 44, height: 44)
+                
+                Image(systemName: transaction.source.icon)
+                    .font(.body)
+                    .foregroundColor(.white)
+            }
+            
+            // 資訊
+            VStack(alignment: .leading, spacing: 4) {
+                Text(transaction.source.rawValue)
+                    .font(AviationTheme.Typography.body)
+                    .fontWeight(.semibold)
+                    .foregroundColor(AviationTheme.Colors.primaryText(colorScheme))
+                
+                HStack(spacing: 8) {
+                    // 只在有金額時顯示金額
+                    if hasAmount {
+                        Text("NT$ \((transaction.amount as NSDecimalNumber).intValue.formatted())")
+                            .font(AviationTheme.Typography.caption)
+                            .foregroundColor(AviationTheme.Colors.secondaryText(colorScheme))
+                    }
+                    
+                    if let accelerator = transaction.acceleratorCategory {
+                        HStack(spacing: 4) {
+                            Image(systemName: accelerator.icon)
+                                .font(.caption2)
+                            Text(accelerator.rawValue)
+                                .font(AviationTheme.Typography.caption)
+                        }
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 3)
+                        .background(
+                            Capsule()
+                                .fill(AviationTheme.Colors.warning.opacity(0.15))
+                        )
+                        .foregroundColor(AviationTheme.Colors.warning)
+                    }
+                    
+                    if !transaction.notes.isEmpty {
+                        Text(transaction.notes)
+                            .font(AviationTheme.Typography.caption)
+                            .foregroundColor(AviationTheme.Colors.tertiaryText(colorScheme))
+                            .lineLimit(1)
+                    }
+                }
+            }
+            
+            Spacer()
+            
+            // 哩程
+            VStack(alignment: .trailing, spacing: 4) {
+                HStack(spacing: 4) {
+                    Text("+\(transaction.earnedMiles)")
+                        .font(AviationTheme.Typography.subheadline)
+                        .fontWeight(.bold)
+                    Text("哩")
+                        .font(AviationTheme.Typography.caption)
+                }
+                .foregroundColor(AviationTheme.Colors.success)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 3)
+                .background(
+                    Capsule()
+                        .fill(AviationTheme.Colors.success.opacity(0.15))
+                )
+                
+                if hasAmount && transaction.costPerMile > 0 {
+                    Text("@\(String(format: "%.2f", transaction.costPerMile))")
+                        .font(AviationTheme.Typography.caption)
+                        .foregroundColor(AviationTheme.Colors.tertiaryText(colorScheme))
+                }
+            }
+        }
+        .padding(.vertical, AviationTheme.Spacing.sm)
+    }
+}
+
+#Preview {
+    LedgerView(viewModel: MileageViewModel())
+        .modelContainer(for: [MileageAccount.self, Transaction.self, FlightGoal.self, CreditCardRule.self])
+}
