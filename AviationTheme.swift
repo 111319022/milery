@@ -14,111 +14,105 @@ struct AviationTheme {
     struct Colors {
         // MARK: - 星宇航空大地色系（淺色模式）
         // 深藍靛色 - 主色調
-        static let starluxIndigo = Color(red: 0.20, green: 0.25, blue: 0.35)
-        static let starluxIndigoLight = Color(red: 0.30, green: 0.35, blue: 0.45)
+        static let starluxIndigo = Color("starluxIndigo")
+        static let starluxIndigoLight = Color("starluxIndigoLight")
         
         // 大地棕色
-        static let earthBrown = Color(red: 0.55, green: 0.45, blue: 0.35)
-        static let lightBrown = Color(red: 0.75, green: 0.65, blue: 0.55)
-        static let darkBrown = Color(red: 0.35, green: 0.28, blue: 0.22)
+        static let earthBrown = Color("earthBrown")
+        static let lightBrown = Color("lightBrown")
+        static let darkBrown = Color("darkBrown")
         
         // 沙漠米色
-        static let desertBeige = Color(red: 0.90, green: 0.85, blue: 0.75)
-        static let lightBeige = Color(red: 0.95, green: 0.92, blue: 0.85)
-        static let warmBeige = Color(red: 0.85, green: 0.78, blue: 0.68)
+        static let desertBeige = Color("desertBeige")
+        static let lightBeige = Color("lightBeige")
+        static let warmBeige = Color("warmBeige")
         
         // 天空灰藍
-        static let skyGray = Color(red: 0.65, green: 0.70, blue: 0.75)
-        static let lightSkyGray = Color(red: 0.85, green: 0.88, blue: 0.90)
+        static let skyGray = Color("skyGray")
+        static let lightSkyGray = Color("lightSkyGray")
         
         // MARK: - 深色模式金屬色系
         // 深藍金屬
-        static let darkPrimaryMetal = Color(red: 0.15, green: 0.25, blue: 0.35)
-        static let darkSecondaryMetal = Color(red: 0.2, green: 0.3, blue: 0.4)
+        static let darkPrimaryMetal = Color("darkPrimaryMetal")
+        static let darkSecondaryMetal = Color("darkSecondaryMetal")
         
         // 金色點綴
-        static let gold = Color(red: 0.85, green: 0.65, blue: 0.13)
-        static let lightGold = Color(red: 0.95, green: 0.85, blue: 0.55)
-        static let darkGold = Color(red: 0.65, green: 0.50, blue: 0.10)
+        static let gold = Color("gold")
+        static let lightGold = Color("lightGold")
+        static let darkGold = Color("darkGold")
         
         // 銀色金屬
-        static let silver = Color(red: 0.75, green: 0.75, blue: 0.75)
-        static let lightSilver = Color(red: 0.90, green: 0.90, blue: 0.92)
-        static let darkSilver = Color(red: 0.50, green: 0.50, blue: 0.52)
+        static let silver = Color("silver")
+        static let lightSilver = Color("lightSilver")
+        static let darkSilver = Color("darkSilver")
         
         // MARK: - 品牌色（統一）
         // 國泰翡翠綠
-        static let cathayJade = Color(red: 0.0, green: 0.42, blue: 0.42)
-        static let cathayJadeLight = Color(red: 0.1, green: 0.52, blue: 0.52)
-        static let cathayJadeDark = Color(red: 0.0, green: 0.32, blue: 0.32)
+        static let cathayJade = Color("cathayJade")
+        static let cathayJadeLight = Color("cathayJadeLight")
+        static let cathayJadeDark = Color("cathayJadeDark")
         
         // 修改：深色模式專用翡翠綠（降低亮度和飽和度，改為沉穩的玉石色）
-        static let cathayJadeBright = Color(red: 0.15, green: 0.65, blue: 0.65) // 原本是 0.3, 0.85, 0.85 (太刺眼)
-        static let cathayJadeBrightLight = Color(red: 0.25, green: 0.75, blue: 0.75) // 原本是 0.4, 0.95, 0.95
+        static let cathayJadeBright = Color("cathayJadeBright") // 原本是 0.3, 0.85, 0.85 (太刺眼)
+        static let cathayJadeBrightLight = Color("cathayJadeBrightLight") // 原本是 0.4, 0.95, 0.95
         
         // 星宇金色
-        static let starluxGold = Color(red: 0.78, green: 0.62, blue: 0.42)
+        static let starluxGold = Color("starluxGold")
         
         // MARK: - 功能色（統一）
         // 修改：微調深色模式的成功與警告色，避免過亮
-        static let success = Color(red: 0.18, green: 0.65, blue: 0.35)
-        static let warning = Color(red: 0.85, green: 0.60, blue: 0.15)
-        static let danger = Color(red: 0.85, green: 0.25, blue: 0.25)
+        static let success = Color("success")
+        static let warning = Color("warning")
+        static let danger = Color("danger")
         
         // MARK: - 自適應顏色（根據 ColorScheme 切換）
         static func background(_ colorScheme: ColorScheme) -> Color {
-            colorScheme == .dark
-                ? Color(red: 0.08, green: 0.08, blue: 0.12)
-                : Color(red: 0.96, green: 0.94, blue: 0.90)
+            Color("backgroundAdaptive")
         }
         
         static func cardBackground(_ colorScheme: ColorScheme) -> Color {
-            colorScheme == .dark
-                ? Color(red: 0.10, green: 0.11, blue: 0.15) // 🛠️ 微調：讓卡片底色稍微暗一點點，融入背景
-                : Color.white
+            Color("cardBackgroundAdaptive")
         }
         
         static func surfaceBackground(_ colorScheme: ColorScheme) -> Color {
-            colorScheme == .dark
-                ? Color(red: 0.13, green: 0.14, blue: 0.18)
-                : Color(red: 0.98, green: 0.96, blue: 0.93)
+            Color("surfaceBackgroundAdaptive")
         }
         
         static func primaryText(_ colorScheme: ColorScheme) -> Color {
             // 修改：深色模式下純白太刺眼，改用帶有一點點灰藍的「珍珠白」
-            colorScheme == .dark ? Color(red: 0.92, green: 0.92, blue: 0.95) : starluxIndigo
+            Color("primaryTextAdaptive")
         }
         
         static func secondaryText(_ colorScheme: ColorScheme) -> Color {
-            colorScheme == .dark ? silver : earthBrown
+            Color("secondaryTextAdaptive")
         }
         
         static func tertiaryText(_ colorScheme: ColorScheme) -> Color {
-            colorScheme == .dark ? darkSilver : skyGray
+            Color("tertiaryTextAdaptive")
         }
         
         // 自適應品牌色（國泰翡翠綠）
         static func brandColor(_ colorScheme: ColorScheme) -> Color {
-            colorScheme == .dark ? cathayJadeBright : cathayJade
+            Color("brandColorAdaptive")
         }
         
         static func brandColorLight(_ colorScheme: ColorScheme) -> Color {
-            colorScheme == .dark ? cathayJadeBrightLight : cathayJadeLight
+            Color("brandColorLightAdaptive")
         }
         
         // 自適應成功色（綠色）
         static func successColor(_ colorScheme: ColorScheme) -> Color {
-            colorScheme == .dark ? Color(red: 0.4, green: 0.9, blue: 0.6) : Color(red: 0.2, green: 0.7, blue: 0.4)
+            Color("successColorAdaptive")
         }
     }
     
     // MARK: - Gradients (自適應漸層)
     struct Gradients {
-        // 🛠️ 修改：深色模式漸層 - 降低藍色飽和度與亮度，讓它更接近深邃的夜空消光感
+        // 修改：深色模式漸層 - 降低藍色飽和度與亮度，讓它更接近深邃的夜空消光感
         static let darkMetalBlue = LinearGradient(
             colors: [
-                Color(red: 0.12, green: 0.15, blue: 0.22), // 原本是 0.15, 0.25, 0.40
-                Color(red: 0.07, green: 0.09, blue: 0.13)  // 原本是 0.10, 0.18, 0.30
+                Colors.darkPrimaryMetal,
+                Color("cardBackgroundAdaptive")
             ],
             startPoint: .topLeading,
             endPoint: .bottomTrailing
@@ -127,8 +121,8 @@ struct AviationTheme {
         // 淺色模式漸層 - 星宇大地色
         static let lightEarthTone = LinearGradient(
             colors: [
-                Color(red: 0.92, green: 0.88, blue: 0.80),
-                Color(red: 0.85, green: 0.78, blue: 0.68)
+                Colors.desertBeige,
+                Colors.warmBeige
             ],
             startPoint: .topLeading,
             endPoint: .bottomTrailing
@@ -136,8 +130,8 @@ struct AviationTheme {
         
         static let lightIndigo = LinearGradient(
             colors: [
-                Color(red: 0.25, green: 0.30, blue: 0.42),
-                Color(red: 0.20, green: 0.25, blue: 0.35)
+                Colors.starluxIndigoLight,
+                Colors.starluxIndigo
             ],
             startPoint: .topLeading,
             endPoint: .bottomTrailing
@@ -146,9 +140,9 @@ struct AviationTheme {
         // 金色漸層（通用）
         static let metalGold = LinearGradient(
             colors: [
-                Color(red: 0.95, green: 0.75, blue: 0.25),
-                Color(red: 0.75, green: 0.55, blue: 0.15),
-                Color(red: 0.65, green: 0.45, blue: 0.10)
+                Colors.lightGold,
+                Colors.gold,
+                Colors.darkGold
             ],
             startPoint: .topLeading,
             endPoint: .bottomTrailing
@@ -157,8 +151,8 @@ struct AviationTheme {
         // 星宇金色漸層
         static let starluxGold = LinearGradient(
             colors: [
-                Color(red: 0.85, green: 0.70, blue: 0.50),
-                Color(red: 0.75, green: 0.60, blue: 0.40)
+                Colors.starluxGold,
+                Colors.lightBrown
             ],
             startPoint: .topLeading,
             endPoint: .bottomTrailing
@@ -167,9 +161,9 @@ struct AviationTheme {
         // 銀色金屬漸層
         static let metalSilver = LinearGradient(
             colors: [
-                Color(red: 0.85, green: 0.85, blue: 0.88),
-                Color(red: 0.65, green: 0.65, blue: 0.68),
-                Color(red: 0.55, green: 0.55, blue: 0.58)
+                Colors.lightSilver,
+                Colors.silver,
+                Colors.darkSilver
             ],
             startPoint: .topLeading,
             endPoint: .bottomTrailing
@@ -178,8 +172,8 @@ struct AviationTheme {
         // 國泰翡翠綠漸層（淺色模式）
         static let cathayJade = LinearGradient(
             colors: [
-                Color(red: 0.05, green: 0.50, blue: 0.50),
-                Color(red: 0.00, green: 0.38, blue: 0.38)
+                Colors.cathayJadeLight,
+                Colors.cathayJadeDark
             ],
             startPoint: .topLeading,
             endPoint: .bottomTrailing
@@ -188,8 +182,8 @@ struct AviationTheme {
         // 修改：國泰翡翠綠漸層（深色模式 - 沉穩玉石色）
         static let cathayJadeBright = LinearGradient(
             colors: [
-                Color(red: 0.25, green: 0.75, blue: 0.75), // 原本 0.4, 0.95, 0.95
-                Color(red: 0.15, green: 0.65, blue: 0.65)  // 原本 0.3, 0.85, 0.85
+                Colors.cathayJadeBrightLight,
+                Colors.cathayJadeBright
             ],
             startPoint: .topLeading,
             endPoint: .bottomTrailing
@@ -202,25 +196,14 @@ struct AviationTheme {
         
         // 自適應背景漸層
         static func dashboardBackground(_ colorScheme: ColorScheme) -> LinearGradient {
-            if colorScheme == .dark {
-                return LinearGradient(
-                    colors: [
-                        Color(red: 0.08, green: 0.08, blue: 0.15),
-                        Color(red: 0.05, green: 0.05, blue: 0.10)
-                    ],
-                    startPoint: .top,
-                    endPoint: .bottom
-                )
-            } else {
-                return LinearGradient(
-                    colors: [
-                        Color(red: 0.98, green: 0.96, blue: 0.92),
-                        Color(red: 0.94, green: 0.90, blue: 0.84)
-                    ],
-                    startPoint: .top,
-                    endPoint: .bottom
-                )
-            }
+            LinearGradient(
+                colors: [
+                    Color("backgroundAdaptive"),
+                    Color("surfaceBackgroundAdaptive")
+                ],
+                startPoint: .top,
+                endPoint: .bottom
+            )
         }
         
         // 自適應卡片漸層
@@ -248,7 +231,7 @@ struct AviationTheme {
         }
         
         static let lightShadow = Color.black.opacity(0.05)
-        static let goldGlow = Color(red: 0.85, green: 0.65, blue: 0.13).opacity(0.3)
+        static let goldGlow = Color("gold").opacity(0.3)
     }
     
     // MARK: - Typography (航空字型)

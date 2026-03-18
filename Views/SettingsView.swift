@@ -13,7 +13,7 @@ struct SettingsView: View {
     @Environment(\.colorScheme) var colorScheme
     @Bindable var viewModel: MileageViewModel
     @AppStorage("userName") private var userName: String = ""
-    @AppStorage("preferredOrigin") private var preferredOrigin: String = "TPE"
+    @AppStorage("preferredOrigin") private var preferredOrigin: String = ""
     @AppStorage("userColorScheme") private var userColorScheme: String = "system"
     @AppStorage("enableNotifications") private var enableNotifications: Bool = true
     

@@ -45,7 +45,7 @@ struct DashboardView: View {
     }
 }
 
-// MARK: - 英雄卡片（現代化設計）
+// MARK: - 卡片
 struct HeroMilesCard: View {
     @Environment(\.colorScheme) var colorScheme
     let totalMiles: Int
