@@ -52,35 +52,41 @@ struct AviationTheme {
         static let cathayJadeLight = Color(red: 0.1, green: 0.52, blue: 0.52)
         static let cathayJadeDark = Color(red: 0.0, green: 0.32, blue: 0.32)
         
+        // 🛠️ 修改：深色模式專用翡翠綠（降低亮度和飽和度，改為沉穩的玉石色）
+        static let cathayJadeBright = Color(red: 0.15, green: 0.65, blue: 0.65) // 原本是 0.3, 0.85, 0.85 (太刺眼)
+        static let cathayJadeBrightLight = Color(red: 0.25, green: 0.75, blue: 0.75) // 原本是 0.4, 0.95, 0.95
+        
         // 星宇金色
         static let starluxGold = Color(red: 0.78, green: 0.62, blue: 0.42)
         
         // MARK: - 功能色（統一）
-        static let success = Color(red: 0.2, green: 0.7, blue: 0.4)
-        static let warning = Color(red: 0.95, green: 0.65, blue: 0.13)
+        // 🛠️ 修改：微調深色模式的成功與警告色，避免過亮
+        static let success = Color(red: 0.18, green: 0.65, blue: 0.35)
+        static let warning = Color(red: 0.85, green: 0.60, blue: 0.15)
         static let danger = Color(red: 0.85, green: 0.25, blue: 0.25)
         
         // MARK: - 自適應顏色（根據 ColorScheme 切換）
         static func background(_ colorScheme: ColorScheme) -> Color {
             colorScheme == .dark
                 ? Color(red: 0.08, green: 0.08, blue: 0.12)
-                : Color(red: 0.96, green: 0.94, blue: 0.90) // 淺米色背景
+                : Color(red: 0.96, green: 0.94, blue: 0.90)
         }
         
         static func cardBackground(_ colorScheme: ColorScheme) -> Color {
             colorScheme == .dark
-                ? Color(red: 0.12, green: 0.12, blue: 0.18)
+                ? Color(red: 0.10, green: 0.11, blue: 0.15) // 🛠️ 微調：讓卡片底色稍微暗一點點，融入背景
                 : Color.white
         }
         
         static func surfaceBackground(_ colorScheme: ColorScheme) -> Color {
             colorScheme == .dark
-                ? Color(red: 0.15, green: 0.15, blue: 0.22)
+                ? Color(red: 0.13, green: 0.14, blue: 0.18)
                 : Color(red: 0.98, green: 0.96, blue: 0.93)
         }
         
         static func primaryText(_ colorScheme: ColorScheme) -> Color {
-            colorScheme == .dark ? .white : starluxIndigo
+            // 🛠️ 修改：深色模式下純白太刺眼，改用帶有一點點灰藍的「珍珠白」
+            colorScheme == .dark ? Color(red: 0.92, green: 0.92, blue: 0.95) : starluxIndigo
         }
         
         static func secondaryText(_ colorScheme: ColorScheme) -> Color {
@@ -90,15 +96,29 @@ struct AviationTheme {
         static func tertiaryText(_ colorScheme: ColorScheme) -> Color {
             colorScheme == .dark ? darkSilver : skyGray
         }
+        
+        // 自適應品牌色（國泰翡翠綠）
+        static func brandColor(_ colorScheme: ColorScheme) -> Color {
+            colorScheme == .dark ? cathayJadeBright : cathayJade
+        }
+        
+        static func brandColorLight(_ colorScheme: ColorScheme) -> Color {
+            colorScheme == .dark ? cathayJadeBrightLight : cathayJadeLight
+        }
+        
+        // 自適應成功色（綠色）
+        static func successColor(_ colorScheme: ColorScheme) -> Color {
+            colorScheme == .dark ? Color(red: 0.4, green: 0.9, blue: 0.6) : Color(red: 0.2, green: 0.7, blue: 0.4)
+        }
     }
     
     // MARK: - Gradients (自適應漸層)
     struct Gradients {
-        // 深色模式漸層
+        // 🛠️ 修改：深色模式漸層 - 降低藍色飽和度與亮度，讓它更接近深邃的夜空消光感
         static let darkMetalBlue = LinearGradient(
             colors: [
-                Color(red: 0.15, green: 0.25, blue: 0.40),
-                Color(red: 0.10, green: 0.18, blue: 0.30)
+                Color(red: 0.12, green: 0.15, blue: 0.22), // 原本是 0.15, 0.25, 0.40
+                Color(red: 0.07, green: 0.09, blue: 0.13)  // 原本是 0.10, 0.18, 0.30
             ],
             startPoint: .topLeading,
             endPoint: .bottomTrailing
@@ -155,7 +175,7 @@ struct AviationTheme {
             endPoint: .bottomTrailing
         )
         
-        // 國泰翡翠綠漸層
+        // 國泰翡翠綠漸層（淺色模式）
         static let cathayJade = LinearGradient(
             colors: [
                 Color(red: 0.05, green: 0.50, blue: 0.50),
@@ -164,6 +184,21 @@ struct AviationTheme {
             startPoint: .topLeading,
             endPoint: .bottomTrailing
         )
+        
+        // 🛠️ 修改：國泰翡翠綠漸層（深色模式 - 沉穩玉石色）
+        static let cathayJadeBright = LinearGradient(
+            colors: [
+                Color(red: 0.25, green: 0.75, blue: 0.75), // 原本 0.4, 0.95, 0.95
+                Color(red: 0.15, green: 0.65, blue: 0.65)  // 原本 0.3, 0.85, 0.85
+            ],
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
+        )
+        
+        // 自適應國泰翡翠綠漸層
+        static func cathayJadeGradient(_ colorScheme: ColorScheme) -> LinearGradient {
+            colorScheme == .dark ? cathayJadeBright : cathayJade
+        }
         
         // 自適應背景漸層
         static func dashboardBackground(_ colorScheme: ColorScheme) -> LinearGradient {
@@ -270,12 +305,12 @@ struct MetalCardStyle: ViewModifier {
                         AviationTheme.Gradients.cardGradient(colorScheme)
                     }
                     
-                    // 金屬反光效果
+                    // 🛠️ 修改：減弱深色模式下的金屬邊緣反光，讓質感更內斂
                     LinearGradient(
                         colors: [
-                            Color.white.opacity(colorScheme == .dark ? 0.15 : 0.35),
+                            Color.white.opacity(colorScheme == .dark ? 0.08 : 0.35),
                             Color.clear,
-                            Color.black.opacity(colorScheme == .dark ? 0.2 : 0.05)
+                            Color.black.opacity(colorScheme == .dark ? 0.3 : 0.05)
                         ],
                         startPoint: .topLeading,
                         endPoint: .bottomTrailing
@@ -294,7 +329,7 @@ struct MetalCardStyle: ViewModifier {
                     .stroke(
                         LinearGradient(
                             colors: [
-                                Color.white.opacity(colorScheme == .dark ? 0.3 : 0.5),
+                                Color.white.opacity(colorScheme == .dark ? 0.15 : 0.5), // 🛠️ 邊框反光減弱
                                 Color.clear
                             ],
                             startPoint: .topLeading,

@@ -20,12 +20,14 @@ struct CalculatorLedgerView: View {
     @State private var earnedMiles: String = ""
     @State private var date: Date = Date()
     @State private var notes: String = ""
+    @State private var flightRoute: String = "" // 飛行累積：航線
+    @State private var conversionSource: String = "" // 銀行點數兌換/他點轉入：來源
     
     var activeCards: [CreditCardRule] {
         viewModel.creditCards.filter { $0.isActive }
     }
     
-    // 如果只有一張卡,自動選擇
+    // 如果只有一張卡，自動選擇
     var defaultCard: CreditCardRule? {
         activeCards.count == 1 ? activeCards.first : nil
     }
@@ -48,13 +50,26 @@ struct CalculatorLedgerView: View {
         needsCardSelection && selectedCard != nil && !amount.isEmpty
     }
     
+    // 自訂的來源顯示順序（將飛行累積移到活動贈送前面）
+    var displaySources: [MileageSource] {
+        [
+            .cardGeneral,
+            .cardAccelerator,
+            .specialMerchant,
+            .flight,
+            .promotion,
+            .pointsConversion,
+            .pointsTransfer
+        ]
+    }
+    
     var body: some View {
         NavigationStack {
             contentView
-                .navigationTitle("記帳")
+                .navigationTitle("新增記帳")
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbarBackground(
-                    AviationTheme.Colors.background(colorScheme).opacity(0.95),
+                    AviationTheme.Colors.background(colorScheme),
                     for: .navigationBar
                 )
                 .toolbarColorScheme(colorScheme == .dark ? .dark : .light, for: .navigationBar)
@@ -62,7 +77,7 @@ struct CalculatorLedgerView: View {
                     toolbarContent
                 }
                 .onAppear {
-                    // 如果只有一張卡,自動選擇
+                    // 如果只有一張卡，自動選擇
                     if let defaultCard = defaultCard, selectedCard == nil {
                         selectedCard = defaultCard
                     }
@@ -77,41 +92,63 @@ struct CalculatorLedgerView: View {
                 .ignoresSafeArea()
             
             ScrollView {
-                VStack(spacing: AviationTheme.Spacing.lg) {
-                    // 來源選擇器
+                VStack(spacing: AviationTheme.Spacing.xl) {
+                    
+                    // 1. 來源選擇器
                     sourceSelector
                     
-                    // 主要表單內容
-                    mainContentArea
+                    // 2. 信用卡與加速器選擇（動態顯示）
+                    if needsCardSelection && !activeCards.isEmpty {
+                        cardSelectionSection
+                    }
+                    if needsAccelerator {
+                        acceleratorSection
+                    }
+                    
+                    // 3. 交易資訊（金額 / 哩程）
+                    transactionInputSection
+                    
+                    // 4. 額外資訊（航線 / 來源）
+                    if selectedSource == .flight || selectedSource == .pointsConversion || selectedSource == .pointsTransfer {
+                        extraInfoSection
+                    }
+                    
+                    // 5. 其他資訊（日期 / 備註）
+                    additionalInfoSection
                 }
-                .padding(.vertical, AviationTheme.Spacing.md)
+                .padding(.vertical, AviationTheme.Spacing.lg)
             }
         }
         .onTapGesture {
-            // 點擊外部關閉鍵盤
             hideKeyboard()
         }
     }
     
+    // MARK: - 區塊 1: 來源選擇器
     private var sourceSelector: some View {
-        VStack(alignment: .leading, spacing: AviationTheme.Spacing.sm) {
+        VStack(alignment: .leading, spacing: 8) {
             Text("哩程來源")
                 .font(AviationTheme.Typography.subheadline)
+                .fontWeight(.semibold)
                 .foregroundColor(AviationTheme.Colors.secondaryText(colorScheme))
-                .padding(.horizontal, AviationTheme.Spacing.md)
+                .padding(.horizontal, 28)
             
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: AviationTheme.Spacing.sm) {
-                    ForEach(MileageSource.allCases, id: \.self) { source in
+                    Spacer().frame(width: 12) // 左側安全距離
+                    
+                    ForEach(displaySources, id: \.self) { source in
                         SourceButton(
                             source: source,
                             isSelected: selectedSource == source,
                             colorScheme: colorScheme
                         ) {
-                            withAnimation(.easeInOut(duration: 0.2)) {
+                            withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
                                 selectedSource = source
                                 if !needsCardSelection {
                                     selectedCard = nil
+                                } else if let defaultCard = defaultCard, selectedCard == nil {
+                                    selectedCard = defaultCard // 切換回來時自動補上單張卡
                                 }
                                 if !needsAccelerator {
                                     selectedAccelerator = nil
@@ -119,220 +156,289 @@ struct CalculatorLedgerView: View {
                             }
                         }
                     }
+                    
+                    Spacer().frame(width: 12) // 右側安全距離
                 }
-                .padding(.horizontal, AviationTheme.Spacing.md)
             }
         }
-        .padding(.vertical, AviationTheme.Spacing.sm)
-        .background(AviationTheme.Colors.cardBackground(colorScheme))
     }
     
-    private var mainContentArea: some View {
-        VStack(spacing: AviationTheme.Spacing.md) {
-            // 信用卡選擇（如果需要且不是自動選擇）
-            if needsCardSelection && activeCards.count > 1 {
-                VStack(alignment: .leading, spacing: AviationTheme.Spacing.sm) {
-                    HStack(spacing: 6) {
-                        Image(systemName: "creditcard")
-                            .font(.caption)
-                            .foregroundColor(AviationTheme.Colors.cathayJade)
-                        Text("選擇信用卡")
-                            .font(AviationTheme.Typography.subheadline)
-                            .foregroundColor(AviationTheme.Colors.secondaryText(colorScheme))
-                    }
-                    .padding(.horizontal, AviationTheme.Spacing.md)
-                    
-                    VStack(spacing: AviationTheme.Spacing.xs) {
-                        ForEach(activeCards, id: \.id) { card in
-                            Button {
-                                withAnimation(.easeInOut(duration: 0.2)) {
-                                    selectedCard = card
-                                }
-                            } label: {
-                                CompactCardRow(
-                                    card: card,
-                                    isSelected: selectedCard?.id == card.id,
-                                    colorScheme: colorScheme
-                                )
-                            }
-                            .buttonStyle(.plain)
+    // MARK: - 區塊 2: 信用卡選擇
+    private var cardSelectionSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("選擇信用卡")
+                .font(AviationTheme.Typography.subheadline)
+                .fontWeight(.semibold)
+                .foregroundColor(AviationTheme.Colors.secondaryText(colorScheme))
+                .padding(.horizontal, 28)
+            
+            VStack(spacing: 0) {
+                ForEach(Array(activeCards.enumerated()), id: \.element.id) { index, card in
+                    Button {
+                        withAnimation(.easeInOut(duration: 0.2)) {
+                            selectedCard = card
                         }
+                    } label: {
+                        CompactCardRow(
+                            card: card,
+                            isSelected: selectedCard?.id == card.id,
+                            colorScheme: colorScheme
+                        )
                     }
-                    .padding(AviationTheme.Spacing.md)
-                    .background(AviationTheme.Colors.cardBackground(colorScheme))
-                    .cornerRadius(AviationTheme.CornerRadius.md)
-                    .padding(.horizontal, AviationTheme.Spacing.md)
+                    .buttonStyle(.plain)
+                    
+                    if index < activeCards.count - 1 {
+                        Divider()
+                            .background(AviationTheme.Colors.tertiaryText(colorScheme).opacity(0.2))
+                            .padding(.leading, 60)
+                    }
                 }
             }
+            .background(AviationTheme.Colors.cardBackground(colorScheme))
+            .clipShape(RoundedRectangle(cornerRadius: AviationTheme.CornerRadius.lg))
+            .shadow(color: AviationTheme.Shadows.cardShadow(colorScheme).opacity(0.3), radius: 8, x: 0, y: 2)
+            .padding(.horizontal, AviationTheme.Spacing.md)
+        }
+    }
+    
+    // MARK: - 區塊 3: 加速器選擇
+    private var acceleratorSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("加速器類別")
+                .font(AviationTheme.Typography.subheadline)
+                .fontWeight(.semibold)
+                .foregroundColor(AviationTheme.Colors.secondaryText(colorScheme))
+                .padding(.horizontal, 28)
             
-            // 金額或哩程輸入 + 即時顯示
-            VStack(spacing: AviationTheme.Spacing.md) {
-                // 一般消費 / 哩程加速器 - 輸入金額
-                if needsAmountInput {
-                    VStack(alignment: .leading, spacing: AviationTheme.Spacing.sm) {
-                        HStack(spacing: 6) {
-                            Image(systemName: "dollarsign.circle.fill")
-                                .font(.caption)
-                                .foregroundColor(AviationTheme.Colors.starluxGold)
-                            Text("消費金額")
-                                .font(AviationTheme.Typography.subheadline)
-                                .foregroundColor(AviationTheme.Colors.secondaryText(colorScheme))
+            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
+                ForEach(AcceleratorCategory.allCases, id: \.self) { category in
+                    CompactAcceleratorButton(
+                        category: category,
+                        isSelected: selectedAccelerator == category,
+                        colorScheme: colorScheme
+                    ) {
+                        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                            selectedAccelerator = category
                         }
-                        .padding(.horizontal, AviationTheme.Spacing.md)
-                        
-                        VStack(spacing: 0) {
-                            // 金額輸入框
-                            HStack {
-                                Text("NT$")
-                                    .font(AviationTheme.Typography.title3)
-                                    .foregroundColor(AviationTheme.Colors.tertiaryText(colorScheme))
-                                TextField("0", text: $amount)
-                                    .keyboardType(.decimalPad)
-                                    .font(AviationTheme.Typography.title2)
-                                    .fontWeight(.semibold)
-                                    .foregroundColor(AviationTheme.Colors.primaryText(colorScheme))
-                                    .multilineTextAlignment(.leading)
-                            }
-                            .padding(AviationTheme.Spacing.md)
-                            
-                            // 即時換算哩程顯示
-                            if let info = calculatedMilesDisplay {
-                                Divider()
-                                    .background(
-                                        colorScheme == .dark
-                                            ? Color.white.opacity(0.1)
-                                            : Color.black.opacity(0.1)
-                                    )
-                                
-                                HStack {
-                                    Image(systemName: "airplane.circle.fill")
-                                        .foregroundColor(AviationTheme.Colors.cathayJade)
-                                    Text("可獲得")
-                                        .font(AviationTheme.Typography.subheadline)
-                                        .foregroundColor(AviationTheme.Colors.secondaryText(colorScheme))
-                                    Spacer()
-                                    HStack(spacing: 4) {
-                                        Text("\(info.miles)")
-                                            .font(AviationTheme.Typography.title2)
-                                            .fontWeight(.bold)
-                                        Text("哩")
-                                            .font(AviationTheme.Typography.subheadline)
-                                    }
-                                    .foregroundColor(AviationTheme.Colors.cathayJade)
-                                    if info.isBirthdayMonth {
-                                        Image(systemName: "gift.fill")
-                                            .foregroundColor(.pink)
-                                    }
-                                }
-                                .padding(AviationTheme.Spacing.md)
-                                .background(
-                                    AviationTheme.Colors.cathayJade.opacity(colorScheme == .dark ? 0.1 : 0.05)
-                                )
-                            }
-                        }
-                        .background(AviationTheme.Colors.cardBackground(colorScheme))
-                        .cornerRadius(AviationTheme.CornerRadius.md)
-                        .padding(.horizontal, AviationTheme.Spacing.md)
                     }
+                }
+            }
+            .padding(.horizontal, AviationTheme.Spacing.md)
+        }
+    }
+    
+    // MARK: - 區塊 4: 交易金額與哩程輸入
+    private var transactionInputSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("交易明細")
+                .font(AviationTheme.Typography.subheadline)
+                .fontWeight(.semibold)
+                .foregroundColor(AviationTheme.Colors.secondaryText(colorScheme))
+                .padding(.horizontal, 28)
+            
+            VStack(spacing: 0) {
+                if needsAmountInput {
+                    // 輸入金額
+                    HStack {
+                        Image(systemName: "dollarsign.circle.fill")
+                            .font(.title3)
+                            .foregroundColor(AviationTheme.Colors.starluxGold)
+                            .frame(width: 28)
+                        Text("消費金額")
+                            .font(AviationTheme.Typography.body)
+                            .foregroundColor(AviationTheme.Colors.primaryText(colorScheme))
+                        
+                        Spacer()
+                        
+                        Text("NT$")
+                            .font(AviationTheme.Typography.body)
+                            .foregroundColor(AviationTheme.Colors.tertiaryText(colorScheme))
+                        TextField("0", text: $amount)
+                            .keyboardType(.decimalPad)
+                            .font(AviationTheme.Typography.title3)
+                            .fontWeight(.semibold)
+                            .foregroundColor(AviationTheme.Colors.primaryText(colorScheme))
+                            .multilineTextAlignment(.trailing)
+                            .frame(maxWidth: 120)
+                    }
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 14)
                     
-                    // 加速器選擇（如果需要）
-                    if needsAccelerator {
-                        VStack(alignment: .leading, spacing: AviationTheme.Spacing.sm) {
-                            HStack(spacing: 6) {
-                                Image(systemName: "bolt.fill")
-                                    .font(.caption)
-                                    .foregroundColor(AviationTheme.Colors.warning)
-                                Text("加速器類別")
-                                    .font(AviationTheme.Typography.subheadline)
-                                    .foregroundColor(AviationTheme.Colors.secondaryText(colorScheme))
-                            }
-                            .padding(.horizontal, AviationTheme.Spacing.md)
+                    // 自動計算的哩程結果
+                    if let info = calculatedMilesDisplay {
+                        Divider().padding(.leading, 60)
+                        HStack {
+                            Image(systemName: "sparkles")
+                                .font(.title3)
+                                .foregroundColor(AviationTheme.Colors.cathayJade)
+                                .frame(width: 28)
+                            Text("可獲得哩程")
+                                .font(AviationTheme.Typography.body)
+                                .foregroundColor(AviationTheme.Colors.primaryText(colorScheme))
                             
-                            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: AviationTheme.Spacing.sm) {
-                                ForEach(AcceleratorCategory.allCases, id: \.self) { category in
-                                    CompactAcceleratorButton(
-                                        category: category,
-                                        isSelected: selectedAccelerator == category,
-                                        colorScheme: colorScheme
-                                    ) {
-                                        withAnimation(.easeInOut(duration: 0.2)) {
-                                            selectedAccelerator = category
-                                        }
-                                    }
-                                }
+                            Spacer()
+                            
+                            if info.isBirthdayMonth {
+                                Image(systemName: "gift.fill")
+                                    .foregroundColor(.pink)
+                                    .font(.caption)
                             }
-                            .padding(AviationTheme.Spacing.md)
-                            .background(AviationTheme.Colors.cardBackground(colorScheme))
-                            .cornerRadius(AviationTheme.CornerRadius.md)
-                            .padding(.horizontal, AviationTheme.Spacing.md)
+                            Text("\(info.miles)")
+                                .font(AviationTheme.Typography.title3)
+                                .fontWeight(.bold)
+                                .foregroundColor(AviationTheme.Colors.cathayJade)
+                            Text("哩")
+                                .font(AviationTheme.Typography.body)
+                                .foregroundColor(AviationTheme.Colors.cathayJade)
                         }
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 14)
+                        .background(AviationTheme.Colors.cathayJade.opacity(colorScheme == .dark ? 0.15 : 0.05))
                     }
                 } else {
-                    // 其他來源 - 直接輸入哩程
-                    VStack(alignment: .leading, spacing: AviationTheme.Spacing.sm) {
-                        HStack(spacing: 6) {
-                            Image(systemName: "airplane.circle.fill")
-                                .font(.caption)
-                                .foregroundColor(AviationTheme.Colors.cathayJade)
-                            Text("獲得哩程")
-                                .font(AviationTheme.Typography.subheadline)
-                                .foregroundColor(AviationTheme.Colors.secondaryText(colorScheme))
-                        }
-                        .padding(.horizontal, AviationTheme.Spacing.md)
+                    // 其他來源直接輸入哩程
+                    HStack {
+                        Image(systemName: "airplane.circle.fill")
+                            .font(.title3)
+                            .foregroundColor(AviationTheme.Colors.cathayJade)
+                            .frame(width: 28)
+                        Text("獲得哩程")
+                            .font(AviationTheme.Typography.body)
+                            .foregroundColor(AviationTheme.Colors.primaryText(colorScheme))
                         
-                        HStack {
-                            TextField("0", text: $earnedMiles)
-                                .keyboardType(.numberPad)
-                                .font(AviationTheme.Typography.title2)
-                                .fontWeight(.semibold)
-                                .foregroundColor(AviationTheme.Colors.primaryText(colorScheme))
-                                .multilineTextAlignment(.leading)
-                            Text("哩")
-                                .font(AviationTheme.Typography.title3)
-                                .foregroundColor(AviationTheme.Colors.tertiaryText(colorScheme))
-                        }
-                        .padding(AviationTheme.Spacing.md)
-                        .background(AviationTheme.Colors.cardBackground(colorScheme))
-                        .cornerRadius(AviationTheme.CornerRadius.md)
-                        .padding(.horizontal, AviationTheme.Spacing.md)
+                        Spacer()
+                        
+                        TextField("0", text: $earnedMiles)
+                            .keyboardType(.numberPad)
+                            .font(AviationTheme.Typography.title3)
+                            .fontWeight(.semibold)
+                            .foregroundColor(AviationTheme.Colors.cathayJade)
+                            .multilineTextAlignment(.trailing)
+                            .frame(maxWidth: 120)
+                        Text("哩")
+                            .font(AviationTheme.Typography.body)
+                            .foregroundColor(AviationTheme.Colors.tertiaryText(colorScheme))
                     }
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 14)
                 }
             }
-            
-            // 日期選擇
-            FormRow(
-                icon: "calendar.circle.fill",
-                title: "日期",
-                colorScheme: colorScheme
-            ) {
-                DatePicker("", selection: $date, displayedComponents: .date)
-                    .labelsHidden()
-            }
-            
-            // 備註輸入
-            VStack(alignment: .leading, spacing: AviationTheme.Spacing.sm) {
-                HStack(spacing: 6) {
-                    Image(systemName: "note.text")
-                        .font(.caption)
-                        .foregroundColor(AviationTheme.Colors.silver)
-                    Text("備註（選填）")
-                        .font(AviationTheme.Typography.subheadline)
-                        .foregroundColor(AviationTheme.Colors.secondaryText(colorScheme))
-                }
-                .padding(.horizontal, AviationTheme.Spacing.md)
-                
-                TextField("輸入備註", text: $notes, axis: .vertical)
-                    .lineLimit(2...4)
-                    .font(AviationTheme.Typography.body)
-                    .foregroundColor(AviationTheme.Colors.primaryText(colorScheme))
-                    .padding(AviationTheme.Spacing.md)
-                    .background(AviationTheme.Colors.cardBackground(colorScheme))
-                    .cornerRadius(AviationTheme.CornerRadius.md)
-                    .padding(.horizontal, AviationTheme.Spacing.md)
-            }
+            .background(AviationTheme.Colors.cardBackground(colorScheme))
+            .clipShape(RoundedRectangle(cornerRadius: AviationTheme.CornerRadius.lg))
+            .shadow(color: AviationTheme.Shadows.cardShadow(colorScheme).opacity(0.3), radius: 8, x: 0, y: 2)
+            .padding(.horizontal, AviationTheme.Spacing.md)
         }
     }
     
+    // MARK: - 區塊 4: 額外資訊（航線 / 來源）
+    private var extraInfoSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(selectedSource == .flight ? "航線資訊" : "來源資訊")
+                .font(AviationTheme.Typography.subheadline)
+                .fontWeight(.semibold)
+                .foregroundColor(AviationTheme.Colors.secondaryText(colorScheme))
+                .padding(.horizontal, 28)
+            
+            VStack(spacing: 0) {
+                // 飛行累積：航線輸入
+                if selectedSource == .flight {
+                    HStack {
+                        Image(systemName: "airplane.departure")
+                            .font(.title3)
+                            .foregroundColor(AviationTheme.Colors.cathayJade)
+                            .frame(width: 28)
+                        
+                        TextField("航線（例如：TPE-NRT）", text: $flightRoute)
+                            .font(AviationTheme.Typography.body)
+                            .foregroundColor(AviationTheme.Colors.primaryText(colorScheme))
+                            .autocapitalization(.allCharacters)
+                            .padding(.vertical, 12)
+                    }
+                    .padding(.horizontal, 16)
+                }
+                
+                // 銀行點數兌換/他點轉入：來源輸入
+                if selectedSource == .pointsConversion || selectedSource == .pointsTransfer {
+                    HStack {
+                        Image(systemName: selectedSource == .pointsConversion ? "building.columns.fill" : "arrow.down.app.fill")
+                            .font(.title3)
+                            .foregroundColor(AviationTheme.Colors.cathayJade)
+                            .frame(width: 28)
+                        
+                        TextField(
+                            selectedSource == .pointsConversion ? "點數來源（例如：國泰世華銀行）" : "轉入來源（例如：Open Point）",
+                            text: $conversionSource
+                        )
+                            .font(AviationTheme.Typography.body)
+                            .foregroundColor(AviationTheme.Colors.primaryText(colorScheme))
+                            .padding(.vertical, 12)
+                    }
+                    .padding(.horizontal, 16)
+                }
+            }
+            .background(AviationTheme.Colors.cardBackground(colorScheme))
+            .clipShape(RoundedRectangle(cornerRadius: AviationTheme.CornerRadius.lg))
+            .shadow(color: AviationTheme.Shadows.cardShadow(colorScheme).opacity(0.3), radius: 8, x: 0, y: 2)
+            .padding(.horizontal, AviationTheme.Spacing.md)
+        }
+    }
+    
+    // MARK: - 區塊 5: 日期與備註
+    private var additionalInfoSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("其他資訊")
+                .font(AviationTheme.Typography.subheadline)
+                .fontWeight(.semibold)
+                .foregroundColor(AviationTheme.Colors.secondaryText(colorScheme))
+                .padding(.horizontal, 28)
+            
+            VStack(spacing: 0) {
+                // 日期選擇
+                HStack {
+                    Image(systemName: "calendar")
+                        .font(.title3)
+                        .foregroundColor(AviationTheme.Colors.silver)
+                        .frame(width: 28)
+                    Text("日期")
+                        .font(AviationTheme.Typography.body)
+                        .foregroundColor(AviationTheme.Colors.primaryText(colorScheme))
+                    Spacer()
+                    DatePicker("", selection: $date, displayedComponents: .date)
+                        .labelsHidden()
+                        .tint(AviationTheme.Colors.cathayJade)
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 10)
+                
+                Divider()
+                    .background(AviationTheme.Colors.tertiaryText(colorScheme).opacity(0.2))
+                    .padding(.leading, 60)
+                
+                // 備註
+                HStack(alignment: .top) {
+                    Image(systemName: "note.text")
+                        .font(.title3)
+                        .foregroundColor(AviationTheme.Colors.silver)
+                        .frame(width: 28)
+                        .padding(.top, 8)
+                    
+                    TextField("加入備註（選填）", text: $notes, axis: .vertical)
+                        .lineLimit(3...5)
+                        .font(AviationTheme.Typography.body)
+                        .foregroundColor(AviationTheme.Colors.primaryText(colorScheme))
+                        .padding(.vertical, 8)
+                }
+                .padding(.horizontal, 16)
+                .padding(.bottom, 8)
+            }
+            .background(AviationTheme.Colors.cardBackground(colorScheme))
+            .clipShape(RoundedRectangle(cornerRadius: AviationTheme.CornerRadius.lg))
+            .shadow(color: AviationTheme.Shadows.cardShadow(colorScheme).opacity(0.3), radius: 8, x: 0, y: 2)
+            .padding(.horizontal, AviationTheme.Spacing.md)
+        }
+    }
+    
+    // MARK: - 工具列與邏輯
     @ToolbarContentBuilder
     private var toolbarContent: some ToolbarContent {
         ToolbarItem(placement: .cancellationAction) {
@@ -347,11 +453,10 @@ struct CalculatorLedgerView: View {
             }
             .disabled(!canSave)
             .foregroundColor(canSave ? AviationTheme.Colors.cathayJade : AviationTheme.Colors.silver.opacity(0.3))
-            .fontWeight(.semibold)
+            .fontWeight(.bold)
         }
     }
     
-    // 計算顯示的哩程資訊
     private var calculatedMilesDisplay: CalculatedMilesInfo? {
         guard canCalculateMiles, let card = selectedCard else { return nil }
         
@@ -367,25 +472,13 @@ struct CalculatorLedgerView: View {
     }
     
     private var canSave: Bool {
-        // 如果需要輸入金額
         if needsAmountInput {
-            guard let amountValue = Decimal(string: amount), amountValue > 0 else {
-                return false
-            }
-            // 需要選擇信用卡
-            guard selectedCard != nil else {
-                return false
-            }
-            // 如果是加速器,需要選擇加速器類別
-            if needsAccelerator && selectedAccelerator == nil {
-                return false
-            }
+            guard let amountValue = Decimal(string: amount), amountValue > 0 else { return false }
+            guard selectedCard != nil else { return false }
+            if needsAccelerator && selectedAccelerator == nil { return false }
             return true
         } else {
-            // 其他來源直接輸入哩程
-            guard let milesValue = Int(earnedMiles), milesValue > 0 else {
-                return false
-            }
+            guard let milesValue = Int(earnedMiles), milesValue > 0 else { return false }
             return true
         }
     }
@@ -395,7 +488,6 @@ struct CalculatorLedgerView: View {
         let finalAmount: Decimal
         
         if needsAmountInput {
-            // 從金額計算哩程
             guard let amountValue = Decimal(string: amount), let card = selectedCard else { return }
             finalAmount = amountValue
             
@@ -407,10 +499,9 @@ struct CalculatorLedgerView: View {
                 isBirthdayMonth: isBirthdayMonth
             )
         } else {
-            // 直接輸入哩程
             guard let milesValue = Int(earnedMiles) else { return }
             miles = milesValue
-            finalAmount = 0 // 其他來源沒有金額
+            finalAmount = 0
         }
         
         viewModel.addTransaction(
@@ -419,7 +510,9 @@ struct CalculatorLedgerView: View {
             source: selectedSource,
             acceleratorCategory: selectedAccelerator,
             date: date,
-            notes: notes
+            notes: notes,
+            flightRoute: selectedSource == .flight && !flightRoute.isEmpty ? flightRoute : nil,
+            conversionSource: (selectedSource == .pointsConversion || selectedSource == .pointsTransfer) && !conversionSource.isEmpty ? conversionSource : nil
         )
         
         dismiss()
@@ -430,48 +523,15 @@ struct CalculatorLedgerView: View {
     }
 }
 
-// MARK: - 表單行組件
-struct FormRow<Content: View>: View {
-    let icon: String
-    let title: String
-    let colorScheme: ColorScheme
-    let content: Content
-    
-    init(icon: String, title: String, colorScheme: ColorScheme, @ViewBuilder content: () -> Content) {
-        self.icon = icon
-        self.title = title
-        self.colorScheme = colorScheme
-        self.content = content()
-    }
-    
-    var body: some View {
-        HStack(spacing: AviationTheme.Spacing.md) {
-            Image(systemName: icon)
-                .foregroundColor(AviationTheme.Colors.cathayJade)
-                .font(.title3)
-            
-            Text(title)
-                .font(AviationTheme.Typography.body)
-                .foregroundColor(AviationTheme.Colors.primaryText(colorScheme))
-            
-            Spacer()
-            
-            content
-        }
-        .padding(AviationTheme.Spacing.md)
-        .background(AviationTheme.Colors.cardBackground(colorScheme))
-        .cornerRadius(AviationTheme.CornerRadius.md)
-        .padding(.horizontal, AviationTheme.Spacing.md)
-    }
-}
+// MARK: - 輔助視圖元件
 
-// MARK: - 計算哩程資訊
+// 計算哩程資訊
 struct CalculatedMilesInfo {
     let miles: Int
     let isBirthdayMonth: Bool
 }
 
-// MARK: - 來源按鈕
+// 來源按鈕
 struct SourceButton: View {
     let source: MileageSource
     let isSelected: Bool
@@ -480,87 +540,90 @@ struct SourceButton: View {
     
     var body: some View {
         Button(action: action) {
-            VStack(spacing: 6) {
+            VStack(spacing: 8) {
                 Image(systemName: source.icon)
-                    .font(.title3)
+                    .font(.title2)
                 Text(source.rawValue)
                     .font(AviationTheme.Typography.caption)
                     .lineLimit(2)
                     .multilineTextAlignment(.center)
                     .minimumScaleFactor(0.8)
             }
-            .frame(minWidth: 80, minHeight: 65)
-            .padding(.vertical, 8)
-            .padding(.horizontal, 6)
+            .frame(width: 85, height: 75)
+            .padding(.horizontal, 4)
             .background(
-                isSelected 
+                isSelected
                     ? AviationTheme.Colors.cathayJade
-                    : AviationTheme.Colors.surfaceBackground(colorScheme)
+                    : AviationTheme.Colors.cardBackground(colorScheme)
             )
             .foregroundColor(
-                isSelected 
-                    ? .white 
+                isSelected
+                    ? .white
                     : AviationTheme.Colors.primaryText(colorScheme)
             )
-            .cornerRadius(AviationTheme.CornerRadius.md)
+            .clipShape(RoundedRectangle(cornerRadius: AviationTheme.CornerRadius.md))
+            .shadow(color: AviationTheme.Shadows.cardShadow(colorScheme).opacity(isSelected ? 0.4 : 0.1), radius: 5, x: 0, y: 2)
             .overlay(
                 RoundedRectangle(cornerRadius: AviationTheme.CornerRadius.md)
                     .stroke(
-                        isSelected ? AviationTheme.Colors.cathayJadeLight : AviationTheme.Colors.tertiaryText(colorScheme).opacity(0.3),
-                        lineWidth: isSelected ? 2 : 1
+                        isSelected ? Color.white.opacity(0.3) : Color.clear,
+                        lineWidth: 1
                     )
             )
         }
     }
 }
 
-// MARK: - 精簡卡片選擇行
+// 精簡卡片選擇行 (改為 iOS 原生打勾風格)
 struct CompactCardRow: View {
     let card: CreditCardRule
     let isSelected: Bool
     let colorScheme: ColorScheme
     
     var body: some View {
-        HStack(spacing: AviationTheme.Spacing.md) {
-            // 選擇指示器
+        HStack(spacing: 16) {
+            // 卡片圖標
             ZStack {
                 Circle()
-                    .stroke(
-                        isSelected ? AviationTheme.Colors.cathayJade : AviationTheme.Colors.tertiaryText(colorScheme),
-                        lineWidth: 2
-                    )
-                    .frame(width: 20, height: 20)
-                
-                if isSelected {
-                    Circle()
-                        .fill(AviationTheme.Colors.cathayJade)
-                        .frame(width: 10, height: 10)
-                }
+                    .fill(AviationTheme.Colors.cathayJade.opacity(0.15))
+                    .frame(width: 36, height: 36)
+                Image(systemName: "creditcard.fill")
+                    .foregroundColor(AviationTheme.Colors.cathayJade)
+                    .font(.subheadline)
             }
             
             // 卡片資訊
             VStack(alignment: .leading, spacing: 2) {
                 Text(card.cardName)
                     .font(AviationTheme.Typography.body)
-                    .fontWeight(.medium)
                     .foregroundColor(AviationTheme.Colors.primaryText(colorScheme))
                     .lineLimit(1)
+                Text(card.bankName)
+                    .font(AviationTheme.Typography.caption)
+                    .foregroundColor(AviationTheme.Colors.secondaryText(colorScheme))
             }
             
             Spacer()
+            
+            // 選取狀態（打勾）
+            if isSelected {
+                Image(systemName: "checkmark")
+                    .font(.headline)
+                    .foregroundColor(AviationTheme.Colors.cathayJade)
+            }
         }
-        .padding(.vertical, AviationTheme.Spacing.sm)
-        .padding(.horizontal, AviationTheme.Spacing.md)
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
+        .contentShape(Rectangle()) // 讓整列都能點擊
         .background(
             isSelected
-                ? AviationTheme.Colors.cathayJade.opacity(colorScheme == .dark ? 0.15 : 0.08)
+                ? AviationTheme.Colors.cathayJade.opacity(colorScheme == .dark ? 0.1 : 0.03)
                 : Color.clear
         )
-        .cornerRadius(AviationTheme.CornerRadius.sm)
     }
 }
 
-// MARK: - 精簡加速器按鈕
+// 精簡加速器按鈕 (現代化卡片風格)
 struct CompactAcceleratorButton: View {
     let category: AcceleratorCategory
     let isSelected: Bool
@@ -569,18 +632,17 @@ struct CompactAcceleratorButton: View {
     
     var body: some View {
         Button(action: action) {
-            VStack(spacing: AviationTheme.Spacing.sm) {
+            HStack(spacing: 12) {
                 Image(systemName: category.icon)
                     .font(.title3)
                     .foregroundColor(
                         isSelected
                             ? .white
-                            : AviationTheme.Colors.secondaryText(colorScheme)
+                            : AviationTheme.Colors.warning
                     )
-                    .frame(height: 30)
                 
                 Text(category.rawValue)
-                    .font(AviationTheme.Typography.caption)
+                    .font(AviationTheme.Typography.subheadline)
                     .fontWeight(isSelected ? .semibold : .regular)
                     .foregroundColor(
                         isSelected
@@ -588,139 +650,22 @@ struct CompactAcceleratorButton: View {
                             : AviationTheme.Colors.primaryText(colorScheme)
                     )
                     .lineLimit(1)
+                
+                Spacer()
             }
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, AviationTheme.Spacing.md)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 14)
             .background(
-                Group {
-                    if isSelected {
-                        AviationTheme.Gradients.cathayJade
-                    } else {
-                        AviationTheme.Colors.surfaceBackground(colorScheme)
-                    }
-                }
+                isSelected
+                    ? AviationTheme.Colors.cathayJade
+                    : AviationTheme.Colors.cardBackground(colorScheme)
             )
-            .cornerRadius(AviationTheme.CornerRadius.md)
+            .clipShape(RoundedRectangle(cornerRadius: AviationTheme.CornerRadius.md))
+            .shadow(color: AviationTheme.Shadows.cardShadow(colorScheme).opacity(isSelected ? 0.3 : 0.1), radius: 5, x: 0, y: 2)
             .overlay(
                 RoundedRectangle(cornerRadius: AviationTheme.CornerRadius.md)
-                    .stroke(
-                        isSelected ? Color.clear : AviationTheme.Colors.tertiaryText(colorScheme).opacity(0.3),
-                        lineWidth: 1
-                    )
+                    .stroke(isSelected ? Color.white.opacity(0.3) : Color.clear, lineWidth: 1)
             )
-        }
-    }
-}
-
-// MARK: - 信用卡選擇行
-struct CardSelectionRow: View {
-    let card: CreditCardRule
-    let isSelected: Bool
-    let colorScheme: ColorScheme
-    
-    var body: some View {
-        HStack(spacing: AviationTheme.Spacing.md) {
-            // 選擇指示器
-            ZStack {
-                Circle()
-                    .stroke(
-                        isSelected ? AviationTheme.Colors.cathayJade : AviationTheme.Colors.tertiaryText(colorScheme),
-                        lineWidth: 2
-                    )
-                    .frame(width: 22, height: 22)
-                
-                if isSelected {
-                    Circle()
-                        .fill(AviationTheme.Colors.cathayJade)
-                        .frame(width: 12, height: 12)
-                }
-            }
-            
-            // 卡片資訊
-            VStack(alignment: .leading, spacing: 4) {
-                Text(card.cardName)
-                    .font(AviationTheme.Typography.body)
-                    .fontWeight(.semibold)
-                    .foregroundColor(AviationTheme.Colors.primaryText(colorScheme))
-                
-                Text(card.bankName)
-                    .font(AviationTheme.Typography.caption)
-                    .foregroundColor(AviationTheme.Colors.secondaryText(colorScheme))
-            }
-            
-            Spacer()
-            
-            // 卡片圖標
-            Image(systemName: "creditcard.fill")
-                .foregroundColor(
-                    isSelected 
-                        ? AviationTheme.Colors.cathayJade 
-                        : AviationTheme.Colors.tertiaryText(colorScheme)
-                )
-        }
-        .padding(AviationTheme.Spacing.md)
-        .background(
-            isSelected 
-                ? AviationTheme.Colors.cathayJade.opacity(colorScheme == .dark ? 0.1 : 0.05)
-                : Color.clear
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: AviationTheme.CornerRadius.sm)
-                .stroke(
-                    isSelected ? AviationTheme.Colors.cathayJade : AviationTheme.Colors.tertiaryText(colorScheme).opacity(0.2),
-                    lineWidth: 1
-                )
-        )
-        .cornerRadius(AviationTheme.CornerRadius.sm)
-    }
-}
-
-// MARK: - 加速器按鈕
-struct AcceleratorButton: View {
-    let category: AcceleratorCategory
-    let isSelected: Bool
-    let colorScheme: ColorScheme
-    let action: () -> Void
-    
-    var body: some View {
-        Button(action: action) {
-            VStack(spacing: AviationTheme.Spacing.sm) {
-                Image(systemName: category.icon)
-                    .font(.title2)
-                    .foregroundColor(
-                        isSelected 
-                            ? AviationTheme.Colors.cathayJade 
-                            : AviationTheme.Colors.secondaryText(colorScheme)
-                    )
-                    .frame(height: 40)
-                
-                Text(category.rawValue)
-                    .font(AviationTheme.Typography.caption)
-                    .fontWeight(isSelected ? .semibold : .regular)
-                    .foregroundColor(
-                        isSelected 
-                            ? AviationTheme.Colors.primaryText(colorScheme) 
-                            : AviationTheme.Colors.secondaryText(colorScheme)
-                    )
-                    .lineLimit(2)
-                    .multilineTextAlignment(.center)
-                    .minimumScaleFactor(0.8)
-            }
-            .frame(maxWidth: .infinity)
-            .padding(AviationTheme.Spacing.md)
-            .background(
-                isSelected 
-                    ? AviationTheme.Colors.cathayJade.opacity(colorScheme == .dark ? 0.1 : 0.05)
-                    : AviationTheme.Colors.surfaceBackground(colorScheme)
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: AviationTheme.CornerRadius.md)
-                    .stroke(
-                        isSelected ? AviationTheme.Colors.cathayJade : AviationTheme.Colors.tertiaryText(colorScheme).opacity(0.3),
-                        lineWidth: isSelected ? 2 : 1
-                    )
-            )
-            .cornerRadius(AviationTheme.CornerRadius.md)
         }
     }
 }

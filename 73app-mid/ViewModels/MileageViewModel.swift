@@ -71,7 +71,9 @@ class MileageViewModel {
                        source: MileageSource,
                        acceleratorCategory: AcceleratorCategory? = nil,
                        date: Date = Date(),
-                       notes: String = "") {
+                       notes: String = "",
+                       flightRoute: String? = nil,
+                       conversionSource: String? = nil) {
         guard let context = modelContext, let account = mileageAccount else { return }
         
         // 創建交易記錄
@@ -81,7 +83,9 @@ class MileageViewModel {
             earnedMiles: earnedMiles,
             source: source,
             acceleratorCategory: acceleratorCategory,
-            notes: notes
+            notes: notes,
+            flightRoute: flightRoute,
+            conversionSource: conversionSource
         )
         
         context.insert(transaction)

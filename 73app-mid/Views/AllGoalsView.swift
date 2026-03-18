@@ -196,8 +196,8 @@ struct DetailedFlightGoalCard: View {
                             .font(.caption)
                             .padding(.horizontal, 10)
                             .padding(.vertical, 6)
-                            .background(Color.green.opacity(0.1))
-                            .foregroundStyle(.green)
+                            .background(AviationTheme.Colors.successColor(colorScheme).opacity(0.15))
+                            .foregroundStyle(AviationTheme.Colors.successColor(colorScheme))
                             .cornerRadius(8)
                     }
                     
@@ -287,7 +287,7 @@ struct DetailedFlightGoalCard: View {
                             Text("已達成")
                         }
                         .font(.caption)
-                        .foregroundStyle(.green)
+                        .foregroundStyle(AviationTheme.Colors.successColor(colorScheme))
                         .fontWeight(.semibold)
                     }
                 }
@@ -454,7 +454,7 @@ struct AddFlightGoalView: View {
                             Text("\(miles.formatted())")
                                 .font(.title3)
                                 .fontWeight(.bold)
-                                .foregroundStyle(.green)
+                                .foregroundStyle(AviationTheme.Colors.successColor(colorScheme))
                         }
                     } header: {
                         Text("航線資訊")
@@ -576,7 +576,7 @@ struct AirportPickerView: View {
                     } label: {
                         HStack {
                             Image(systemName: "checkmark.circle.fill")
-                                .foregroundStyle(.green)
+                                .foregroundStyle(AviationTheme.Colors.successColor(colorScheme))
                             VStack(alignment: .leading, spacing: 4) {
                                 HStack(spacing: 8) {
                                     Text(airport.iataCode)
@@ -594,7 +594,7 @@ struct AirportPickerView: View {
                                 .foregroundStyle(.blue)
                         }
                         .padding()
-                        .background(Color.green.opacity(0.1))
+                        .background(AviationTheme.Colors.successColor(colorScheme).opacity(0.15))
                     }
                     .buttonStyle(.plain)
                 }
@@ -602,11 +602,7 @@ struct AirportPickerView: View {
                 // 搜尋結果列表
                 List {
                     if searchText.isEmpty {
-                        Section {
-                            Text("輸入 IATA 代碼（如 TPE）或搜尋城市/機場名稱")
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                        }
+                        
                     }
                     
                     Section {
@@ -657,12 +653,12 @@ struct AirportRowView: View {
                     Text(airport.iataCode)
                         .font(.headline)
                         .fontWeight(.bold)
-                        .foregroundStyle(.blue)
+                        .foregroundStyle(colorScheme == .dark ? Color.blue.opacity(0.9) : .blue)
                         .padding(.horizontal, 8)
                         .padding(.vertical, 4)
                         .background(
                             RoundedRectangle(cornerRadius: 6)
-                                .fill(Color.blue.opacity(0.1))
+                                .fill(colorScheme == .dark ? Color.blue.opacity(0.25) : Color.blue.opacity(0.1))
                         )
                     Text(airport.cityName)
                         .font(.subheadline)
@@ -670,23 +666,23 @@ struct AirportRowView: View {
                 }
                 Text(airport.airportName)
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(colorScheme == .dark ? Color.white.opacity(0.7) : Color.black.opacity(0.6))
                 HStack(spacing: 4) {
                     Text(airport.cityNameEN)
                         .font(.caption2)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(colorScheme == .dark ? Color.white.opacity(0.5) : Color.black.opacity(0.5))
                     Text("•")
                         .font(.caption2)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(colorScheme == .dark ? Color.white.opacity(0.5) : Color.black.opacity(0.5))
                     Text(airport.country)
                         .font(.caption2)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(colorScheme == .dark ? Color.white.opacity(0.5) : Color.black.opacity(0.5))
                 }
             }
             Spacer()
             if isSelected {
                 Image(systemName: "checkmark.circle.fill")
-                    .foregroundStyle(.blue)
+                    .foregroundStyle(colorScheme == .dark ? Color.blue.opacity(0.9) : .blue)
             }
         }
     }

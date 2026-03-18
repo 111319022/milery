@@ -19,12 +19,18 @@ final class Transaction {
     var notes: String
     var costPerMile: Double // 每哩成本（自動計算）
     
+    // 額外資訊欄位
+    var flightRoute: String? // 飛行累積：航線（例如：TPE-NRT）
+    var conversionSource: String? // 銀行點數兌換/他點轉入：來源（例如：國泰世華銀行、Marriott Bonvoy）
+    
     init(date: Date = Date(), 
          amount: Decimal, 
          earnedMiles: Int, 
          source: MileageSource,
          acceleratorCategory: AcceleratorCategory? = nil,
-         notes: String = "") {
+         notes: String = "",
+         flightRoute: String? = nil,
+         conversionSource: String? = nil) {
         self.id = UUID()
         self.date = date
         self.amount = amount
@@ -32,6 +38,8 @@ final class Transaction {
         self.source = source
         self.acceleratorCategory = acceleratorCategory
         self.notes = notes
+        self.flightRoute = flightRoute
+        self.conversionSource = conversionSource
         
         // 計算每哩成本
         if earnedMiles > 0 {
