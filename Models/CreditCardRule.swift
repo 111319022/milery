@@ -18,8 +18,8 @@ final class CreditCardRule {
     // 基礎回饋率 (多少元 = 1 哩)
     var baseRate: Decimal // 例如：30 表示 30元/哩
     
-    // 海外消費回饋率
-    var overseasRate: Decimal // 例如：15 表示 15元/哩
+    // 加速器回饋率（哩程加速器消費適用）
+    var acceleratorRate: Decimal // 例如：10 表示 10元/哩
     
     // 特約商店回饋率
     var specialMerchantRate: Decimal // 例如：10 表示 10元/哩
@@ -39,7 +39,7 @@ final class CreditCardRule {
     init(cardName: String,
          bankName: String,
          baseRate: Decimal = 30,
-         overseasRate: Decimal = 30,
+         acceleratorRate: Decimal = 30,
          specialMerchantRate: Decimal = 30,
          birthdayMultiplier: Decimal = 1.0,
          roundingMode: RoundingMode = .down,
@@ -50,7 +50,7 @@ final class CreditCardRule {
         self.cardName = cardName
         self.bankName = bankName
         self.baseRate = baseRate
-        self.overseasRate = overseasRate
+        self.acceleratorRate = acceleratorRate
         self.specialMerchantRate = specialMerchantRate
         self.birthdayMultiplier = birthdayMultiplier
         self.roundingMode = roundingMode
@@ -69,7 +69,7 @@ final class CreditCardRule {
         // 根據來源和加速器類別決定費率
         if source == .cardAccelerator, acceleratorCategory != nil {
             // 使用加速器費率
-            rate = overseasRate // overseasRate 現在代表加速器費率
+            rate = acceleratorRate
         } else if source == .specialMerchant {
             rate = specialMerchantRate
         } else {
@@ -196,7 +196,7 @@ extension CreditCardRule {
             cardName: "國泰世華亞萬聯名卡 世界卡",
             bankName: "國泰世華銀行",
             baseRate: 22,
-            overseasRate: 10,
+            acceleratorRate: 10,
             specialMerchantRate: 10,
             birthdayMultiplier: 2.0,
             roundingMode: .down,
@@ -211,7 +211,7 @@ extension CreditCardRule {
             cardName: "國泰世華亞萬聯名卡 鈦商卡",
             bankName: "國泰世華銀行",
             baseRate: 25,
-            overseasRate: 10,
+            acceleratorRate: 10,
             specialMerchantRate: 10,
             birthdayMultiplier: 2.0,
             roundingMode: .down,
@@ -226,7 +226,7 @@ extension CreditCardRule {
             cardName: "國泰世華亞萬聯名卡 白金卡",
             bankName: "國泰世華銀行",
             baseRate: 30,
-            overseasRate: 15,
+            acceleratorRate: 15,
             specialMerchantRate: 15,
             birthdayMultiplier: 2.0,
             roundingMode: .down,
@@ -241,7 +241,7 @@ extension CreditCardRule {
             cardName: "國泰世華亞萬聯名卡 里享卡",
             bankName: "國泰世華銀行",
             baseRate: 30,
-            overseasRate: 30,
+            acceleratorRate: 30,
             specialMerchantRate: 30,
             birthdayMultiplier: 2.0,
             roundingMode: .down,

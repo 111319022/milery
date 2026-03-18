@@ -270,7 +270,7 @@ struct GoalProgressCard: View {
                 Menu {
                     Button {
                         goal.isPriority.toggle()
-                        try? viewModel.modelContext?.save()
+                        viewModel.saveContext()
                         viewModel.loadData()
                     } label: {
                         Label(
@@ -328,6 +328,8 @@ struct GoalProgressCard: View {
                 }
                 .frame(height: 8)
             }
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel("\(goal.originName)到\(goal.destinationName)，\(goal.cabinClass.rawValue)，進度 \(Int(goal.progress(currentMiles: currentMiles) * 100))%，\(currentMiles) / \(goal.requiredMiles) 哩")
         }
         .padding(AviationTheme.Spacing.md)
         .background(AviationTheme.Colors.cardBackground(colorScheme))

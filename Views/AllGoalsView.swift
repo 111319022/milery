@@ -58,7 +58,7 @@ struct AllGoalsView: View {
                                 currentMiles: viewModel.mileageAccount?.totalMiles ?? 0,
                                 onTogglePriority: {
                                     goal.isPriority.toggle()
-                                    try? viewModel.modelContext?.save()
+                                    viewModel.saveContext()
                                     viewModel.loadData()
                                 },
                                 onDelete: {

@@ -56,6 +56,11 @@ struct MainTabView: View {
         .onChange(of: userColorScheme) { _, _ in
             updateTabBarAppearance()
         }
+        .alert("儲存失敗", isPresented: $viewModel.showSaveError) {
+            Button("確定", role: .cancel) {}
+        } message: {
+            Text(viewModel.saveError ?? "未知錯誤")
+        }
     }
     
     private func updateTabBarAppearance() {

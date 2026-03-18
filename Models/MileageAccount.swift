@@ -37,7 +37,7 @@ final class MileageAccount {
         return calendar.date(from: components)
     }
     
-    // 計算哩程到期日(最近有記錄月份 + 6個月後的月底)
+    // 計算哩程到期日(最近有記錄月份 + 18個月後的月底)
     func expiryDate() -> Date {
         let calendar = Calendar.current
         let baseDate: Date
@@ -49,16 +49,16 @@ final class MileageAccount {
             baseDate = lastActivityDate
         }
         
-        // 加6個月
-        guard let sixMonthsLater = calendar.date(byAdding: .month, value: 18, to: baseDate) else {
+        // 加18個月
+        guard let eighteenMonthsLater = calendar.date(byAdding: .month, value: 18, to: baseDate) else {
             return Date()
         }
         
         // 取得該月的最後一天
-        let components = calendar.dateComponents([.year, .month], from: sixMonthsLater)
+        let components = calendar.dateComponents([.year, .month], from: eighteenMonthsLater)
         guard let firstDayOfMonth = calendar.date(from: components),
               let lastDayOfMonth = calendar.date(byAdding: DateComponents(month: 1, day: -1), to: firstDayOfMonth) else {
-            return sixMonthsLater
+            return eighteenMonthsLater
         }
         
         // 設置為當天的23:59:59

@@ -114,6 +114,8 @@ struct HeroMilesCard: View {
                         .offset(y: -8)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
+                .accessibilityElement(children: .combine)
+                .accessibilityLabel("可用哩程 \(totalMiles) 哩")
             }
             .padding(AviationTheme.Spacing.lg)
             
@@ -161,6 +163,15 @@ struct HeroMilesCard: View {
                 
                 // 剩餘天數
                 HStack(spacing: 4) {
+                    if daysUntilExpiry < 30 {
+                        Image(systemName: "exclamationmark.triangle.fill")
+                            .font(.caption2)
+                            .foregroundColor(expiryColor)
+                    } else if daysUntilExpiry < 90 {
+                        Image(systemName: "clock.badge.exclamationmark")
+                            .font(.caption2)
+                            .foregroundColor(expiryColor)
+                    }
                     Text("\(daysUntilExpiry)")
                         .font(AviationTheme.Typography.title3)
                         .fontWeight(.bold)
@@ -175,6 +186,8 @@ struct HeroMilesCard: View {
                     Capsule()
                         .fill(expiryColor.opacity(colorScheme == .dark ? 0.2 : 0.1))
                 )
+                .accessibilityElement(children: .combine)
+                .accessibilityLabel("距離到期還有 \(daysUntilExpiry) 天\(daysUntilExpiry < 30 ? "，即將到期" : daysUntilExpiry < 90 ? "，請留意" : "")")
             }
             .padding(AviationTheme.Spacing.md)
             .background(

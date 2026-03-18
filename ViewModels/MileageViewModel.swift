@@ -20,7 +20,23 @@ class MileageViewModel {
     // 使用者生日（用於計算生日當月加碼）
     var userBirthday: Date = Calendar.current.date(from: DateComponents(month: 1, day: 1)) ?? Date()
     
+    // 儲存錯誤訊息，供 UI 顯示 Alert
+    var saveError: String?
+    var showSaveError: Bool = false
+    
     init() {}
+    
+    /// 集中式儲存方法，取代所有 try? context.save()
+    func saveContext() {
+        guard let context = modelContext else { return }
+        do {
+            try context.save()
+        } catch {
+            print("資料儲存失敗: \(error)")
+            saveError = "資料儲存失敗，請稍後再試。\n(\(error.localizedDescription))"
+            showSaveError = true
+        }
+    }
     
     func initialize(context: ModelContext) {
         self.modelContext = context
@@ -42,7 +58,7 @@ class MileageViewModel {
             let newAccount = MileageAccount()
             context.insert(newAccount)
             self.mileageAccount = newAccount
-            try? context.save()
+            saveContext()
         }
         
         // 載入信用卡規則
@@ -61,7 +77,7 @@ class MileageViewModel {
                 context.insert(card)
                 creditCards.append(card)
             }
-            try? context.save()
+            saveContext()
         }
     }
     
@@ -96,7 +112,7 @@ class MileageViewModel {
         account.transactions.append(transaction)
         account.updateMiles(amount: earnedMiles, date: date)
         
-        try? context.save()
+        saveContext()
         loadData()
     }
     
@@ -127,7 +143,7 @@ class MileageViewModel {
         context.insert(goal)
         account.flightGoals.append(goal)
         
-        try? context.save()
+        saveContext()
         loadData()
     }
     
@@ -135,7 +151,7 @@ class MileageViewModel {
     func deleteFlightGoal(_ goal: FlightGoal) {
         guard let context = modelContext else { return }
         context.delete(goal)
-        try? context.save()
+        saveContext()
         loadData()
     }
     
@@ -153,7 +169,7 @@ class MileageViewModel {
         
         // 從資料庫刪除
         context.delete(transaction)
-        try? context.save()
+        saveContext()
         loadData()
     }
     
@@ -173,7 +189,7 @@ class MileageViewModel {
     func addCreditCard(_ card: CreditCardRule) {
         guard let context = modelContext else { return }
         context.insert(card)
-        try? context.save()
+        saveContext()
         loadData()
     }
     
@@ -181,14 +197,14 @@ class MileageViewModel {
     func deleteCreditCard(_ card: CreditCardRule) {
         guard let context = modelContext else { return }
         context.delete(card)
-        try? context.save()
+        saveContext()
         loadData()
     }
     
     // 切換信用卡啟用狀態
     func toggleCardActive(_ card: CreditCardRule) {
         card.isActive.toggle()
-        try? modelContext?.save()
+        saveContext()
         loadData()
     }
     
