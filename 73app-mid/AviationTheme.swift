@@ -305,7 +305,7 @@ struct MetalCardStyle: ViewModifier {
                         AviationTheme.Gradients.cardGradient(colorScheme)
                     }
                     
-                    // 🛠️ 修改：減弱深色模式下的金屬邊緣反光，讓質感更內斂
+                    // 修改：減弱深色模式下的金屬邊緣反光，讓質感更內斂
                     LinearGradient(
                         colors: [
                             Color.white.opacity(colorScheme == .dark ? 0.08 : 0.35),
