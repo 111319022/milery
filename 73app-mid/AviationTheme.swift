@@ -52,7 +52,7 @@ struct AviationTheme {
         static let cathayJadeLight = Color(red: 0.1, green: 0.52, blue: 0.52)
         static let cathayJadeDark = Color(red: 0.0, green: 0.32, blue: 0.32)
         
-        // 🛠️ 修改：深色模式專用翡翠綠（降低亮度和飽和度，改為沉穩的玉石色）
+        // 修改：深色模式專用翡翠綠（降低亮度和飽和度，改為沉穩的玉石色）
         static let cathayJadeBright = Color(red: 0.15, green: 0.65, blue: 0.65) // 原本是 0.3, 0.85, 0.85 (太刺眼)
         static let cathayJadeBrightLight = Color(red: 0.25, green: 0.75, blue: 0.75) // 原本是 0.4, 0.95, 0.95
         
@@ -60,7 +60,7 @@ struct AviationTheme {
         static let starluxGold = Color(red: 0.78, green: 0.62, blue: 0.42)
         
         // MARK: - 功能色（統一）
-        // 🛠️ 修改：微調深色模式的成功與警告色，避免過亮
+        // 修改：微調深色模式的成功與警告色，避免過亮
         static let success = Color(red: 0.18, green: 0.65, blue: 0.35)
         static let warning = Color(red: 0.85, green: 0.60, blue: 0.15)
         static let danger = Color(red: 0.85, green: 0.25, blue: 0.25)
@@ -85,7 +85,7 @@ struct AviationTheme {
         }
         
         static func primaryText(_ colorScheme: ColorScheme) -> Color {
-            // 🛠️ 修改：深色模式下純白太刺眼，改用帶有一點點灰藍的「珍珠白」
+            // 修改：深色模式下純白太刺眼，改用帶有一點點灰藍的「珍珠白」
             colorScheme == .dark ? Color(red: 0.92, green: 0.92, blue: 0.95) : starluxIndigo
         }
         
@@ -185,7 +185,7 @@ struct AviationTheme {
             endPoint: .bottomTrailing
         )
         
-        // 🛠️ 修改：國泰翡翠綠漸層（深色模式 - 沉穩玉石色）
+        // 修改：國泰翡翠綠漸層（深色模式 - 沉穩玉石色）
         static let cathayJadeBright = LinearGradient(
             colors: [
                 Color(red: 0.25, green: 0.75, blue: 0.75), // 原本 0.4, 0.95, 0.95
@@ -305,7 +305,7 @@ struct MetalCardStyle: ViewModifier {
                         AviationTheme.Gradients.cardGradient(colorScheme)
                     }
                     
-                    // 修改：減弱深色模式下的金屬邊緣反光，讓質感更內斂
+                    // 修改：減弱深色模式下的金屬邊緣反光
                     LinearGradient(
                         colors: [
                             Color.white.opacity(colorScheme == .dark ? 0.08 : 0.35),
