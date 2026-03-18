@@ -6,17 +6,51 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		FBF89DAE2F6AC2EE003DB1EB /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FBF89D962F6AC2EE003DB1EB /* Assets.xcassets */; };
+		FBF89DAF2F6AC2EE003DB1EB /* airports.csv in Resources */ = {isa = PBXBuildFile; fileRef = FBF89D992F6AC2EE003DB1EB /* airports.csv */; };
+		FBF89DB02F6AC2EE003DB1EB /* CalculatorLedgerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBF89DA42F6AC2EE003DB1EB /* CalculatorLedgerView.swift */; };
+		FBF89DB12F6AC2EE003DB1EB /* ProgressView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBF89DA92F6AC2EE003DB1EB /* ProgressView.swift */; };
+		FBF89DB22F6AC2EE003DB1EB /* _3app_midApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBF89D942F6AC2EE003DB1EB /* _3app_midApp.swift */; };
+		FBF89DB32F6AC2EE003DB1EB /* MainTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBF89DA82F6AC2EE003DB1EB /* MainTabView.swift */; };
+		FBF89DB42F6AC2EE003DB1EB /* MileageAccount.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBF89D9E2F6AC2EE003DB1EB /* MileageAccount.swift */; };
+		FBF89DB52F6AC2EE003DB1EB /* Transaction.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBF89D9F2F6AC2EE003DB1EB /* Transaction.swift */; };
+		FBF89DB62F6AC2EE003DB1EB /* CreditCardRule.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBF89D9C2F6AC2EE003DB1EB /* CreditCardRule.swift */; };
+		FBF89DB72F6AC2EE003DB1EB /* CardIntroView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBF89DA52F6AC2EE003DB1EB /* CardIntroView.swift */; };
+		FBF89DB82F6AC2EE003DB1EB /* DashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBF89DA62F6AC2EE003DB1EB /* DashboardView.swift */; };
+		FBF89DB92F6AC2EE003DB1EB /* AirportDatabase.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBF89D982F6AC2EE003DB1EB /* AirportDatabase.swift */; };
+		FBF89DBA2F6AC2EE003DB1EB /* CathayAwardChart.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBF89D9A2F6AC2EE003DB1EB /* CathayAwardChart.swift */; };
+		FBF89DBB2F6AC2EE003DB1EB /* FlightGoal.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBF89D9D2F6AC2EE003DB1EB /* FlightGoal.swift */; };
+		FBF89DBC2F6AC2EE003DB1EB /* MileageViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBF89DA12F6AC2EE003DB1EB /* MileageViewModel.swift */; };
+		FBF89DBD2F6AC2EE003DB1EB /* AviationTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBF89D972F6AC2EE003DB1EB /* AviationTheme.swift */; };
+		FBF89DBE2F6AC2EE003DB1EB /* LedgerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBF89DA72F6AC2EE003DB1EB /* LedgerView.swift */; };
+		FBF89DBF2F6AC2EE003DB1EB /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBF89DAA2F6AC2EE003DB1EB /* SettingsView.swift */; };
+		FBF89DC02F6AC2EE003DB1EB /* AllGoalsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBF89DA32F6AC2EE003DB1EB /* AllGoalsView.swift */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
 		FBB3ADDA2F67A60600D7ADE3 /* 73app-mid.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "73app-mid.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		FBF89D942F6AC2EE003DB1EB /* _3app_midApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = _3app_midApp.swift; sourceTree = "<group>"; };
+		FBF89D952F6AC2EE003DB1EB /* 73app-mid.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = "73app-mid.xcodeproj"; sourceTree = "<group>"; };
+		FBF89D962F6AC2EE003DB1EB /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		FBF89D972F6AC2EE003DB1EB /* AviationTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AviationTheme.swift; sourceTree = "<group>"; };
+		FBF89D982F6AC2EE003DB1EB /* AirportDatabase.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AirportDatabase.swift; sourceTree = "<group>"; };
+		FBF89D992F6AC2EE003DB1EB /* airports.csv */ = {isa = PBXFileReference; lastKnownFileType = text; path = airports.csv; sourceTree = "<group>"; };
+		FBF89D9A2F6AC2EE003DB1EB /* CathayAwardChart.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CathayAwardChart.swift; sourceTree = "<group>"; };
+		FBF89D9C2F6AC2EE003DB1EB /* CreditCardRule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreditCardRule.swift; sourceTree = "<group>"; };
+		FBF89D9D2F6AC2EE003DB1EB /* FlightGoal.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlightGoal.swift; sourceTree = "<group>"; };
+		FBF89D9E2F6AC2EE003DB1EB /* MileageAccount.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MileageAccount.swift; sourceTree = "<group>"; };
+		FBF89D9F2F6AC2EE003DB1EB /* Transaction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Transaction.swift; sourceTree = "<group>"; };
+		FBF89DA12F6AC2EE003DB1EB /* MileageViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MileageViewModel.swift; sourceTree = "<group>"; };
+		FBF89DA32F6AC2EE003DB1EB /* AllGoalsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AllGoalsView.swift; sourceTree = "<group>"; };
+		FBF89DA42F6AC2EE003DB1EB /* CalculatorLedgerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalculatorLedgerView.swift; sourceTree = "<group>"; };
+		FBF89DA52F6AC2EE003DB1EB /* CardIntroView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardIntroView.swift; sourceTree = "<group>"; };
+		FBF89DA62F6AC2EE003DB1EB /* DashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardView.swift; sourceTree = "<group>"; };
+		FBF89DA72F6AC2EE003DB1EB /* LedgerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LedgerView.swift; sourceTree = "<group>"; };
+		FBF89DA82F6AC2EE003DB1EB /* MainTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainTabView.swift; sourceTree = "<group>"; };
+		FBF89DA92F6AC2EE003DB1EB /* ProgressView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgressView.swift; sourceTree = "<group>"; };
+		FBF89DAA2F6AC2EE003DB1EB /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
-
-/* Begin PBXFileSystemSynchronizedRootGroup section */
-		FBB3ADDC2F67A60600D7ADE3 /* 73app-mid */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = "73app-mid";
-			sourceTree = "<group>";
-		};
-/* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		FBB3ADD72F67A60600D7ADE3 /* Frameworks */ = {
@@ -32,7 +66,14 @@
 		FBB3ADD12F67A60600D7ADE3 = {
 			isa = PBXGroup;
 			children = (
-				FBB3ADDC2F67A60600D7ADE3 /* 73app-mid */,
+				FBF89D942F6AC2EE003DB1EB /* _3app_midApp.swift */,
+				FBF89D952F6AC2EE003DB1EB /* 73app-mid.xcodeproj */,
+				FBF89D962F6AC2EE003DB1EB /* Assets.xcassets */,
+				FBF89D972F6AC2EE003DB1EB /* AviationTheme.swift */,
+				FBF89D9B2F6AC2EE003DB1EB /* Database */,
+				FBF89DA02F6AC2EE003DB1EB /* Models */,
+				FBF89DA22F6AC2EE003DB1EB /* ViewModels */,
+				FBF89DAB2F6AC2EE003DB1EB /* Views */,
 				FBB3ADDB2F67A60600D7ADE3 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -42,6 +83,55 @@
 			children = (
 				FBB3ADDA2F67A60600D7ADE3 /* 73app-mid.app */,
 			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		FBF89D9B2F6AC2EE003DB1EB /* Database */ = {
+			isa = PBXGroup;
+			children = (
+				FBF89D982F6AC2EE003DB1EB /* AirportDatabase.swift */,
+				FBF89D992F6AC2EE003DB1EB /* airports.csv */,
+				FBF89D9A2F6AC2EE003DB1EB /* CathayAwardChart.swift */,
+			);
+			path = Database;
+			sourceTree = "<group>";
+		};
+		FBF89DA02F6AC2EE003DB1EB /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				FBF89D9C2F6AC2EE003DB1EB /* CreditCardRule.swift */,
+				FBF89D9D2F6AC2EE003DB1EB /* FlightGoal.swift */,
+				FBF89D9E2F6AC2EE003DB1EB /* MileageAccount.swift */,
+				FBF89D9F2F6AC2EE003DB1EB /* Transaction.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		FBF89DA22F6AC2EE003DB1EB /* ViewModels */ = {
+			isa = PBXGroup;
+			children = (
+				FBF89DA12F6AC2EE003DB1EB /* MileageViewModel.swift */,
+			);
+			path = ViewModels;
+			sourceTree = "<group>";
+		};
+		FBF89DAB2F6AC2EE003DB1EB /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				FBF89DA32F6AC2EE003DB1EB /* AllGoalsView.swift */,
+				FBF89DA42F6AC2EE003DB1EB /* CalculatorLedgerView.swift */,
+				FBF89DA52F6AC2EE003DB1EB /* CardIntroView.swift */,
+				FBF89DA62F6AC2EE003DB1EB /* DashboardView.swift */,
+				FBF89DA72F6AC2EE003DB1EB /* LedgerView.swift */,
+				FBF89DA82F6AC2EE003DB1EB /* MainTabView.swift */,
+				FBF89DA92F6AC2EE003DB1EB /* ProgressView.swift */,
+				FBF89DAA2F6AC2EE003DB1EB /* SettingsView.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		FBF89DAC2F6AC2EE003DB1EB /* Products */ = {
+			isa = PBXGroup;
 			name = Products;
 			sourceTree = "<group>";
 		};
@@ -59,9 +149,6 @@
 			buildRules = (
 			);
 			dependencies = (
-			);
-			fileSystemSynchronizedGroups = (
-				FBB3ADDC2F67A60600D7ADE3 /* 73app-mid */,
 			);
 			name = "73app-mid";
 			packageProductDependencies = (
@@ -97,6 +184,12 @@
 			preferredProjectObjectVersion = 77;
 			productRefGroup = FBB3ADDB2F67A60600D7ADE3 /* Products */;
 			projectDirPath = "";
+			projectReferences = (
+				{
+					ProductGroup = FBF89DAC2F6AC2EE003DB1EB /* Products */;
+					ProjectRef = FBF89D952F6AC2EE003DB1EB /* 73app-mid.xcodeproj */;
+				},
+			);
 			projectRoot = "";
 			targets = (
 				FBB3ADD92F67A60600D7ADE3 /* 73app-mid */,
@@ -109,6 +202,8 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				FBF89DAE2F6AC2EE003DB1EB /* Assets.xcassets in Resources */,
+				FBF89DAF2F6AC2EE003DB1EB /* airports.csv in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -119,6 +214,23 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				FBF89DB02F6AC2EE003DB1EB /* CalculatorLedgerView.swift in Sources */,
+				FBF89DB12F6AC2EE003DB1EB /* ProgressView.swift in Sources */,
+				FBF89DB22F6AC2EE003DB1EB /* _3app_midApp.swift in Sources */,
+				FBF89DB32F6AC2EE003DB1EB /* MainTabView.swift in Sources */,
+				FBF89DB42F6AC2EE003DB1EB /* MileageAccount.swift in Sources */,
+				FBF89DB52F6AC2EE003DB1EB /* Transaction.swift in Sources */,
+				FBF89DB62F6AC2EE003DB1EB /* CreditCardRule.swift in Sources */,
+				FBF89DB72F6AC2EE003DB1EB /* CardIntroView.swift in Sources */,
+				FBF89DB82F6AC2EE003DB1EB /* DashboardView.swift in Sources */,
+				FBF89DB92F6AC2EE003DB1EB /* AirportDatabase.swift in Sources */,
+				FBF89DBA2F6AC2EE003DB1EB /* CathayAwardChart.swift in Sources */,
+				FBF89DBB2F6AC2EE003DB1EB /* FlightGoal.swift in Sources */,
+				FBF89DBC2F6AC2EE003DB1EB /* MileageViewModel.swift in Sources */,
+				FBF89DBD2F6AC2EE003DB1EB /* AviationTheme.swift in Sources */,
+				FBF89DBE2F6AC2EE003DB1EB /* LedgerView.swift in Sources */,
+				FBF89DBF2F6AC2EE003DB1EB /* SettingsView.swift in Sources */,
+				FBF89DC02F6AC2EE003DB1EB /* AllGoalsView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -252,16 +364,16 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = 45SQT63B67;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = "73 Flight Tracker";
+				INFOPLIST_KEY_CFBundleDisplayName = "73app-mid";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -287,16 +399,16 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = 45SQT63B67;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = "73 Flight Tracker";
+				INFOPLIST_KEY_CFBundleDisplayName = "73app-mid";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",

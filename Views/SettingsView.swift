@@ -17,6 +17,8 @@ struct SettingsView: View {
     @AppStorage("userColorScheme") private var userColorScheme: String = "system"
     @AppStorage("enableNotifications") private var enableNotifications: Bool = true
     
+    @State private var showingAirportPicker = false
+    
     var themeDisplayName: String {
         switch userColorScheme {
         case "light": return "淺色模式"
@@ -135,7 +137,9 @@ struct SettingsView: View {
                             SectionHeaderView(title: "一般", colorScheme: colorScheme)
                             
                             VStack(spacing: 0) {
-                                NavigationLink(destination: SettingsAirportPickerWrapper(selectedCode: $preferredOrigin)) {
+                                Button {
+                                    showingAirportPicker = true
+                                } label: {
                                     SettingRow(
                                         icon: "airplane.departure",
                                         title: "常用出發地",
@@ -196,6 +200,9 @@ struct SettingsView: View {
                 for: .navigationBar
             )
             .toolbarColorScheme(colorScheme == .dark ? .dark : .light, for: .navigationBar)
+            .sheet(isPresented: $showingAirportPicker) {
+                SettingsAirportPickerWrapper(selectedCode: $preferredOrigin)
+            }
         }
     }
 }

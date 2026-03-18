@@ -22,6 +22,8 @@ final class Transaction {
     // 額外資訊欄位
     var flightRoute: String? // 飛行累積：航線（例如：TPE-NRT）
     var conversionSource: String? // 銀行點數兌換/他點轉入：來源（例如：國泰世華銀行、Marriott Bonvoy）
+    var merchantName: String? // 特店消費累積：商家名稱（例如：星巴克、誠品書店）
+    var promotionName: String? // 活動贈送：活動名稱（例如：開卡禮、生日禮）
     
     init(date: Date = Date(), 
          amount: Decimal, 
@@ -30,7 +32,9 @@ final class Transaction {
          acceleratorCategory: AcceleratorCategory? = nil,
          notes: String = "",
          flightRoute: String? = nil,
-         conversionSource: String? = nil) {
+         conversionSource: String? = nil,
+         merchantName: String? = nil,
+         promotionName: String? = nil) {
         self.id = UUID()
         self.date = date
         self.amount = amount
@@ -40,6 +44,8 @@ final class Transaction {
         self.notes = notes
         self.flightRoute = flightRoute
         self.conversionSource = conversionSource
+        self.merchantName = merchantName
+        self.promotionName = promotionName
         
         // 計算每哩成本
         if earnedMiles > 0 {

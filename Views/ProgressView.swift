@@ -307,12 +307,11 @@ struct GoalProgressCard: View {
                 
                 GeometryReader { geometry in
                     ZStack(alignment: .leading) {
-                        Rectangle()
+                        RoundedRectangle(cornerRadius: 4)
                             .fill(AviationTheme.Colors.tertiaryText(colorScheme).opacity(0.2))
                             .frame(height: 8)
-                            .cornerRadius(4)
                         
-                        Rectangle()
+                        RoundedRectangle(cornerRadius: 4)
                             .fill(
                                 LinearGradient(
                                     colors: [
@@ -324,7 +323,6 @@ struct GoalProgressCard: View {
                                 )
                             )
                             .frame(width: geometry.size.width * min(goal.progress(currentMiles: currentMiles), 1.0), height: 8)
-                            .cornerRadius(4)
                             .animation(.easeInOut(duration: 0.5), value: goal.progress(currentMiles: currentMiles))
                     }
                 }

@@ -22,6 +22,8 @@ struct CalculatorLedgerView: View {
     @State private var notes: String = ""
     @State private var flightRoute: String = "" // 飛行累積：航線
     @State private var conversionSource: String = "" // 銀行點數兌換/他點轉入：來源
+    @State private var merchantName: String = "" // 特店消費累積：商家名稱
+    @State private var promotionName: String = "" // 活動贈送：活動名稱
     
     var activeCards: [CreditCardRule] {
         viewModel.creditCards.filter { $0.isActive }
@@ -108,8 +110,8 @@ struct CalculatorLedgerView: View {
                     // 3. 交易資訊（金額 / 哩程）
                     transactionInputSection
                     
-                    // 4. 額外資訊（航線 / 來源）
-                    if selectedSource == .flight || selectedSource == .pointsConversion || selectedSource == .pointsTransfer {
+                    // 4. 額外資訊（航線 / 來源 / 商家 / 活動）
+                    if selectedSource == .flight || selectedSource == .pointsConversion || selectedSource == .pointsTransfer || selectedSource == .specialMerchant || selectedSource == .promotion {
                         extraInfoSection
                     }
                     
@@ -333,7 +335,12 @@ struct CalculatorLedgerView: View {
     // MARK: - 區塊 4: 額外資訊（航線 / 來源）
     private var extraInfoSection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text(selectedSource == .flight ? "航線資訊" : "來源資訊")
+            Text(
+                selectedSource == .flight ? "航線資訊" :
+                selectedSource == .specialMerchant ? "商家資訊" :
+                selectedSource == .promotion ? "活動資訊" :
+                "來源資訊"
+            )
                 .font(AviationTheme.Typography.subheadline)
                 .fontWeight(.semibold)
                 .foregroundColor(AviationTheme.Colors.secondaryText(colorScheme))
@@ -366,9 +373,41 @@ struct CalculatorLedgerView: View {
                             .frame(width: 28)
                         
                         TextField(
-                            selectedSource == .pointsConversion ? "點數來源（例如：國泰世華銀行）" : "轉入來源（例如：Open Point）",
+                            selectedSource == .pointsConversion ? "點數來源（例如：國泰世華銀行）" : "轉入來源（例如：Happy Go）",
                             text: $conversionSource
                         )
+                            .font(AviationTheme.Typography.body)
+                            .foregroundColor(AviationTheme.Colors.primaryText(colorScheme))
+                            .padding(.vertical, 12)
+                    }
+                    .padding(.horizontal, 16)
+                }
+                
+                // 特店消費累積：商家名稱輸入
+                if selectedSource == .specialMerchant {
+                    HStack {
+                        Image(systemName: "storefront.fill")
+                            .font(.title3)
+                            .foregroundColor(AviationTheme.Colors.cathayJade)
+                            .frame(width: 28)
+                        
+                        TextField("商家名稱（例如：Lalaport）", text: $merchantName)
+                            .font(AviationTheme.Typography.body)
+                            .foregroundColor(AviationTheme.Colors.primaryText(colorScheme))
+                            .padding(.vertical, 12)
+                    }
+                    .padding(.horizontal, 16)
+                }
+                
+                // 活動贈送：活動名稱輸入
+                if selectedSource == .promotion {
+                    HStack {
+                        Image(systemName: "gift.fill")
+                            .font(.title3)
+                            .foregroundColor(AviationTheme.Colors.cathayJade)
+                            .frame(width: 28)
+                        
+                        TextField("活動名稱（例如：里賞季）", text: $promotionName)
                             .font(AviationTheme.Typography.body)
                             .foregroundColor(AviationTheme.Colors.primaryText(colorScheme))
                             .padding(.vertical, 12)
@@ -512,7 +551,9 @@ struct CalculatorLedgerView: View {
             date: date,
             notes: notes,
             flightRoute: selectedSource == .flight && !flightRoute.isEmpty ? flightRoute : nil,
-            conversionSource: (selectedSource == .pointsConversion || selectedSource == .pointsTransfer) && !conversionSource.isEmpty ? conversionSource : nil
+            conversionSource: (selectedSource == .pointsConversion || selectedSource == .pointsTransfer) && !conversionSource.isEmpty ? conversionSource : nil,
+            merchantName: selectedSource == .specialMerchant && !merchantName.isEmpty ? merchantName : nil,
+            promotionName: selectedSource == .promotion && !promotionName.isEmpty ? promotionName : nil
         )
         
         dismiss()

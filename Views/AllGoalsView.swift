@@ -313,6 +313,7 @@ struct AddFlightGoalView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.colorScheme) var colorScheme
     @Bindable var viewModel: MileageViewModel
+    @AppStorage("preferredOrigin") private var preferredOrigin: String = "TPE"
     
     @State private var selectedOrigin: Airport?
     @State private var selectedDestination: Airport?
@@ -499,6 +500,12 @@ struct AddFlightGoalView: View {
             .sheet(isPresented: $showingDestinationPicker) {
                 AirportPickerView(selectedAirport: $selectedDestination, airports: airports)
             }
+            .onAppear {
+                // 如果尚未選擇出發地，且有設定常用出發地，則自動填入
+                if selectedOrigin == nil {
+                    selectedOrigin = AirportDatabase.shared.getAirport(iataCode: preferredOrigin)
+                }
+            }
         }
     }
     
@@ -568,43 +575,39 @@ struct AirportPickerView: View {
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
-                // 快速輸入提示
-                if isValidIATACode, let airport = airportFromIATA {
-                    Button {
-                        selectedAirport = airport
-                        dismiss()
-                    } label: {
-                        HStack {
-                            Image(systemName: "checkmark.circle.fill")
-                                .foregroundStyle(AviationTheme.Colors.successColor(colorScheme))
-                            VStack(alignment: .leading, spacing: 4) {
-                                HStack(spacing: 8) {
-                                    Text(airport.iataCode)
-                                        .font(.headline)
-                                        .foregroundStyle(.blue)
-                                    Text(airport.cityName)
-                                        .font(.subheadline)
-                                }
-                                Text(airport.airportName)
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
-                            }
-                            Spacer()
-                            Image(systemName: "arrow.right.circle.fill")
-                                .foregroundStyle(.blue)
+                // 搜尋欄位 - iOS 26 風格
+                HStack(spacing: 8) {
+                    Image(systemName: "magnifyingglass")
+                        .foregroundColor(Color(.systemGray))
+                        .font(.system(size: 16, weight: .medium))
+                    
+                    TextField("搜尋", text: $searchText)
+                        .textInputAutocapitalization(.characters)
+                        .autocorrectionDisabled()
+                        .font(.system(size: 17))
+                    
+                    if !searchText.isEmpty {
+                        Button {
+                            searchText = ""
+                        } label: {
+                            Image(systemName: "xmark.circle.fill")
+                                .foregroundColor(Color(.systemGray3))
+                                .font(.system(size: 16))
                         }
-                        .padding()
-                        .background(AviationTheme.Colors.successColor(colorScheme).opacity(0.15))
                     }
-                    .buttonStyle(.plain)
                 }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 10)
+                .background(
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(colorScheme == .dark ? Color(.systemGray5) : Color(.systemGray6))
+                )
+                .padding(.horizontal, 16)
+                .padding(.top, 12)
+                .padding(.bottom, 8)
                 
                 // 搜尋結果列表
                 List {
-                    if searchText.isEmpty {
-                        
-                    }
-                    
                     Section {
                         ForEach(filteredAirports) { airport in
                             Button {
@@ -624,9 +627,6 @@ struct AirportPickerView: View {
                 }
                 .listStyle(.insetGrouped)
             }
-            .searchable(text: $searchText, prompt: "輸入 IATA 代碼或搜尋機場")
-            .textInputAutocapitalization(.characters)
-            .autocorrectionDisabled()
             .navigationTitle("選擇機場")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

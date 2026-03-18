@@ -13,7 +13,6 @@ struct LedgerView: View {
     @Bindable var viewModel: MileageViewModel
     @State private var showingAddTransaction = false
     @State private var selectedMonth = Date()
-    @State private var editMode: EditMode = .inactive
     
     var filteredTransactions: [Transaction] {
         viewModel.transactions.filter { transaction in
@@ -173,7 +172,16 @@ struct LedgerView: View {
                                         inSameDayAs: filteredTransactions.sorted(by: { $0.date > $1.date })[index - 1].date
                                     )
                                     
-                                    TransactionDetailRow(transaction: transaction, showDate: showDate)
+                                    // 日期卡片（獨立顯示，不支援滑動刪除）
+                                    if showDate {
+                                        DateHeaderCard(date: transaction.date)
+                                            .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 4, trailing: 16))
+                                            .listRowSeparator(.hidden)
+                                            .listRowBackground(Color.clear)
+                                    }
+                                    
+                                    // 交易卡片
+                                    TransactionDetailRow(transaction: transaction, showDate: false)
                                         .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
                                         .listRowSeparator(.hidden)
                                         .listRowBackground(Color.clear)
@@ -191,7 +199,6 @@ struct LedgerView: View {
                             }
                             .listStyle(.plain)
                             .scrollContentBackground(.hidden)
-                            .environment(\.editMode, $editMode)
                         }
                 }
             }
@@ -200,19 +207,6 @@ struct LedgerView: View {
             .toolbarBackground(.hidden, for: .navigationBar)
             .toolbarColorScheme(colorScheme == .dark ? .dark : .light, for: .navigationBar)
             .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    if !filteredTransactions.isEmpty {
-                        Button {
-                            withAnimation {
-                                editMode = editMode == .active ? .inactive : .active
-                            }
-                        } label: {
-                            Text(editMode == .active ? "完成" : "編輯")
-                                .foregroundColor(AviationTheme.Colors.brandColor(colorScheme))
-                        }
-                    }
-                }
-                
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
                         showingAddTransaction = true
@@ -429,7 +423,24 @@ struct MonthPicker: View {
     }
 }
 
-// MARK: - 交易詳細列（航空風格）
+// MARK: - 卡片
+struct DateHeaderCard: View {
+    @Environment(\.colorScheme) var colorScheme
+    let date: Date
+    
+    var body: some View {
+        HStack(spacing: 6) {
+            Image(systemName: "calendar")
+                .font(.caption2)
+                .foregroundColor(AviationTheme.Colors.brandColor(colorScheme))
+            Text(date.formatted(date: .abbreviated, time: .omitted))
+                .font(AviationTheme.Typography.caption)
+                .fontWeight(.medium)
+                .foregroundColor(AviationTheme.Colors.primaryText(colorScheme))
+        }
+    }
+}
+
 struct TransactionDetailRow: View {
     @Environment(\.colorScheme) var colorScheme
     let transaction: Transaction
@@ -440,22 +451,7 @@ struct TransactionDetailRow: View {
     }
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            // 日期標籤（如果需要顯示）
-            if showDate {
-                HStack(spacing: 6) {
-                    Image(systemName: "calendar")
-                        .font(.caption2)
-                        .foregroundColor(AviationTheme.Colors.brandColor(colorScheme))
-                    Text(transaction.date.formatted(date: .abbreviated, time: .omitted))
-                        .font(AviationTheme.Typography.caption)
-                        .foregroundColor(AviationTheme.Colors.primaryText(colorScheme))
-                }
-                .padding(.top, 12)
-                .padding(.bottom, 4)
-            }
-            
-            HStack(spacing: AviationTheme.Spacing.md) {
+        HStack(spacing: AviationTheme.Spacing.md) {
                 // 圖標
                 ZStack {
                     Circle()
@@ -516,6 +512,56 @@ struct TransactionDetailRow: View {
                         .foregroundColor(AviationTheme.Colors.brandColor(colorScheme))
                     }
                     
+                    // 特店消費累積：顯示商家名稱
+                    if let merchant = transaction.merchantName, !merchant.isEmpty {
+                        HStack(spacing: 4) {
+                            Image(systemName: "storefront")
+                                .font(.caption2)
+                            Text(merchant)
+                                .font(AviationTheme.Typography.caption)
+                        }
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 3)
+                        .background(
+                            Capsule()
+                                .fill(
+                                    colorScheme == .dark 
+                                        ? Color(red: 0.5, green: 0.6, blue: 0.7).opacity(0.2)
+                                        : Color(red: 0.4, green: 0.5, blue: 0.6).opacity(0.15)
+                                )
+                        )
+                        .foregroundColor(
+                            colorScheme == .dark
+                                ? Color(red: 0.6, green: 0.7, blue: 0.8)
+                                : Color(red: 0.3, green: 0.4, blue: 0.5)
+                        )
+                    }
+                    
+                    // 活動贈送：顯示活動名稱
+                    if let promotion = transaction.promotionName, !promotion.isEmpty {
+                        HStack(spacing: 4) {
+                            Image(systemName: "gift")
+                                .font(.caption2)
+                            Text(promotion)
+                                .font(AviationTheme.Typography.caption)
+                        }
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 3)
+                        .background(
+                            Capsule()
+                                .fill(
+                                    colorScheme == .dark
+                                        ? Color(red: 0.7, green: 0.55, blue: 0.45).opacity(0.2)
+                                        : Color(red: 0.65, green: 0.5, blue: 0.4).opacity(0.15)
+                                )
+                        )
+                        .foregroundColor(
+                            colorScheme == .dark
+                                ? Color(red: 0.8, green: 0.65, blue: 0.55)
+                                : Color(red: 0.6, green: 0.45, blue: 0.35)
+                        )
+                    }
+                    
                     if let accelerator = transaction.acceleratorCategory {
                         HStack(spacing: 4) {
                             Image(systemName: accelerator.icon)
@@ -566,18 +612,17 @@ struct TransactionDetailRow: View {
                             .foregroundColor(AviationTheme.Colors.tertiaryText(colorScheme))
                     }
                 }
-            }
-            .padding(AviationTheme.Spacing.md)
-            .background(
-                RoundedRectangle(cornerRadius: AviationTheme.CornerRadius.md)
-                    .fill(
-                        colorScheme == .dark
-                            ? Color.white.opacity(0.03)
-                            : Color.white
-                    )
-            )
-            .clipShape(RoundedRectangle(cornerRadius: AviationTheme.CornerRadius.md))
         }
+        .padding(AviationTheme.Spacing.md)
+        .background(
+            RoundedRectangle(cornerRadius: AviationTheme.CornerRadius.md)
+                .fill(
+                    colorScheme == .dark
+                        ? Color.white.opacity(0.03)
+                        : Color.white
+                )
+        )
+        .clipShape(RoundedRectangle(cornerRadius: AviationTheme.CornerRadius.md))
     }
 }
 
