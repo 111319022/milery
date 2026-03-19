@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		FB419C212F6B1C3B00A30AF9 /* CalculatorComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB419C202F6B1C3B00A30AF9 /* CalculatorComponents.swift */; };
+		FB419C242F6C1BA700A30AF9 /* CreditCardPageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB419C232F6C1BA700A30AF9 /* CreditCardPageView.swift */; };
 		FBF89DAE2F6AC2EE003DB1EB /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FBF89D962F6AC2EE003DB1EB /* Assets.xcassets */; };
 		FBF89DAF2F6AC2EE003DB1EB /* airports.csv in Resources */ = {isa = PBXBuildFile; fileRef = FBF89D992F6AC2EE003DB1EB /* airports.csv */; };
 		FBF89DB02F6AC2EE003DB1EB /* CalculatorLedgerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBF89DA42F6AC2EE003DB1EB /* CalculatorLedgerView.swift */; };
@@ -31,6 +32,7 @@
 
 /* Begin PBXFileReference section */
 		FB419C202F6B1C3B00A30AF9 /* CalculatorComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalculatorComponents.swift; sourceTree = "<group>"; };
+		FB419C232F6C1BA700A30AF9 /* CreditCardPageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreditCardPageView.swift; sourceTree = "<group>"; };
 		FBB3ADDA2F67A60600D7ADE3 /* 73app-mid.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "73app-mid.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		FBF89D942F6AC2EE003DB1EB /* _3app_midApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = _3app_midApp.swift; sourceTree = "<group>"; };
 		FBF89D952F6AC2EE003DB1EB /* 73app-mid.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = "73app-mid.xcodeproj"; sourceTree = "<group>"; };
@@ -129,6 +131,7 @@
 				FBF89DA92F6AC2EE003DB1EB /* ProgressView.swift */,
 				FBF89DAA2F6AC2EE003DB1EB /* SettingsView.swift */,
 				FB419C202F6B1C3B00A30AF9 /* CalculatorComponents.swift */,
+				FB419C232F6C1BA700A30AF9 /* CreditCardPageView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -226,6 +229,7 @@
 				FBF89DB52F6AC2EE003DB1EB /* Transaction.swift in Sources */,
 				FBF89DB62F6AC2EE003DB1EB /* CreditCardRule.swift in Sources */,
 				FBF89DB72F6AC2EE003DB1EB /* CardIntroView.swift in Sources */,
+				FB419C242F6C1BA700A30AF9 /* CreditCardPageView.swift in Sources */,
 				FBF89DB82F6AC2EE003DB1EB /* DashboardView.swift in Sources */,
 				FBF89DB92F6AC2EE003DB1EB /* AirportDatabase.swift in Sources */,
 				FBF89DBA2F6AC2EE003DB1EB /* CathayAwardChart.swift in Sources */,
@@ -368,7 +372,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 4;
+				CURRENT_PROJECT_VERSION = 5;
 				DEVELOPMENT_TEAM = 45SQT63B67;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -403,7 +407,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 4;
+				CURRENT_PROJECT_VERSION = 5;
 				DEVELOPMENT_TEAM = 45SQT63B67;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;

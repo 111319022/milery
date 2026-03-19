@@ -8,12 +8,43 @@
 import Foundation
 import SwiftData
 
+// 信用卡品牌
+enum CardBrand: String, Codable, CaseIterable {
+    case cathayUnitedBank = "cathayUnitedBank"
+    case taishinCathay = "taishinCathay"
+    
+    var displayName: String {
+        switch self {
+        case .cathayUnitedBank: return "國泰世華亞萬聯名卡"
+        case .taishinCathay: return "台新國泰航空聯名卡"
+        }
+    }
+    
+    var bankName: String {
+        switch self {
+        case .cathayUnitedBank: return "國泰世華銀行"
+        case .taishinCathay: return "台新銀行"
+        }
+    }
+    
+    var hasTiers: Bool {
+        switch self {
+        case .cathayUnitedBank: return true
+        case .taishinCathay: return false
+        }
+    }
+}
+
 @Model
 final class CreditCardRule {
     var id: UUID
     var cardName: String
     var bankName: String
     var isActive: Bool
+    
+    // 卡片品牌與等級（SwiftData additive migration，預設值）
+    var cardBrandRaw: String = "cathayUnitedBank"
+    var cardTierRaw: String = ""
     
     // 基礎回饋率 (多少元 = 1 哩)
     var baseRate: Decimal // 例如：30 表示 30元/哩
@@ -36,6 +67,23 @@ final class CreditCardRule {
     // 年費
     var annualFee: Int
     
+    // Computed: 卡片品牌
+    var cardBrand: CardBrand {
+        get { CardBrand(rawValue: cardBrandRaw) ?? .cathayUnitedBank }
+        set { cardBrandRaw = newValue.rawValue }
+    }
+    
+    // Computed: 國泰卡等級（台新卡回傳 nil）
+    var cathayTier: CathayCardTier? {
+        get {
+            guard cardBrand == .cathayUnitedBank, !cardTierRaw.isEmpty else { return nil }
+            return CathayCardTier(rawValue: cardTierRaw)
+        }
+        set {
+            cardTierRaw = newValue?.rawValue ?? ""
+        }
+    }
+    
     init(cardName: String,
          bankName: String,
          baseRate: Decimal = 30,
@@ -45,7 +93,9 @@ final class CreditCardRule {
          roundingMode: RoundingMode = .down,
          billingDay: Int = 1,
          annualFee: Int = 0,
-         isActive: Bool = true) {
+         isActive: Bool = true,
+         cardBrand: CardBrand = .cathayUnitedBank,
+         cathayTier: CathayCardTier? = nil) {
         self.id = UUID()
         self.cardName = cardName
         self.bankName = bankName
@@ -57,6 +107,18 @@ final class CreditCardRule {
         self.billingDay = billingDay
         self.annualFee = annualFee
         self.isActive = isActive
+        self.cardBrandRaw = cardBrand.rawValue
+        self.cardTierRaw = cathayTier?.rawValue ?? ""
+    }
+    
+    /// 切換國泰卡等級，自動更新所有費率
+    func updateTier(_ tier: CathayCardTier) {
+        self.cathayTier = tier
+        self.cardName = "國泰世華亞萬聯名卡 \(tier.rawValue)"
+        self.baseRate = tier.baseRate
+        self.acceleratorRate = tier.acceleratorRate
+        self.specialMerchantRate = tier.acceleratorRate
+        self.annualFee = tier.annualFee
     }
     
     // 計算哩程（新版 - 支援加速器）
@@ -146,9 +208,9 @@ enum CathayCardTier: String, Codable, CaseIterable {
     var annualFee: Int {
         switch self {
         case .world: return 8000
-        case .titanium: return 5000
-        case .platinum: return 3000
-        case .miles: return 2000
+        case .titanium: return 1800
+        case .platinum: return 500
+        case .miles: return 288
         }
     }
     
@@ -246,7 +308,44 @@ extension CreditCardRule {
             birthdayMultiplier: 2.0,
             roundingMode: .down,
             billingDay: 20,
-            annualFee: 2000
+            annualFee: 2000,
+            cardBrand: .cathayUnitedBank,
+            cathayTier: .miles
+        )
+    }
+    
+    // 整合版：國泰世華亞萬聯名卡（指定等級）
+    static func cathayCard(tier: CathayCardTier = .world) -> CreditCardRule {
+        CreditCardRule(
+            cardName: "國泰世華亞萬聯名卡 \(tier.rawValue)",
+            bankName: "國泰世華銀行",
+            baseRate: tier.baseRate,
+            acceleratorRate: tier.acceleratorRate,
+            specialMerchantRate: tier.acceleratorRate,
+            birthdayMultiplier: 2.0,
+            roundingMode: .down,
+            billingDay: 20,
+            annualFee: tier.annualFee,
+            cardBrand: .cathayUnitedBank,
+            cathayTier: tier
+        )
+    }
+    
+    // 台新國泰航空聯名卡（佔位，計算規則待開發）
+    static func taishinCathayCard() -> CreditCardRule {
+        CreditCardRule(
+            cardName: "台新國泰航空聯名卡",
+            bankName: "台新銀行",
+            baseRate: 30,
+            acceleratorRate: 30,
+            specialMerchantRate: 30,
+            birthdayMultiplier: 1.0,
+            roundingMode: .down,
+            billingDay: 15,
+            annualFee: 0,
+            isActive: false,
+            cardBrand: .taishinCathay,
+            cathayTier: nil
         )
     }
 }

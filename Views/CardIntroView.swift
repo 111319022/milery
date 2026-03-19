@@ -26,7 +26,7 @@ struct CardIntroView: View {
                         Text("國泰世華亞萬聯名卡")
                             .font(AviationTheme.Typography.title2)
                             .foregroundColor(AviationTheme.Colors.primaryText(colorScheme))
-                        Text("四大等級完整介紹")
+                        Text("聯名卡完整介紹")
                             .font(AviationTheme.Typography.subheadline)
                             .foregroundColor(AviationTheme.Colors.secondaryText(colorScheme))
                     }
@@ -36,6 +36,9 @@ struct CardIntroView: View {
                     ForEach(CathayCardTier.allCases, id: \.self) { tier in
                         CathayCardDetailCard(tier: tier, colorScheme: colorScheme)
                     }
+                    
+                    // 台新國泰航空聯名卡
+                    TaishinCardPlaceholder(colorScheme: colorScheme)
                     
                     // 加速器說明
                     AcceleratorInfoSection(colorScheme: colorScheme)
@@ -277,6 +280,77 @@ struct AcceleratorInfoRow: View {
             
             Spacer()
         }
+    }
+}
+
+// 台新國泰航空聯名卡佔位區塊
+struct TaishinCardPlaceholder: View {
+    let colorScheme: ColorScheme
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: AviationTheme.Spacing.lg) {
+            // 卡片視覺化
+            ZStack(alignment: .topLeading) {
+                RoundedRectangle(cornerRadius: AviationTheme.CornerRadius.md)
+                    .fill(
+                        LinearGradient(
+                            colors: [Color(red: 0.05, green: 0.25, blue: 0.15), Color(red: 0.15, green: 0.5, blue: 0.35)],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+                    .frame(height: 180)
+                    .shadow(color: .black.opacity(0.3), radius: 5, x: 0, y: 3)
+                
+                VStack(alignment: .leading, spacing: 12) {
+                    HStack {
+                        Image(systemName: "creditcard.fill")
+                            .font(.title)
+                        Spacer()
+                        Image(systemName: "airplane.circle.fill")
+                            .font(.title)
+                    }
+                    
+                    Spacer()
+                    
+                    Text("台新銀行")
+                        .font(.caption)
+                        .fontWeight(.medium)
+                        .opacity(0.8)
+                    Text("國泰航空聯名卡")
+                        .font(.title3)
+                        .fontWeight(.bold)
+                }
+                .foregroundStyle(.white)
+                .padding(AviationTheme.Spacing.lg)
+            }
+            
+            // 開發中提示
+            HStack(spacing: 12) {
+                Image(systemName: "wrench.and.screwdriver")
+                    .font(.title3)
+                    .foregroundColor(AviationTheme.Colors.warning)
+                
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("計算規則開發中")
+                        .font(AviationTheme.Typography.body)
+                        .fontWeight(.semibold)
+                        .foregroundColor(AviationTheme.Colors.primaryText(colorScheme))
+                    Text("詳細回饋規則與權益介紹即將推出，敬請期待。")
+                        .font(AviationTheme.Typography.caption)
+                        .foregroundColor(AviationTheme.Colors.secondaryText(colorScheme))
+                }
+            }
+        }
+        .padding(AviationTheme.Spacing.lg)
+        .background(AviationTheme.Colors.cardBackground(colorScheme))
+        .cornerRadius(AviationTheme.CornerRadius.lg)
+        .shadow(
+            color: AviationTheme.Shadows.cardShadow(colorScheme),
+            radius: 8,
+            x: 0,
+            y: 4
+        )
     }
 }
 

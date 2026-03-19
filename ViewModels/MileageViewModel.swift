@@ -65,18 +65,16 @@ class MileageViewModel {
         let cardDescriptor = FetchDescriptor<CreditCardRule>()
         self.creditCards = (try? context.fetch(cardDescriptor)) ?? []
         
-        // 如果沒有信用卡，創建預設的國泰世華四張卡
+        // 舊資料遷移：多張國泰卡 → 1 張 + 等級選擇
+        migrateCardDataIfNeeded()
+        
+        // 如果沒有信用卡，創建預設卡片
         if creditCards.isEmpty {
-            let cards = [
-                CreditCardRule.cathayWorldCard(),
-                CreditCardRule.cathayTitaniumCard(),
-                CreditCardRule.cathayPlatinumCard(),
-                CreditCardRule.cathayMilesCard()
-            ]
-            for card in cards {
-                context.insert(card)
-                creditCards.append(card)
-            }
+            let cathayCard = CreditCardRule.cathayCard(tier: .world)
+            let taishinCard = CreditCardRule.taishinCathayCard()
+            context.insert(cathayCard)
+            context.insert(taishinCard)
+            creditCards = [cathayCard, taishinCard]
             saveContext()
         }
     }
@@ -211,6 +209,75 @@ class MileageViewModel {
         card.isActive.toggle()
         saveContext()
         loadData()
+    }
+    
+    // 切換國泰卡等級
+    func updateCardTier(_ card: CreditCardRule, tier: CathayCardTier) {
+        card.updateTier(tier)
+        saveContext()
+    }
+    
+    // 舊資料遷移：多張國泰世華卡 → 1 張 + 等級
+    private func migrateCardDataIfNeeded() {
+        guard let context = modelContext else { return }
+        
+        let cathayCards = creditCards.filter { $0.bankName == "國泰世華銀行" }
+        
+        // 只有多張國泰卡時才需要遷移
+        guard cathayCards.count > 1 else {
+            // 確保既有的單張國泰卡也有 brand/tier 標記
+            if let single = cathayCards.first, single.cardBrandRaw == "cathayUnitedBank", single.cardTierRaw.isEmpty {
+                // 從 cardName 推斷等級
+                let tier = inferTier(from: single.cardName)
+                single.cardBrandRaw = CardBrand.cathayUnitedBank.rawValue
+                single.cardTierRaw = tier.rawValue
+            }
+            // 確保有台新卡
+            ensureTaishinCardExists()
+            return
+        }
+        
+        // 找出要保留的那張（優先保留 active 的，再取第一張）
+        let keepCard = cathayCards.first(where: { $0.isActive }) ?? cathayCards.first!
+        let tier = inferTier(from: keepCard.cardName)
+        keepCard.cardBrandRaw = CardBrand.cathayUnitedBank.rawValue
+        keepCard.cardTierRaw = tier.rawValue
+        keepCard.cardName = "國泰世華亞萬聯名卡 \(tier.rawValue)"
+        
+        // 刪除多餘的國泰卡
+        for card in cathayCards where card.id != keepCard.id {
+            context.delete(card)
+        }
+        
+        // 確保有台新卡
+        ensureTaishinCardExists()
+        
+        saveContext()
+        
+        // 重新載入
+        let cardDescriptor = FetchDescriptor<CreditCardRule>()
+        self.creditCards = (try? context.fetch(cardDescriptor)) ?? []
+    }
+    
+    // 從 cardName 推斷國泰卡等級
+    private func inferTier(from cardName: String) -> CathayCardTier {
+        if cardName.contains("世界") { return .world }
+        if cardName.contains("鈦") { return .titanium }
+        if cardName.contains("白金") { return .platinum }
+        if cardName.contains("里享") { return .miles }
+        return .world // 預設
+    }
+    
+    // 確保台新卡存在
+    private func ensureTaishinCardExists() {
+        guard let context = modelContext else { return }
+        let hasTaishin = creditCards.contains { $0.bankName == "台新銀行" }
+        if !hasTaishin {
+            let taishinCard = CreditCardRule.taishinCathayCard()
+            context.insert(taishinCard)
+            creditCards.append(taishinCard)
+            saveContext()
+        }
     }
     
     // 取得本月交易統計

@@ -541,7 +541,6 @@ struct AirportPickerView: View {
     let airports: [Airport]
     
     @State private var searchText = ""
-    @State private var showingQuickSelect = false
     
     var filteredAirports: [Airport] {
         if searchText.isEmpty {
@@ -561,80 +560,39 @@ struct AirportPickerView: View {
         }
     }
     
-    // 檢查輸入是否為有效的 IATA 代碼
-    var isValidIATACode: Bool {
-        searchText.count == 3 && searchText.allSatisfy { $0.isLetter }
-    }
-    
-    // 根據 IATA 代碼快速選擇
-    var airportFromIATA: Airport? {
-        guard isValidIATACode else { return nil }
-        return AirportDatabase.shared.getAirport(iataCode: searchText.uppercased())
-    }
-    
     var body: some View {
         NavigationStack {
-            VStack(spacing: 0) {
-                // 搜尋欄位 - iOS 26 風格
-                HStack(spacing: 8) {
-                    Image(systemName: "magnifyingglass")
-                        .foregroundColor(Color(.systemGray))
-                        .font(.system(size: 16, weight: .medium))
-                    
-                    TextField("搜尋", text: $searchText)
-                        .textInputAutocapitalization(.characters)
-                        .autocorrectionDisabled()
-                        .font(.system(size: 17))
-                    
-                    if !searchText.isEmpty {
+            List {
+                Section {
+                    ForEach(filteredAirports) { airport in
                         Button {
-                            searchText = ""
+                            selectedAirport = airport
+                            dismiss()
                         } label: {
-                            Image(systemName: "xmark.circle.fill")
-                                .foregroundColor(Color(.systemGray3))
-                                .font(.system(size: 16))
+                            AirportRowView(airport: airport, isSelected: selectedAirport?.id == airport.id)
                         }
                     }
-                }
-                .padding(.horizontal, 12)
-                .padding(.vertical, 10)
-                .background(
-                    RoundedRectangle(cornerRadius: 12)
-                        .fill(colorScheme == .dark ? Color(.systemGray5) : Color(.systemGray6))
-                )
-                .padding(.horizontal, 16)
-                .padding(.top, 12)
-                .padding(.bottom, 8)
-                
-                // 搜尋結果列表
-                List {
-                    Section {
-                        ForEach(filteredAirports) { airport in
-                            Button {
-                                selectedAirport = airport
-                                dismiss()
-                            } label: {
-                                AirportRowView(airport: airport, isSelected: selectedAirport?.id == airport.id)
-                            }
-                        }
-                    } header: {
-                        if !searchText.isEmpty {
-                            Text("搜尋結果")
-                        } else {
-                            Text("熱門機場")
-                        }
+                } header: {
+                    if !searchText.isEmpty {
+                        Text("搜尋結果")
+                    } else {
+                        Text("熱門機場")
                     }
                 }
-                .listStyle(.insetGrouped)
             }
+            .listStyle(.insetGrouped)
             .navigationTitle("選擇機場")
             .navigationBarTitleDisplayMode(.inline)
+            .searchable(text: $searchText, placement: .automatic, prompt: "搜尋機場名稱或代碼")
+            .textInputAutocapitalization(.characters)
+            .autocorrectionDisabled()
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("取消") {
                         dismiss()
                     }
                 }
+                DefaultToolbarItem(kind: .search, placement: .bottomBar)
             }
         }
     }

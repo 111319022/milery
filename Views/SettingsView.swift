@@ -81,8 +81,8 @@ struct SettingsView: View {
                             SectionHeaderView(title: "信用卡管理", colorScheme: colorScheme)
                             
                             VStack(spacing: 0) {
-                                // 1. 啟用卡片設定
-                                NavigationLink(destination: CardManagementView(viewModel: viewModel)) {
+                                // 1. 我的信用卡
+                                NavigationLink(destination: CreditCardPageView(viewModel: viewModel)) {
                                     SettingRow(
                                         icon: "creditcard.fill",
                                         title: "我的信用卡",
@@ -116,7 +116,7 @@ struct SettingsView: View {
                                     SettingRow(
                                         icon: "info.square.fill",
                                         title: "聯名卡權益介紹",
-                                        subtitle: "四大等級卡片回饋規則"
+                                        subtitle: "各聯名卡回饋規則"
                                     ) {
                                         Image(systemName: "chevron.right")
                                             .foregroundColor(AviationTheme.Colors.tertiaryText(colorScheme))
@@ -228,82 +228,6 @@ struct CustomDivider: View {
             .background(AviationTheme.Colors.tertiaryText(colorScheme).opacity(0.2))
             // 60 = 16(外邊距) + 28(Icon寬度) + 16(HStack間隔)
             .padding(.leading, 60)
-    }
-}
-
-// MARK: - 信用卡管理頁面 (CardManagementView)
-struct CardManagementView: View {
-    @Environment(\.colorScheme) var colorScheme
-    @Bindable var viewModel: MileageViewModel
-    
-    var body: some View {
-        ZStack {
-            AviationTheme.Gradients.dashboardBackground(colorScheme)
-                .ignoresSafeArea()
-            
-            ScrollView {
-                VStack(spacing: AviationTheme.Spacing.md) {
-                    
-                    Text("請勾選您目前持有的信用卡。只有啟用的卡片會顯示在記帳本的計算機選項中。")
-                        .font(AviationTheme.Typography.subheadline)
-                        .foregroundColor(AviationTheme.Colors.secondaryText(colorScheme))
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.horizontal)
-                        .padding(.top, AviationTheme.Spacing.sm)
-                    
-                    VStack(spacing: AviationTheme.Spacing.md) {
-                        ForEach(viewModel.creditCards) { card in
-                            HStack(spacing: AviationTheme.Spacing.md) {
-                                // 卡片圖標
-                                ZStack {
-                                    Circle()
-                                        .fill(card.isActive ? AviationTheme.Colors.cathayJade.opacity(colorScheme == .dark ? 0.3 : 0.15) : AviationTheme.Colors.tertiaryText(colorScheme).opacity(0.1))
-                                        .frame(width: 44, height: 44)
-                                    
-                                    Image(systemName: "creditcard.fill")
-                                        .foregroundColor(card.isActive ? AviationTheme.Colors.cathayJade : AviationTheme.Colors.tertiaryText(colorScheme))
-                                }
-                                
-                                // 卡片資訊
-                                VStack(alignment: .leading, spacing: 4) {
-                                    Text(card.cardName)
-                                        .font(AviationTheme.Typography.body)
-                                        .fontWeight(card.isActive ? .bold : .regular)
-                                        .foregroundColor(AviationTheme.Colors.primaryText(colorScheme))
-                                    
-                                    Text(card.bankName)
-                                        .font(AviationTheme.Typography.caption)
-                                        .foregroundColor(AviationTheme.Colors.secondaryText(colorScheme))
-                                }
-                                
-                                Spacer()
-                                
-                                // 開關
-                                Toggle("", isOn: Binding(
-                                    get: { card.isActive },
-                                    set: { _ in viewModel.toggleCardActive(card) }
-                                ))
-                                .labelsHidden()
-                                .tint(AviationTheme.Colors.cathayJade)
-                            }
-                            .padding(AviationTheme.Spacing.md)
-                            .background(AviationTheme.Colors.cardBackground(colorScheme))
-                            .clipShape(RoundedRectangle(cornerRadius: AviationTheme.CornerRadius.lg))
-                            .shadow(color: AviationTheme.Shadows.cardShadow(colorScheme).opacity(0.3), radius: 5, x: 0, y: 2)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: AviationTheme.CornerRadius.lg)
-                                    .stroke(card.isActive ? AviationTheme.Colors.cathayJade.opacity(0.3) : Color.clear, lineWidth: 1)
-                            )
-                        }
-                    }
-                    .padding(.horizontal)
-                }
-                .padding(.vertical)
-            }
-        }
-        .navigationTitle("我的信用卡")
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbarBackgroundVisibility(.automatic, for: .navigationBar)
     }
 }
 
