@@ -475,9 +475,14 @@ struct GoalProgressCard: View {
     var onEdit: (() -> Void)? = nil
     
     @State private var showingDeleteAlert = false
+    @State private var showingRedeemSheet = false
     
     var currentMiles: Int {
         viewModel.mileageAccount?.totalMiles ?? 0
+    }
+
+    var isRedeemable: Bool {
+        goal.progress(currentMiles: currentMiles) >= 1.0
     }
     
     var body: some View {
@@ -583,8 +588,32 @@ struct GoalProgressCard: View {
                 }
                 .frame(height: 8)
             }
-            .accessibilityElement(children: .combine)
-            .accessibilityLabel("\(goal.originName)到\(goal.destinationName)，\(goal.cabinClass.rawValue)，進度 \(Int(goal.progress(currentMiles: currentMiles) * 100))%，\(currentMiles) / \(goal.requiredMiles) 哩")
+
+            if isRedeemable {
+                Button {
+                    showingRedeemSheet = true
+                } label: {
+                    HStack(spacing: 8) {
+                        Image(systemName: "ticket.fill")
+                        Text("立即兌換機票")
+                            .fontWeight(.bold)
+                    }
+                    .font(AviationTheme.Typography.subheadline)
+                    .foregroundColor(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 12)
+                    .background(
+                        RoundedRectangle(cornerRadius: AviationTheme.CornerRadius.md)
+                            .fill(AviationTheme.Gradients.cathayJadeGradient(colorScheme))
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: AviationTheme.CornerRadius.md)
+                            .stroke(Color.white.opacity(0.25), lineWidth: 1)
+                    )
+                    .shadow(color: AviationTheme.Colors.cathayJade.opacity(0.35), radius: 12, x: 0, y: 6)
+                }
+                .buttonStyle(.plain)
+            }
         }
         .padding(AviationTheme.Spacing.md)
         .background(AviationTheme.Colors.cardBackground(colorScheme))
@@ -597,6 +626,8 @@ struct GoalProgressCard: View {
                 )
         )
         .contentShape(Rectangle())
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(goal.originName)到\(goal.destinationName)，\(goal.cabinClass.rawValue)，進度 \(Int(goal.progress(currentMiles: currentMiles) * 100))%，\(currentMiles) / \(goal.requiredMiles) 哩")
         .onTapGesture {
             onEdit?()
         }
@@ -608,10 +639,101 @@ struct GoalProgressCard: View {
         } message: {
             Text("刪除後將無法復原")
         }
+        .sheet(isPresented: $showingRedeemSheet) {
+            RedeemTicketSheet(
+                goal: goal,
+                viewModel: viewModel,
+                isPresented: $showingRedeemSheet
+            )
+        }
+    }
+}
+
+struct RedeemTicketSheet: View {
+    let goal: FlightGoal
+    let viewModel: MileageViewModel
+    @Binding var isPresented: Bool
+
+    @State private var flightDate: Date = Date()
+    @State private var pnr: String = ""
+    @State private var taxPaidText: String = ""
+    @State private var airline: String = ""
+    @State private var flightNumber: String = ""
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section("航班資訊") {
+                    DatePicker("搭乘日期", selection: $flightDate, displayedComponents: [.date])
+
+                    TextField("訂位代號 (PNR)", text: $pnr)
+                        .textInputAutocapitalization(.characters)
+                        .autocorrectionDisabled()
+
+                    TextField("航空公司（選填）", text: $airline)
+                        .autocorrectionDisabled()
+
+                    TextField("航班編號（選填）", text: $flightNumber)
+                        .textInputAutocapitalization(.characters)
+                        .autocorrectionDisabled()
+
+                    TextField("稅金與附加費", text: $taxPaidText)
+                        .keyboardType(.decimalPad)
+                }
+
+                Section {
+                    HStack {
+                        Text("航線")
+                        Spacer()
+                        Text("\(goal.origin) → \(goal.destination)")
+                            .foregroundStyle(.secondary)
+                    }
+
+                    HStack {
+                        Text("艙等")
+                        Spacer()
+                        Text(goal.cabinClass.rawValue)
+                            .foregroundStyle(.secondary)
+                    }
+
+                    HStack {
+                        Text("扣除哩程")
+                        Spacer()
+                        Text("\(goal.requiredMiles) 哩")
+                            .foregroundStyle(.secondary)
+                    }
+                }
+            }
+            .navigationTitle("兌換機票")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button("取消") {
+                        isPresented = false
+                    }
+                }
+
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("確認兌換") {
+                        let taxPaid = Decimal(string: taxPaidText.replacingOccurrences(of: ",", with: "")) ?? 0
+                        viewModel.redeemGoal(
+                            goal: goal,
+                            flightDate: flightDate,
+                            pnr: pnr.trimmingCharacters(in: .whitespacesAndNewlines).uppercased(),
+                            taxPaid: taxPaid,
+                            airline: airline.trimmingCharacters(in: .whitespacesAndNewlines),
+                            flightNumber: flightNumber.trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
+                        )
+                        isPresented = false
+                    }
+                    .fontWeight(.semibold)
+                }
+            }
+        }
     }
 }
 
 #Preview {
     ProgressView(viewModel: MileageViewModel())
-        .modelContainer(for: [MileageAccount.self, Transaction.self, FlightGoal.self, CreditCardRule.self])
+        .modelContainer(for: [MileageAccount.self, Transaction.self, FlightGoal.self, CreditCardRule.self, RedeemedTicket.self])
 }

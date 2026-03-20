@@ -12,6 +12,7 @@ struct DashboardView: View {
     @Environment(\.colorScheme) var colorScheme
     @Bindable var viewModel: MileageViewModel
     var switchToProgress: (() -> Void)? = nil
+    var switchToLedger: (() -> Void)? = nil
     
     var body: some View {
         NavigationStack {
@@ -41,21 +42,32 @@ struct DashboardView: View {
                             )
                         }
                         
-                        // 夢想雷達 - 最接近達成的目標
-                        if let goal = viewModel.closestGoal(),
-                           let currentMiles = viewModel.mileageAccount?.totalMiles {
-                            DreamRadarCard(
-                                goal: goal,
-                                currentMiles: currentMiles,
-                                onTap: switchToProgress
-                            )
+                        // 夢想雷達：里程足夠時顯示可兌換提醒，否則顯示最接近達成目標
+                        if let currentMiles = viewModel.mileageAccount?.totalMiles {
+                            let redeemable = viewModel.redeemableGoals(limit: 3)
+                            if !redeemable.isEmpty {
+                                RedeemReadyRadarCard(
+                                    goals: redeemable,
+                                    currentMiles: currentMiles,
+                                    onTap: switchToProgress
+                                )
+                            } else if let goal = viewModel.closestGoal() {
+                                DreamRadarCard(
+                                    goal: goal,
+                                    currentMiles: currentMiles,
+                                    onTap: switchToProgress
+                                )
+                            }
                         }
                         
                         // 本月累積
                         MonthlyCockpitCard(viewModel: viewModel)
                         
                         // 最新動態
-                        RecentActivityCard(transactions: viewModel.transactions)
+                        RecentActivityCard(
+                            transactions: viewModel.transactions,
+                            onTap: switchToLedger
+                        )
                     }
                     .padding(.horizontal, AviationTheme.Spacing.md)
                     .padding(.top, AviationTheme.Spacing.sm)
@@ -65,6 +77,91 @@ struct DashboardView: View {
             .navigationTitle("儀表板")
             .navigationBarTitleDisplayMode(.large)
             .toolbarBackgroundVisibility(.automatic, for: .navigationBar)
+        }
+    }
+}
+
+// MARK: - 可兌換提醒卡片
+struct RedeemReadyRadarCard: View {
+    @Environment(\.colorScheme) var colorScheme
+    let goals: [FlightGoal]
+    let currentMiles: Int
+    var onTap: (() -> Void)? = nil
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: AviationTheme.Spacing.md) {
+            HStack {
+                Image(systemName: "checkmark.seal.fill")
+                    .font(.body)
+                    .foregroundStyle(AviationTheme.Colors.successColor(colorScheme))
+                Text("夢想雷達")
+                    .font(AviationTheme.Typography.headline)
+                    .foregroundColor(AviationTheme.Colors.primaryText(colorScheme))
+                Spacer()
+                Text("可兌換")
+                    .font(AviationTheme.Typography.caption)
+                    .fontWeight(.semibold)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 4)
+                    .background(
+                        Capsule()
+                            .fill(AviationTheme.Colors.successColor(colorScheme).opacity(0.15))
+                    )
+                    .foregroundColor(AviationTheme.Colors.successColor(colorScheme))
+            }
+
+            Text("你目前有 \(currentMiles.formatted()) 哩，可兌換以下航點")
+                .font(AviationTheme.Typography.subheadline)
+                .foregroundColor(AviationTheme.Colors.secondaryText(colorScheme))
+
+            VStack(alignment: .leading, spacing: 8) {
+                ForEach(goals) { goal in
+                    HStack(spacing: 8) {
+                        Image(systemName: goal.isRoundTrip ? "arrow.left.arrow.right" : "arrow.right")
+                            .font(.caption)
+                            .foregroundColor(AviationTheme.Colors.brandColor(colorScheme))
+                            .frame(width: 12)
+
+                        Text("\(goal.origin) → \(goal.destination)")
+                            .font(AviationTheme.Typography.subheadline)
+                            .fontWeight(.semibold)
+                            .foregroundColor(AviationTheme.Colors.primaryText(colorScheme))
+
+                        Text(goal.cabinClass.rawValue)
+                            .font(.system(size: 10))
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 2)
+                            .background(
+                                Capsule()
+                                    .fill(AviationTheme.Colors.brandColor(colorScheme).opacity(0.12))
+                            )
+                            .foregroundColor(AviationTheme.Colors.brandColor(colorScheme))
+
+                        Spacer()
+
+                        Text("\(goal.requiredMiles.formatted()) 哩")
+                            .font(AviationTheme.Typography.caption)
+                            .foregroundColor(AviationTheme.Colors.secondaryText(colorScheme))
+                    }
+                }
+            }
+        }
+        .padding(AviationTheme.Spacing.lg)
+        .background(AviationTheme.Colors.cardBackground(colorScheme))
+        .cornerRadius(AviationTheme.CornerRadius.xl)
+        .overlay(
+            RoundedRectangle(cornerRadius: AviationTheme.CornerRadius.xl)
+                .stroke(AviationTheme.Colors.successColor(colorScheme).opacity(0.28), lineWidth: 1)
+        )
+        .shadow(
+            color: AviationTheme.Shadows.cardShadow(colorScheme),
+            radius: 8,
+            x: 0,
+            y: 3
+        )
+        .contentShape(Rectangle())
+        .onTapGesture {
+            onTap?()
         }
     }
 }
@@ -451,9 +548,22 @@ struct MonthlyCockpitCard: View {
 struct RecentActivityCard: View {
     @Environment(\.colorScheme) var colorScheme
     let transactions: [Transaction]
+    var onTap: (() -> Void)? = nil
     
     private var recentTransactions: [Transaction] {
         Array(transactions.prefix(3))
+    }
+
+    private func activityIcon(for transaction: Transaction) -> String {
+        transaction.earnedMiles < 0 ? "ticket.fill" : transaction.source.icon
+    }
+
+    private func activityTitle(for transaction: Transaction) -> String {
+        transaction.earnedMiles < 0 ? "機票兌換" : transaction.source.rawValue
+    }
+
+    private func activityIconColor(for transaction: Transaction) -> Color {
+        transaction.earnedMiles < 0 ? AviationTheme.Colors.starluxIndigo : AviationTheme.Colors.brandColor(colorScheme)
     }
     
     var body: some View {
@@ -494,23 +604,23 @@ struct RecentActivityCard: View {
                     ForEach(Array(recentTransactions.enumerated()), id: \.element.id) { index, transaction in
                         HStack(spacing: 12) {
                             // 來源 icon
-                            Image(systemName: transaction.source.icon)
+                            Image(systemName: activityIcon(for: transaction))
                                 .font(.body)
-                                .foregroundColor(Color(transaction.source.color))
+                                .foregroundColor(activityIconColor(for: transaction))
                                 .frame(width: 36, height: 36)
                                 .background(
                                     Circle()
-                                        .fill(Color(transaction.source.color).opacity(colorScheme == .dark ? 0.15 : 0.1))
+                                        .fill(activityIconColor(for: transaction).opacity(colorScheme == .dark ? 0.2 : 0.12))
                                 )
                             
                             // 來源名稱 + 時間
                             VStack(alignment: .leading, spacing: 2) {
-                                Text(transaction.source.rawValue)
+                                Text(activityTitle(for: transaction))
                                     .font(AviationTheme.Typography.subheadline)
                                     .fontWeight(.medium)
                                     .foregroundColor(AviationTheme.Colors.primaryText(colorScheme))
                                 
-                                Text(transaction.date, style: .relative)
+                                Text(transaction.date, format: .dateTime.year().month(.abbreviated).day())
                                     .font(AviationTheme.Typography.caption)
                                     .foregroundColor(AviationTheme.Colors.tertiaryText(colorScheme))
                             }
@@ -518,9 +628,9 @@ struct RecentActivityCard: View {
                             Spacer()
                             
                             // 哩程數
-                            Text("+\(transaction.earnedMiles.formatted())")
+                            Text("\(transaction.earnedMiles > 0 ? "+" : "")\(transaction.earnedMiles.formatted())")
                                 .font(AviationTheme.Typography.headline)
-                                .foregroundColor(AviationTheme.Colors.brandColor(colorScheme))
+                                .foregroundColor(transaction.earnedMiles < 0 ? AviationTheme.Colors.danger : AviationTheme.Colors.brandColor(colorScheme))
                         }
                         .padding(.vertical, 10)
                         
@@ -541,6 +651,10 @@ struct RecentActivityCard: View {
             x: 0,
             y: 3
         )
+        .contentShape(Rectangle())
+        .onTapGesture {
+            onTap?()
+        }
     }
 }
 
@@ -591,5 +705,5 @@ struct ExpiryAlertCard: View {
 
 #Preview {
     DashboardView(viewModel: MileageViewModel())
-        .modelContainer(for: [MileageAccount.self, Transaction.self, FlightGoal.self, CreditCardRule.self])
+    .modelContainer(for: [MileageAccount.self, Transaction.self, FlightGoal.self, CreditCardRule.self, RedeemedTicket.self])
 }

@@ -13,6 +13,7 @@ struct LedgerView: View {
     @Bindable var viewModel: MileageViewModel
     @State private var showingAddTransaction = false
     @State private var selectedMonth = Date()
+    @State private var editingTransaction: Transaction?
     
     var filteredTransactions: [Transaction] {
         viewModel.transactions.filter { transaction in
@@ -182,6 +183,10 @@ struct LedgerView: View {
                                     
                                     // 交易卡片
                                     TransactionDetailRow(transaction: transaction, showDate: false)
+                                        .contentShape(Rectangle())
+                                        .onTapGesture {
+                                            editingTransaction = transaction
+                                        }
                                         .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
                                         .listRowSeparator(.hidden)
                                         .listRowBackground(Color.clear)
@@ -217,6 +222,9 @@ struct LedgerView: View {
             }
             .sheet(isPresented: $showingAddTransaction) {
                 CalculatorLedgerView(viewModel: viewModel)
+            }
+            .sheet(item: $editingTransaction) { transaction in
+                EditTransactionView(transaction: transaction, viewModel: viewModel)
             }
         }
     }
@@ -611,169 +619,105 @@ struct TransactionDetailRow: View {
     var hasAmount: Bool {
         transaction.amount > 0
     }
+
+    var isRedeemTransaction: Bool {
+        transaction.earnedMiles < 0
+    }
+
+    var displayTitle: String {
+        isRedeemTransaction ? "機票兌換" : transaction.source.rawValue
+    }
+
+    var milesTintColor: Color {
+        isRedeemTransaction ? AviationTheme.Colors.danger : AviationTheme.Colors.successColor(colorScheme)
+    }
+
+    var redeemAccentColor: Color {
+        colorScheme == .dark ? AviationTheme.Colors.starluxIndigoLight : AviationTheme.Colors.starluxIndigo
+    }
+
+    var cleanedNoteText: String {
+        let note = transaction.notes.trimmingCharacters(in: .whitespacesAndNewlines)
+        if isRedeemTransaction && note.hasPrefix("兌換機票：") {
+            return ""
+        }
+        return note
+    }
     
     var body: some View {
-        HStack(spacing: AviationTheme.Spacing.md) {
-                // 圖標
-                ZStack {
-                    Circle()
-                        .fill(AviationTheme.Gradients.cathayJadeGradient(colorScheme))
-                        .frame(width: 44, height: 44)
-                    
-                    Image(systemName: transaction.source.icon)
-                        .font(.body)
-                        .foregroundColor(.white)
-                }
-                
-                // 資訊
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(transaction.source.rawValue)
-                        .font(AviationTheme.Typography.body)
-                        .fontWeight(.semibold)
-                        .foregroundColor(AviationTheme.Colors.primaryText(colorScheme))
-                
-                HStack(spacing: 8) {
-                    // 只在有金額時顯示金額
-                    if hasAmount {
-                        Text("NT$ \((transaction.amount as NSDecimalNumber).intValue.formatted())")
-                            .font(AviationTheme.Typography.caption)
-                            .foregroundColor(AviationTheme.Colors.secondaryText(colorScheme))
-                    }
-                    
-                    // 飛行累積：顯示航線
-                    if let route = transaction.flightRoute, !route.isEmpty {
-                        HStack(spacing: 4) {
-                            Image(systemName: "airplane.departure")
-                                .font(.caption2)
-                            Text(route)
-                                .font(AviationTheme.Typography.caption)
-                        }
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 3)
-                        .background(
-                            Capsule()
-                                .fill(AviationTheme.Colors.cathayJade.opacity(0.15))
-                        )
-                        .foregroundColor(AviationTheme.Colors.cathayJade)
-                    }
-                    
-                    // 銀行點數兌換/他點轉入：顯示來源
-                    if let source = transaction.conversionSource, !source.isEmpty {
-                        HStack(spacing: 4) {
-                            Image(systemName: transaction.source == .pointsConversion ? "building.columns" : "arrow.down.app")
-                                .font(.caption2)
-                            Text(source)
-                                .font(AviationTheme.Typography.caption)
-                        }
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 3)
-                        .background(
-                            Capsule()
-                                .fill(AviationTheme.Colors.brandColor(colorScheme).opacity(0.15))
-                        )
-                        .foregroundColor(AviationTheme.Colors.brandColor(colorScheme))
-                    }
-                    
-                    // 特店消費累積：顯示商家名稱
-                    if let merchant = transaction.merchantName, !merchant.isEmpty {
-                        HStack(spacing: 4) {
-                            Image(systemName: "storefront")
-                                .font(.caption2)
-                            Text(merchant)
-                                .font(AviationTheme.Typography.caption)
-                        }
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 3)
-                        .background(
-                            Capsule()
-                                .fill(
-                                    colorScheme == .dark 
-                                        ? Color(red: 0.5, green: 0.6, blue: 0.7).opacity(0.2)
-                                        : Color(red: 0.4, green: 0.5, blue: 0.6).opacity(0.15)
-                                )
-                        )
-                        .foregroundColor(
-                            colorScheme == .dark
-                                ? Color(red: 0.6, green: 0.7, blue: 0.8)
-                                : Color(red: 0.3, green: 0.4, blue: 0.5)
-                        )
-                    }
-                    
-                    // 活動贈送：顯示活動名稱
-                    if let promotion = transaction.promotionName, !promotion.isEmpty {
-                        HStack(spacing: 4) {
-                            Image(systemName: "gift")
-                                .font(.caption2)
-                            Text(promotion)
-                                .font(AviationTheme.Typography.caption)
-                        }
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 3)
-                        .background(
-                            Capsule()
-                                .fill(
-                                    colorScheme == .dark
-                                        ? Color(red: 0.7, green: 0.55, blue: 0.45).opacity(0.2)
-                                        : Color(red: 0.65, green: 0.5, blue: 0.4).opacity(0.15)
-                                )
-                        )
-                        .foregroundColor(
-                            colorScheme == .dark
-                                ? Color(red: 0.8, green: 0.65, blue: 0.55)
-                                : Color(red: 0.6, green: 0.45, blue: 0.35)
-                        )
-                    }
-                    
-                    if let accelerator = transaction.acceleratorCategory {
-                        HStack(spacing: 4) {
-                            Image(systemName: accelerator.icon)
-                                .font(.caption2)
-                            Text(accelerator.rawValue)
-                                .font(AviationTheme.Typography.caption)
-                        }
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 3)
-                        .background(
-                            Capsule()
-                                .fill(AviationTheme.Colors.warning.opacity(0.15))
-                        )
-                        .foregroundColor(AviationTheme.Colors.warning)
-                    }
-                    
-                    if !transaction.notes.isEmpty {
-                        Text(transaction.notes)
-                            .font(AviationTheme.Typography.caption)
-                            .foregroundColor(AviationTheme.Colors.tertiaryText(colorScheme))
-                            .lineLimit(1)
-                    }
-                }
+        HStack(alignment: .top, spacing: AviationTheme.Spacing.md) {
+            ZStack {
+                Circle()
+                    .fill(isRedeemTransaction ? redeemAccentColor : AviationTheme.Colors.cathayJade)
+                    .frame(width: 44, height: 44)
+
+                Image(systemName: isRedeemTransaction ? "ticket.fill" : transaction.source.icon)
+                    .font(.body)
+                    .foregroundColor(.white)
             }
-            
-                Spacer()
-                
-                // 哩程
-                VStack(alignment: .trailing, spacing: 4) {
+
+            VStack(alignment: .leading, spacing: 6) {
+                Text(displayTitle)
+                    .font(AviationTheme.Typography.body)
+                    .fontWeight(.semibold)
+                    .foregroundColor(AviationTheme.Colors.primaryText(colorScheme))
+
+                if hasAmount {
+                    Text("NT$ \((transaction.amount as NSDecimalNumber).intValue.formatted())")
+                        .font(AviationTheme.Typography.caption)
+                        .foregroundColor(AviationTheme.Colors.secondaryText(colorScheme))
+                }
+
+                if let route = transaction.flightRoute, !route.isEmpty {
                     HStack(spacing: 4) {
-                        Text("+\(transaction.earnedMiles)")
-                            .font(AviationTheme.Typography.subheadline)
-                            .fontWeight(.bold)
-                        Text("哩")
+                        Image(systemName: isRedeemTransaction ? "airplane.arrival" : "airplane.departure")
+                            .font(.caption2)
+                        Text(route)
                             .font(AviationTheme.Typography.caption)
+                            .lineLimit(1)
+                            .truncationMode(.tail)
                     }
-                    .foregroundColor(AviationTheme.Colors.successColor(colorScheme))
+                    .foregroundColor(isRedeemTransaction ? redeemAccentColor : AviationTheme.Colors.cathayJade)
                     .padding(.horizontal, 8)
                     .padding(.vertical, 3)
                     .background(
                         Capsule()
-                            .fill(AviationTheme.Colors.successColor(colorScheme).opacity(0.15))
+                            .fill((isRedeemTransaction ? redeemAccentColor : AviationTheme.Colors.cathayJade).opacity(0.15))
                     )
-                    
-                    if hasAmount && transaction.costPerMile > 0 {
-                        Text("@\(String(format: "%.2f", transaction.costPerMile))")
-                            .font(AviationTheme.Typography.caption)
-                            .foregroundColor(AviationTheme.Colors.tertiaryText(colorScheme))
-                    }
                 }
+
+                if !cleanedNoteText.isEmpty {
+                    Text(cleanedNoteText)
+                        .font(AviationTheme.Typography.caption)
+                        .foregroundColor(AviationTheme.Colors.tertiaryText(colorScheme))
+                        .lineLimit(1)
+                        .truncationMode(.tail)
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+
+            VStack(alignment: .trailing, spacing: 4) {
+                HStack(spacing: 4) {
+                    Text("\(transaction.earnedMiles > 0 ? "+" : "")\(transaction.earnedMiles)")
+                        .font(AviationTheme.Typography.subheadline)
+                        .fontWeight(.bold)
+                    Text("哩")
+                        .font(AviationTheme.Typography.caption)
+                }
+                .foregroundColor(milesTintColor)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 3)
+                .background(
+                    Capsule()
+                        .fill(milesTintColor.opacity(0.15))
+                )
+
+                if hasAmount && transaction.costPerMile > 0 {
+                    Text("@\(String(format: "%.2f", transaction.costPerMile))")
+                        .font(AviationTheme.Typography.caption)
+                        .foregroundColor(AviationTheme.Colors.tertiaryText(colorScheme))
+                }
+            }
         }
         .padding(AviationTheme.Spacing.md)
         .background(
@@ -785,10 +729,19 @@ struct TransactionDetailRow: View {
                 )
         )
         .clipShape(RoundedRectangle(cornerRadius: AviationTheme.CornerRadius.md))
+        .overlay(
+            RoundedRectangle(cornerRadius: AviationTheme.CornerRadius.md)
+                .stroke(
+                    isRedeemTransaction
+                        ? redeemAccentColor.opacity(colorScheme == .dark ? 0.35 : 0.22)
+                        : Color.clear,
+                    lineWidth: 1
+                )
+        )
     }
 }
 
 #Preview {
     LedgerView(viewModel: MileageViewModel())
-        .modelContainer(for: [MileageAccount.self, Transaction.self, FlightGoal.self, CreditCardRule.self])
+    .modelContainer(for: [MileageAccount.self, Transaction.self, FlightGoal.self, CreditCardRule.self, RedeemedTicket.self])
 }

@@ -24,7 +24,11 @@ struct MainTabView: View {
     
     var body: some View {
         TabView(selection: $selectedTab) {
-            DashboardView(viewModel: viewModel, switchToProgress: { selectedTab = 1 })
+            DashboardView(
+                viewModel: viewModel,
+                switchToProgress: { selectedTab = 1 },
+                switchToLedger: { selectedTab = 2 }
+            )
                 .tag(0)
                 .tabItem {
                     Label("儀表板", systemImage: "gauge.with.dots.needle.bottom.50percent")
@@ -41,9 +45,15 @@ struct MainTabView: View {
                 .tabItem {
                     Label("記帳", systemImage: "book.pages.fill")
                 }
+
+            MilestonesView(viewModel: viewModel)
+                .tag(3)
+                .tabItem {
+                    Label("里程碑", systemImage: "ticket.fill")
+                }
             
             SettingsView(viewModel: viewModel)
-                .tag(3)
+                .tag(4)
                 .tabItem {
                     Label("設定", systemImage: "gearshape.fill")
                 }
@@ -63,5 +73,5 @@ struct MainTabView: View {
 
 #Preview {
     MainTabView()
-        .modelContainer(for: [MileageAccount.self, Transaction.self, FlightGoal.self, CreditCardRule.self])
+    .modelContainer(for: [MileageAccount.self, Transaction.self, FlightGoal.self, CreditCardRule.self, RedeemedTicket.self])
 }

@@ -15,7 +15,8 @@ struct _3app_midApp: App {
             MileageAccount.self,
             Transaction.self,
             FlightGoal.self,
-            CreditCardRule.self
+            CreditCardRule.self,
+            RedeemedTicket.self
         ])
         
         let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)

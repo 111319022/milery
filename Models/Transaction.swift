@@ -24,6 +24,7 @@ final class Transaction {
     var conversionSource: String? // 銀行點數兌換/他點轉入：來源（例如：國泰世華銀行、Marriott Bonvoy）
     var merchantName: String? // 特店消費累積：商家名稱（例如：星巴克、誠品書店）
     var promotionName: String? // 活動贈送：活動名稱（例如：開卡禮、生日禮）
+    var linkedTicketID: UUID? // 兌換機票時連結的 RedeemedTicket ID
     
     init(date: Date = Date(), 
          amount: Decimal, 
@@ -34,7 +35,8 @@ final class Transaction {
          flightRoute: String? = nil,
          conversionSource: String? = nil,
          merchantName: String? = nil,
-         promotionName: String? = nil) {
+         promotionName: String? = nil,
+         linkedTicketID: UUID? = nil) {
         self.id = UUID()
         self.date = date
         self.amount = amount
@@ -46,6 +48,7 @@ final class Transaction {
         self.conversionSource = conversionSource
         self.merchantName = merchantName
         self.promotionName = promotionName
+        self.linkedTicketID = linkedTicketID
         
         // 計算每哩成本
         if earnedMiles > 0 {

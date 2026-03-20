@@ -16,6 +16,7 @@ class MileageViewModel {
     var creditCards: [CreditCardRule] = []
     var transactions: [Transaction] = []
     var flightGoals: [FlightGoal] = []
+    var redeemedTickets: [RedeemedTicket] = []
     
     // 使用者生日（用於計算生日當月加碼）
     var userBirthday: Date = Calendar.current.date(from: DateComponents(month: 1, day: 1)) ?? Date()
@@ -64,6 +65,12 @@ class MileageViewModel {
         // 載入信用卡規則
         let cardDescriptor = FetchDescriptor<CreditCardRule>()
         self.creditCards = (try? context.fetch(cardDescriptor)) ?? []
+
+        // 載入兌換成功紀錄（最新在前）
+        let redeemedDescriptor = FetchDescriptor<RedeemedTicket>(
+            sortBy: [SortDescriptor(\RedeemedTicket.redeemedDate, order: .reverse)]
+        )
+        self.redeemedTickets = (try? context.fetch(redeemedDescriptor)) ?? []
         
         // 舊資料遷移：多張國泰卡 → 1 張 + 等級選擇
         migrateCardDataIfNeeded()
@@ -157,10 +164,113 @@ class MileageViewModel {
         saveContext()
         loadData()
     }
+
+    // 兌換目標為機票里程碑
+    func redeemGoal(
+        goal: FlightGoal,
+        flightDate: Date,
+        pnr: String,
+        taxPaid: Decimal,
+        airline: String = "",
+        flightNumber: String = ""
+    ) {
+        guard let context = modelContext, let account = mileageAccount else { return }
+
+        let redeemedDate = Date()
+        let ticket = RedeemedTicket(
+            originIATA: goal.origin,
+            destinationIATA: goal.destination,
+            originName: goal.originName,
+            destinationName: goal.destinationName,
+            isRoundTrip: goal.isRoundTrip,
+            cabinClass: goal.cabinClass,
+            spentMiles: goal.requiredMiles,
+            taxPaid: taxPaid,
+            flightDate: flightDate,
+            pnr: pnr,
+            airline: airline,
+            flightNumber: flightNumber,
+            redeemedDate: redeemedDate
+        )
+        context.insert(ticket)
+
+        let trimmedAirline = airline.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmedFlightNumber = flightNumber.trimmingCharacters(in: .whitespacesAndNewlines)
+        var noteParts: [String] = []
+        if !trimmedAirline.isEmpty { noteParts.append(trimmedAirline) }
+        if !trimmedFlightNumber.isEmpty { noteParts.append(trimmedFlightNumber) }
+        let redeemNote = noteParts.joined(separator: " ")
+        let transaction = Transaction(
+            date: redeemedDate,
+            amount: taxPaid,
+            earnedMiles: -goal.requiredMiles,
+            source: .flight,
+            notes: redeemNote,
+            flightRoute: "\(goal.origin)-\(goal.destination)",
+            linkedTicketID: ticket.id
+        )
+        context.insert(transaction)
+        account.transactions.append(transaction)
+        account.updateMiles(amount: -goal.requiredMiles, date: redeemedDate)
+
+        // 雙向連結
+        ticket.linkedTransactionID = transaction.id
+
+        deleteFlightGoal(goal)
+        saveContext()
+        loadData()
+    }
     
-    // 刪除交易
+    // 更新交易
+    func updateTransaction(_ transaction: Transaction,
+                           amount: Decimal,
+                           earnedMiles: Int,
+                           source: MileageSource,
+                           acceleratorCategory: AcceleratorCategory? = nil,
+                           date: Date,
+                           notes: String = "",
+                           flightRoute: String? = nil,
+                           conversionSource: String? = nil,
+                           merchantName: String? = nil,
+                           promotionName: String? = nil) {
+        guard let account = mileageAccount else { return }
+        
+        // 先扣掉舊的哩程，再加上新的
+        let milesDiff = earnedMiles - transaction.earnedMiles
+        account.updateMiles(amount: milesDiff, date: date)
+        
+        // 更新交易屬性
+        transaction.date = date
+        transaction.amount = amount
+        transaction.earnedMiles = earnedMiles
+        transaction.source = source
+        transaction.acceleratorCategory = acceleratorCategory
+        transaction.notes = notes
+        transaction.flightRoute = flightRoute
+        transaction.conversionSource = conversionSource
+        transaction.merchantName = merchantName
+        transaction.promotionName = promotionName
+        
+        // 重新計算每哩成本
+        if earnedMiles > 0 {
+            transaction.costPerMile = Double(truncating: amount as NSDecimalNumber) / Double(earnedMiles)
+        } else {
+            transaction.costPerMile = 0
+        }
+        
+        saveContext()
+        loadData()
+    }
+    
+    // 刪除交易（連動刪除關聯的兌換紀錄）
     func deleteTransaction(_ transaction: Transaction) {
         guard let context = modelContext, let account = mileageAccount else { return }
+        
+        // 如果有連結的兌換紀錄，一併刪除
+        if let ticketID = transaction.linkedTicketID,
+           let ticket = redeemedTickets.first(where: { $0.id == ticketID }) {
+            context.delete(ticket)
+        }
         
         // 從哩程帳戶減去該交易的哩程
         account.updateMiles(amount: -transaction.earnedMiles, date: transaction.date)
@@ -176,6 +286,38 @@ class MileageViewModel {
         loadData()
     }
     
+    // 刪除兌換紀錄（連動刪除關聯的扣點交易）
+    func deleteRedeemedTicket(_ ticket: RedeemedTicket) {
+        guard let context = modelContext, let account = mileageAccount else { return }
+
+        // 優先使用雙向連結刪除；若舊資料沒有連結，再嘗試依特徵比對扣點交易
+        var linkedTransaction: Transaction?
+        if let txID = ticket.linkedTransactionID {
+            linkedTransaction = transactions.first(where: { $0.id == txID })
+        }
+
+        if linkedTransaction == nil {
+            linkedTransaction = transactions.first(where: {
+                $0.source == .flight &&
+                $0.earnedMiles == -ticket.spentMiles &&
+                $0.flightRoute == "\(ticket.originIATA)-\(ticket.destinationIATA)" &&
+                $0.amount == ticket.taxPaid
+            })
+        }
+
+        if let transaction = linkedTransaction {
+            account.updateMiles(amount: -transaction.earnedMiles, date: transaction.date)
+            if let index = account.transactions.firstIndex(where: { $0.id == transaction.id }) {
+                account.transactions.remove(at: index)
+            }
+            context.delete(transaction)
+        }
+        
+        context.delete(ticket)
+        saveContext()
+        loadData()
+    }
+    
     // 取得最接近達成的目標
     func closestGoal() -> FlightGoal? {
         guard let currentMiles = mileageAccount?.totalMiles else { return nil }
@@ -186,6 +328,23 @@ class MileageViewModel {
         return goalsToCheck
             .filter { $0.requiredMiles > currentMiles }
             .min { $0.milesNeeded(currentMiles: currentMiles) < $1.milesNeeded(currentMiles: currentMiles) }
+    }
+
+    // 取得目前可直接兌換的航點目標
+    func redeemableGoals(limit: Int = 3) -> [FlightGoal] {
+        guard let currentMiles = mileageAccount?.totalMiles else { return [] }
+
+        let sorted = flightGoals.sorted { lhs, rhs in
+            if lhs.isPriority != rhs.isPriority {
+                return lhs.isPriority && !rhs.isPriority
+            }
+            if lhs.requiredMiles != rhs.requiredMiles {
+                return lhs.requiredMiles < rhs.requiredMiles
+            }
+            return lhs.createdDate < rhs.createdDate
+        }
+
+        return Array(sorted.filter { $0.requiredMiles <= currentMiles }.prefix(limit))
     }
     
     // 新增信用卡
@@ -289,7 +448,10 @@ class MileageViewModel {
             calendar.isDate($0.date, equalTo: now, toGranularity: .month)
         }
         
-        let totalAmount = monthTransactions.reduce(Decimal(0)) { $0 + $1.amount }
+        // 兌換機票的附加稅不計入「本月消費」
+        let totalAmount = monthTransactions
+            .filter { $0.earnedMiles >= 0 }
+            .reduce(Decimal(0)) { $0 + $1.amount }
         let totalMiles = monthTransactions.reduce(0) { $0 + $1.earnedMiles }
         
         return (totalAmount, totalMiles)
