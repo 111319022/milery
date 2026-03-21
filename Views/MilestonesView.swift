@@ -31,6 +31,8 @@ struct MilestonesView: View {
 
     @State private var statsAppeared = false
 
+    @State private var showGoalRoutes = false
+
 
 
     private var routes: [RedeemedRoute] {
@@ -63,48 +65,93 @@ struct MilestonesView: View {
 
 
 
-    /// 所有不重複的機場點
+    /// 未完成目標的航線（哩程不夠）
+    private var goalRoutes: [GoalRoute] {
+        let currentMiles = viewModel.mileageAccount?.totalMiles ?? 0
+        return viewModel.flightGoals
+            .filter { $0.requiredMiles > currentMiles }
+            .compactMap { goal in
+                guard let originAirport = AirportDatabase.shared.getAirport(iataCode: goal.origin),
+                      let destinationAirport = AirportDatabase.shared.getAirport(iataCode: goal.destination) else {
+                    return nil
+                }
+                return GoalRoute(
+                    id: goal.id,
+                    goal: goal,
+                    origin: CLLocationCoordinate2D(latitude: originAirport.latitude, longitude: originAirport.longitude),
+                    destination: CLLocationCoordinate2D(latitude: destinationAirport.latitude, longitude: destinationAirport.longitude),
+                    milesNeeded: goal.milesNeeded(currentMiles: currentMiles),
+                    progress: goal.progress(currentMiles: currentMiles),
+                    status: .incomplete
+                )
+            }
+    }
+
+    /// 已達標但尚未兌換的目標航線
+    private var redeemableRoutes: [GoalRoute] {
+        let currentMiles = viewModel.mileageAccount?.totalMiles ?? 0
+        let redeemedPairs = Set(viewModel.redeemedTickets.map {
+            "\($0.originIATA)-\($0.destinationIATA)-\($0.cabinClass.rawValue)"
+        })
+        return viewModel.flightGoals
+            .filter { goal in
+                goal.requiredMiles <= currentMiles &&
+                !redeemedPairs.contains("\(goal.origin)-\(goal.destination)-\(goal.cabinClass.rawValue)")
+            }
+            .compactMap { goal in
+                guard let originAirport = AirportDatabase.shared.getAirport(iataCode: goal.origin),
+                      let destinationAirport = AirportDatabase.shared.getAirport(iataCode: goal.destination) else {
+                    return nil
+                }
+                return GoalRoute(
+                    id: goal.id,
+                    goal: goal,
+                    origin: CLLocationCoordinate2D(latitude: originAirport.latitude, longitude: originAirport.longitude),
+                    destination: CLLocationCoordinate2D(latitude: destinationAirport.latitude, longitude: destinationAirport.longitude),
+                    milesNeeded: 0,
+                    progress: 1.0,
+                    status: .redeemable
+                )
+            }
+    }
+
+    /// 所有目標航線（未完成 + 可兌換）
+    private var allGoalRoutes: [GoalRoute] {
+        goalRoutes + redeemableRoutes
+    }
+
+    /// 是否有內容顯示在地圖上
+    private var hasMapContent: Bool {
+        !routes.isEmpty || !allGoalRoutes.isEmpty
+    }
+
+    /// 所有不重複的機場點（每個機場獨立一個 pin）
 
     private var uniqueAirports: [AirportPin] {
 
         var seen = Set<String>()
-
         var pins: [AirportPin] = []
 
+        func addPin(iata: String, cityEN: String, coordinate: CLLocationCoordinate2D, isGoal: Bool) {
+            guard seen.insert(iata).inserted else { return }
+            pins.append(AirportPin(iata: iata, cityNameEN: cityEN, coordinate: coordinate, isGoal: isGoal))
+        }
+
         for route in routes {
+            let originCityEN = AirportDatabase.shared.getAirport(iataCode: route.ticket.originIATA)?.cityNameEN ?? route.ticket.originName
+            addPin(iata: route.ticket.originIATA, cityEN: originCityEN, coordinate: route.origin, isGoal: false)
+            let destCityEN = AirportDatabase.shared.getAirport(iataCode: route.ticket.destinationIATA)?.cityNameEN ?? route.ticket.destinationName
+            addPin(iata: route.ticket.destinationIATA, cityEN: destCityEN, coordinate: route.destination, isGoal: false)
+        }
 
-            if seen.insert(route.ticket.originIATA).inserted {
-
-                let cityEN = AirportDatabase.shared.getAirport(iataCode: route.ticket.originIATA)?.cityNameEN ?? route.ticket.originName
-
-                pins.append(AirportPin(
-
-                    iata: route.ticket.originIATA,
-
-                    cityNameEN: cityEN,
-
-                    coordinate: route.origin
-
-                ))
-
+        let showGoals = routes.isEmpty || showGoalRoutes
+        if showGoals {
+            for goalRoute in allGoalRoutes {
+                let originCityEN = AirportDatabase.shared.getAirport(iataCode: goalRoute.goal.origin)?.cityNameEN ?? goalRoute.goal.originName
+                addPin(iata: goalRoute.goal.origin, cityEN: originCityEN, coordinate: goalRoute.origin, isGoal: true)
+                let destCityEN = AirportDatabase.shared.getAirport(iataCode: goalRoute.goal.destination)?.cityNameEN ?? goalRoute.goal.destinationName
+                addPin(iata: goalRoute.goal.destination, cityEN: destCityEN, coordinate: goalRoute.destination, isGoal: true)
             }
-
-            if seen.insert(route.ticket.destinationIATA).inserted {
-
-                let cityEN = AirportDatabase.shared.getAirport(iataCode: route.ticket.destinationIATA)?.cityNameEN ?? route.ticket.destinationName
-
-                pins.append(AirportPin(
-
-                    iata: route.ticket.destinationIATA,
-
-                    cityNameEN: cityEN,
-
-                    coordinate: route.destination
-
-                ))
-
-            }
-
         }
 
         return pins
@@ -125,7 +172,11 @@ struct MilestonesView: View {
 
     private var totalFlights: Int {
 
-        viewModel.redeemedTickets.count
+        viewModel.redeemedTickets.reduce(0) { partial, ticket in
+
+            partial + (ticket.isRoundTrip ? 2 : 1)
+
+        }
 
     }
 
@@ -143,13 +194,13 @@ struct MilestonesView: View {
 
         ZStack {
 
-            if routes.isEmpty {
+            if hasMapContent {
 
-                emptyStateView
+                mapContent
 
             } else {
 
-                mapContent
+                emptyStateView
 
             }
 
@@ -179,6 +230,12 @@ struct MilestonesView: View {
 
         }
 
+        .onChange(of: showGoalRoutes) { _, _ in
+
+            updateMapPosition()
+
+        }
+
     }
 
 
@@ -193,47 +250,74 @@ struct MilestonesView: View {
 
             Map(position: $mapPosition, interactionModes: [.pan, .zoom, .rotate]) {
 
-                // 曲線航線
-
+                // 已兌換航線（柔和淡藍光暈）
                 ForEach(routes) { route in
-
-                    MapPolyline(coordinates: greatCirclePoints(
-
+                    let arcPoints = greatCirclePoints(
                         from: route.origin,
-
                         to: route.destination,
-
                         segments: 60
-
-                    ))
-
-                    .stroke(
-
-                        AviationTheme.Colors.cathayJade.opacity(0.85),
-
-                        style: StrokeStyle(lineWidth: 2.5, lineCap: .round)
-
                     )
-
+                    // 外層光暈
+                    MapPolyline(coordinates: arcPoints)
+                        .stroke(
+                            Color(red: 0.45, green: 0.65, blue: 0.9).opacity(0.12),
+                            style: StrokeStyle(lineWidth: 6, lineCap: .round)
+                        )
+                    // 核心線條
+                    MapPolyline(coordinates: arcPoints)
+                        .stroke(
+                            Color(red: 0.55, green: 0.75, blue: 1.0).opacity(0.7),
+                            style: StrokeStyle(lineWidth: 2, lineCap: .round)
+                        )
                 }
 
-
+                // 目標航線（僅在沒有兌換紀錄 或 開啟顯示時）
+                if routes.isEmpty || showGoalRoutes {
+                    // 未完成目標：橘色虛線
+                    ForEach(goalRoutes) { goalRoute in
+                        let arcPoints = greatCirclePoints(
+                            from: goalRoute.origin,
+                            to: goalRoute.destination,
+                            segments: 60
+                        )
+                        MapPolyline(coordinates: arcPoints)
+                            .stroke(
+                                Color.orange.opacity(0.45),
+                                style: StrokeStyle(lineWidth: 2, lineCap: .round, dash: [8, 6])
+                            )
+                    }
+                    // 可兌換目標：橘色實線
+                    ForEach(redeemableRoutes) { goalRoute in
+                        let arcPoints = greatCirclePoints(
+                            from: goalRoute.origin,
+                            to: goalRoute.destination,
+                            segments: 60
+                        )
+                        MapPolyline(coordinates: arcPoints)
+                            .stroke(
+                                Color.orange.opacity(0.35),
+                                style: StrokeStyle(lineWidth: 5, lineCap: .round)
+                            )
+                        MapPolyline(coordinates: arcPoints)
+                            .stroke(
+                                Color.orange.opacity(0.8),
+                                style: StrokeStyle(lineWidth: 2, lineCap: .round)
+                            )
+                    }
+                }
 
                 // 機場標記點
-
                 ForEach(uniqueAirports) { pin in
-
                     Annotation("", coordinate: pin.coordinate, anchor: .bottom) {
-
-                        AirportAnnotationView(cityNameEN: pin.cityNameEN, iata: pin.iata)
-
+                        AirportAnnotationView(cityNameEN: pin.cityNameEN, iata: pin.iata, isGoal: pin.isGoal)
                     }
-
                 }
 
             }
 
             .mapStyle(.imagery(elevation: .realistic))
+
+            .mapControls { }  // 隱藏比例尺與指南針
 
             .ignoresSafeArea()
 
@@ -301,17 +385,48 @@ struct MilestonesView: View {
 
 
 
-            // 頂部統計 Overlay
+            // 頂部統計 Overlay + 選單按鈕
 
             VStack {
 
-                statsOverlay
+                HStack(alignment: .top) {
 
-                    .opacity(statsAppeared ? 1 : 0)
+                    Spacer()
 
-                    .offset(y: statsAppeared ? 0 : -20)
+                    statsOverlay
 
+                        .opacity(statsAppeared ? 1 : 0)
 
+                        .offset(y: statsAppeared ? 0 : -20)
+
+                    Spacer()
+
+                }
+
+                .overlay(alignment: .topTrailing) {
+                    // 有兌換紀錄且有任何目標時顯示 ⋯ 按鈕
+                    if !routes.isEmpty && !viewModel.flightGoals.isEmpty {
+                        Menu {
+                            Button {
+                                withAnimation(.easeInOut(duration: 0.3)) {
+                                    showGoalRoutes.toggle()
+                                }
+                            } label: {
+                                Label(
+                                    showGoalRoutes ? "隱藏目標航線" : "顯示目標航線",
+                                    systemImage: showGoalRoutes ? "eye.slash" : "eye"
+                                )
+                            }
+                        } label: {
+                            Image(systemName: "ellipsis.circle.fill")
+                                .font(.system(size: 28))
+                                .symbolRenderingMode(.palette)
+                                .foregroundStyle(.white.opacity(0.9), .ultraThinMaterial)
+                        }
+                        .padding(.top, 62)
+                        .padding(.trailing, 20)
+                    }
+                }
 
                 Spacer()
 
@@ -319,11 +434,19 @@ struct MilestonesView: View {
 
 
 
-            // 底部按鈕
-
-            VStack {
+            // 底部區域（圖例 + 按鈕）
+            VStack(spacing: 8) {
 
                 Spacer()
+
+                // 圖例（目標航線顯示時出現）
+                if !allGoalRoutes.isEmpty && (showGoalRoutes || routes.isEmpty) {
+                    HStack {
+                        RouteLegendView(hasRedeemed: !routes.isEmpty)
+                        Spacer()
+                    }
+                    .padding(.horizontal, 20)
+                }
 
                 bottomButton
 
@@ -365,26 +488,37 @@ struct MilestonesView: View {
 
                 .tracking(2)
 
+            if !routes.isEmpty {
+                HStack(spacing: 32) {
 
+                    StatColumn(value: "\(totalFlights)", label: "航班")
 
-            HStack(spacing: 32) {
+                    StatColumn(value: "\(uniqueDestinations)", label: "目的地")
 
-                StatColumn(value: "\(totalFlights)", label: "航班")
+                    StatColumn(
 
-                StatColumn(value: "\(uniqueDestinations)", label: "目的地")
+                        value: totalSpentMiles >= 10000
 
-                StatColumn(
+                            ? String(format: "%.1fk", Double(totalSpentMiles) / 1000.0)
 
-                    value: totalSpentMiles >= 10000
+                            : "\(totalSpentMiles)",
 
-                        ? String(format: "%.1fk", Double(totalSpentMiles) / 1000.0)
+                        label: "哩程"
 
-                        : "\(totalSpentMiles)",
+                    )
 
-                    label: "哩程"
-
-                )
-
+                }
+            } else {
+                HStack(spacing: 32) {
+                    StatColumn(value: "\(allGoalRoutes.count)", label: "目標")
+                    let currentMiles = viewModel.mileageAccount?.totalMiles ?? 0
+                    StatColumn(
+                        value: currentMiles >= 10000
+                            ? String(format: "%.1fk", Double(currentMiles) / 1000.0)
+                            : "\(currentMiles)",
+                        label: "目前哩程"
+                    )
+                }
             }
 
         }
@@ -401,52 +535,54 @@ struct MilestonesView: View {
 
     private var bottomButton: some View {
 
-        Button {
-
-            showRecordSheet = true
-
-        } label: {
-
-            HStack(spacing: 10) {
-
-                Image(systemName: "ticket.fill")
-
-                    .font(.system(size: 15, weight: .semibold))
-
-                Text("查看 \(viewModel.redeemedTickets.count) 筆里程碑紀錄")
-
-                    .font(.system(size: 15, weight: .semibold, design: .rounded))
-
-                Image(systemName: "chevron.up")
-
-                    .font(.system(size: 11, weight: .bold))
-
+        Group {
+            if !routes.isEmpty {
+                // 有兌換紀錄：顯示查看紀錄按鈕
+                Button {
+                    showRecordSheet = true
+                } label: {
+                    HStack(spacing: 10) {
+                        Image(systemName: "ticket.fill")
+                            .font(.system(size: 15, weight: .semibold))
+                        Text("查看 \(viewModel.redeemedTickets.count) 筆里程碑紀錄")
+                            .font(.system(size: 15, weight: .semibold, design: .rounded))
+                        Image(systemName: "chevron.up")
+                            .font(.system(size: 11, weight: .bold))
+                    }
+                    .foregroundStyle(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 14)
+                    .background(
+                        RoundedRectangle(cornerRadius: 16, style: .continuous)
+                            .fill(.ultraThinMaterial)
+                            .environment(\.colorScheme, .dark)
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 16, style: .continuous)
+                            .stroke(Color.white.opacity(0.15), lineWidth: 1)
+                    )
+                }
+            } else if !allGoalRoutes.isEmpty {
+                // 僅有目標航線：顯示目標數量提示
+                HStack(spacing: 10) {
+                    Image(systemName: "target")
+                        .font(.system(size: 15, weight: .semibold))
+                    Text("\(allGoalRoutes.count) 個目標航線")
+                        .font(.system(size: 15, weight: .semibold, design: .rounded))
+                }
+                .foregroundStyle(.white.opacity(0.7))
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 14)
+                .background(
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        .fill(.ultraThinMaterial)
+                        .environment(\.colorScheme, .dark)
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        .stroke(Color.white.opacity(0.1), lineWidth: 1)
+                )
             }
-
-            .foregroundStyle(.white)
-
-            .frame(maxWidth: .infinity)
-
-            .padding(.vertical, 14)
-
-            .background(
-
-                RoundedRectangle(cornerRadius: 16, style: .continuous)
-
-                    .fill(.ultraThinMaterial)
-
-                    .environment(\.colorScheme, .dark)
-
-            )
-
-            .overlay(
-
-                RoundedRectangle(cornerRadius: 16, style: .continuous)
-
-                    .stroke(Color.white.opacity(0.15), lineWidth: 1)
-
-            )
-
         }
 
         .padding(.horizontal, 20)
@@ -621,11 +757,11 @@ struct MilestonesView: View {
 
     private func updateMapPosition() {
 
-        guard !routes.isEmpty else { return }
-
-
-
-        let allCoords = routes.flatMap { [$0.origin, $0.destination] }
+        let showGoals = routes.isEmpty || showGoalRoutes
+        let redeemedCoords = routes.flatMap { [$0.origin, $0.destination] }
+        let goalCoords = showGoals ? allGoalRoutes.flatMap { [$0.origin, $0.destination] } : []
+        let allCoords = redeemedCoords + goalCoords
+        guard !allCoords.isEmpty else { return }
 
         let lats = allCoords.map(\.latitude)
 
@@ -701,16 +837,27 @@ private struct RedeemedRoute: Identifiable {
 
 
 
+private enum GoalStatus {
+    case incomplete    // 哩程不夠
+    case redeemable    // 已達標但尚未兌換
+}
+
+private struct GoalRoute: Identifiable {
+    let id: UUID
+    let goal: FlightGoal
+    let origin: CLLocationCoordinate2D
+    let destination: CLLocationCoordinate2D
+    let milesNeeded: Int
+    let progress: Double
+    var status: GoalStatus = .incomplete
+}
+
 private struct AirportPin: Identifiable {
-
     let iata: String
-
     let cityNameEN: String
-
     let coordinate: CLLocationCoordinate2D
-
+    var isGoal: Bool = false
     var id: String { iata }
-
 }
 
 
@@ -753,81 +900,121 @@ private struct StatColumn: View {
 
 
 
-// MARK: - Airport Annotation（Flighty 風格水平膠囊標記）
+// MARK: - Airport Annotation（標籤 + 圓點）
 
 private struct AirportAnnotationView: View {
 
     let cityNameEN: String
-
     let iata: String
+    var isGoal: Bool = false
 
-
+    private var dotColor: Color {
+        isGoal ? .orange : Color(red: 0.55, green: 0.75, blue: 1.0)
+    }
 
     var body: some View {
 
-        VStack(spacing: 5) {
-
-            HStack(spacing: 6) {
-
-                Circle()
-
-                    .fill(Color.white.opacity(0.7))
-
-                    .frame(width: 6, height: 6)
-
-
-
+        VStack(spacing: 3) {
+            // 標籤
+            HStack(spacing: 4) {
                 Text(cityNameEN)
-
-                    .font(.system(size: 12, weight: .medium, design: .rounded))
-
-                    .foregroundStyle(.white)
-
-
-
+                    .font(.system(size: 10, weight: .medium, design: .rounded))
+                    .foregroundStyle(.white.opacity(isGoal ? 0.6 : 0.75))
+                    .lineLimit(1)
                 Text(iata)
-
-                    .font(.system(size: 12, weight: .bold, design: .rounded))
-
-                    .foregroundStyle(.white)
-
+                    .font(.system(size: 10, weight: .bold, design: .rounded))
+                    .foregroundStyle(isGoal ? .orange : .white)
             }
-
-            .padding(.horizontal, 10)
-
-            .padding(.vertical, 6)
-
+            .padding(.horizontal, 8)
+            .padding(.vertical, 4)
             .background(
-
                 Capsule()
-
-                    .fill(.ultraThinMaterial)
-
-                    .environment(\.colorScheme, .dark)
-
+                    .fill(Color.black.opacity(0.6))
             )
-
             .overlay(
-
                 Capsule()
-
-                    .stroke(Color.white.opacity(0.15), lineWidth: 0.5)
-
+                    .stroke(isGoal ? Color.orange.opacity(0.3) : Color.white.opacity(0.2), lineWidth: 0.5)
             )
+            .fixedSize()
 
+            // 圓點
             Circle()
-                .fill(AviationTheme.Colors.cathayJade)
-                .frame(width: 10, height: 10)
-                .overlay(
-                    Circle()
-                        .stroke(Color.white.opacity(0.9), lineWidth: 1.5)
-                )
-                .shadow(color: AviationTheme.Colors.cathayJade.opacity(0.5), radius: 4, x: 0, y: 1)
-
+                .fill(dotColor)
+                .frame(width: 8, height: 8)
+                .shadow(color: dotColor.opacity(0.6), radius: 4, x: 0, y: 0)
         }
 
     }
 
+}
+
+// MARK: - Route Legend（航線圖例）
+private struct RouteLegendView: View {
+    var hasRedeemed: Bool = true
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            if hasRedeemed {
+                legendRow(
+                    color: Color(red: 0.55, green: 0.75, blue: 1.0),
+                    style: .solid,
+                    label: "已兌換航線"
+                )
+            }
+            legendRow(
+                color: .orange,
+                style: .dashed,
+                label: "未實現目標"
+            )
+            legendRow(
+                color: .orange,
+                style: .solid,
+                label: "已實現目標"
+            )
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 10)
+        .background(
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .fill(.ultraThinMaterial)
+                .environment(\.colorScheme, .dark)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .stroke(Color.white.opacity(0.12), lineWidth: 0.5)
+        )
+    }
+
+    private func legendRow(color: Color, style: LegendLineStyle, label: String) -> some View {
+        HStack(spacing: 8) {
+            // 線條示意
+            ZStack {
+                switch style {
+                case .solid:
+                    RoundedRectangle(cornerRadius: 1)
+                        .fill(color)
+                        .frame(width: 20, height: 2.5)
+                case .dashed:
+                    HStack(spacing: 3) {
+                        ForEach(0..<3, id: \.self) { _ in
+                            RoundedRectangle(cornerRadius: 1)
+                                .fill(color)
+                                .frame(width: 4, height: 2.5)
+                        }
+                    }
+                }
+            }
+            .frame(width: 20)
+
+            Text(label)
+                .font(.system(size: 11, weight: .medium, design: .rounded))
+                .foregroundStyle(.white.opacity(0.8))
+        }
+    }
+
+    private enum LegendLineStyle {
+        case solid, dashed
+    }
 }
 
 
