@@ -60,6 +60,14 @@
 		FBF89DAA2F6AC2EE003DB1EB /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		FB40838B2F6F03DD00993DF0 /* DevViews */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = DevViews;
+			sourceTree = "<group>";
+		};
+/* End PBXFileSystemSynchronizedRootGroup section */
+
 /* Begin PBXFrameworksBuildPhase section */
 		FBB3ADD72F67A60600D7ADE3 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
@@ -132,6 +140,7 @@
 		FBF89DAB2F6AC2EE003DB1EB /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				FB40838B2F6F03DD00993DF0 /* DevViews */,
 				FBF89DA32F6AC2EE003DB1EB /* AllGoalsView.swift */,
 				FBF89DA42F6AC2EE003DB1EB /* CalculatorLedgerView.swift */,
 				FBF89DA62F6AC2EE003DB1EB /* DashboardView.swift */,
@@ -161,6 +170,9 @@
 			buildRules = (
 			);
 			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				FB40838B2F6F03DD00993DF0 /* DevViews */,
 			);
 			name = milery;
 			packageProductDependencies = (

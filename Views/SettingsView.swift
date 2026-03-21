@@ -11,6 +11,11 @@ struct SettingsView: View {
     @AppStorage("enableNotifications") private var enableNotifications: Bool = true
     
     @State private var showingAirportPicker = false
+    @State private var versionTapCount = 0
+    @State private var isDeveloperModeEnabled = false
+    @State private var showingDevPasswordAlert = false
+    @State private var devPasswordInput = ""
+    @AppStorage("developerPassword") private var developerPassword: String = "7373"
     
     var themeDisplayName: String {
         switch userColorScheme {
@@ -150,26 +155,72 @@ struct SettingsView: View {
                             SectionHeaderView(title: "關於", colorScheme: colorScheme)
                             
                             VStack(spacing: 0) {
-                                SettingRow(
-                                    icon: "info.circle.fill",
-                                    title: "版本資訊",
-                                    subtitle: nil
-                                ) {
-                                    let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "—"
-                                    let build = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "—"
-                                    Text("\(version) (\(build))")
-                                        .font(AviationTheme.Typography.subheadline)
-                                        .foregroundColor(AviationTheme.Colors.secondaryText(colorScheme))
+                                Button(action: handleVersionTap) {
+                                    SettingRow(
+                                        icon: "info.circle.fill",
+                                        title: "版本資訊",
+                                        subtitle: nil
+                                    ) {
+                                        let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "—"
+                                        let build = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "—"
+                                        Text("\(version) (\(build))")
+                                            .font(AviationTheme.Typography.subheadline)
+                                            .foregroundColor(AviationTheme.Colors.secondaryText(colorScheme))
+                                    }
                                 }
+                                .buttonStyle(.plain)
                             }
                             .background(AviationTheme.Colors.cardBackground(colorScheme))
                             .clipShape(RoundedRectangle(cornerRadius: AviationTheme.CornerRadius.lg))
                             .shadow(color: AviationTheme.Shadows.cardShadow(colorScheme).opacity(0.5), radius: 8, x: 0, y: 2)
                         }
                         .padding(.horizontal, AviationTheme.Spacing.md)
-                        .padding(.bottom, AviationTheme.Spacing.xxl)
+                        
+                        // MARK: - 開發者 (隱藏)
+                        if isDeveloperModeEnabled {
+                            VStack(alignment: .leading, spacing: 8) {
+                                SectionHeaderView(title: "開發者", colorScheme: colorScheme)
+                                
+                                VStack(spacing: 0) {
+                                    NavigationLink(destination: AirportListView()) {
+                                        SettingRow(
+                                            icon: "airplane",
+                                            title: "機場資料列表",
+                                            subtitle: "搜尋機場完善AirportDatabase用"
+                                        ) {
+                                            Image(systemName: "chevron.right")
+                                                .foregroundColor(AviationTheme.Colors.tertiaryText(colorScheme))
+                                                .font(.subheadline)
+                                                .fontWeight(.semibold)
+                                        }
+                                    }
+                                    .buttonStyle(.plain)
+                                    
+                                    CustomDivider(colorScheme: colorScheme)
+                                    
+                                    NavigationLink(destination: TabVisibilitySettingsView()) {
+                                        SettingRow(
+                                            icon: "square.grid.2x2",
+                                            title: "分頁顯示管理",
+                                            subtitle: "設定 TabView 要顯示哪些分頁"
+                                        ) {
+                                            Image(systemName: "chevron.right")
+                                                .foregroundColor(AviationTheme.Colors.tertiaryText(colorScheme))
+                                                .font(.subheadline)
+                                                .fontWeight(.semibold)
+                                        }
+                                    }
+                                    .buttonStyle(.plain)
+                                }
+                                .background(AviationTheme.Colors.cardBackground(colorScheme))
+                                .clipShape(RoundedRectangle(cornerRadius: AviationTheme.CornerRadius.lg))
+                                .shadow(color: AviationTheme.Shadows.cardShadow(colorScheme).opacity(0.5), radius: 8, x: 0, y: 2)
+                            }
+                            .padding(.horizontal, AviationTheme.Spacing.md)
+                        }
                     }
                     .padding(.top, AviationTheme.Spacing.md)
+                    .padding(.bottom, AviationTheme.Spacing.xxl)
                 }
             }
             .navigationTitle("設定")
@@ -177,6 +228,38 @@ struct SettingsView: View {
             .toolbarBackgroundVisibility(.automatic, for: .navigationBar)
             .sheet(isPresented: $showingAirportPicker) {
                 SettingsAirportPickerWrapper(selectedCode: $preferredOrigin)
+            }
+            .alert("開發者模式", isPresented: $showingDevPasswordAlert) {
+                SecureField("請輸入四位數密碼", text: $devPasswordInput)
+                    .keyboardType(.numberPad)
+                Button("確認") {
+                    if devPasswordInput == developerPassword {
+                        isDeveloperModeEnabled = true
+                    }
+                }
+                Button("取消", role: .cancel) { }
+            } message: {
+                Text("請輸入密碼以啟用開發者模式")
+            }
+        }
+    }
+    
+    // MARK: - 版本資訊點擊處理
+    private func handleVersionTap() {
+        versionTapCount += 1
+        
+        if isDeveloperModeEnabled {
+            // 已啟用開發者模式，再點 10 次會隱藏
+            if versionTapCount >= 10 {
+                isDeveloperModeEnabled = false
+                versionTapCount = 0
+            }
+        } else {
+            // 未啟用開發者模式，點 10 次彈出密碼輸入
+            if versionTapCount >= 10 {
+                devPasswordInput = ""
+                showingDevPasswordAlert = true
+                versionTapCount = 0
             }
         }
     }
