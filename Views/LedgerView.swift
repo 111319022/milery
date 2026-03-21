@@ -14,6 +14,7 @@ struct LedgerView: View {
     @State private var showingAddTransaction = false
     @State private var selectedMonth = Date()
     @State private var editingTransaction: Transaction?
+    @State private var isStatsExpanded = false
     
     var filteredTransactions: [Transaction] {
         viewModel.transactions.filter { transaction in
@@ -21,14 +22,21 @@ struct LedgerView: View {
         }
     }
     
-    // 按類別統計
-    var categoryStats: [(source: MileageSource, amount: Decimal, miles: Int)] {
-        let grouped = Dictionary(grouping: filteredTransactions) { $0.source }
-        return grouped.map { source, transactions in
+    // 按類別統計（加速器再細分子類別）
+    var categoryStats: [(source: MileageSource, accelerator: AcceleratorCategory?, amount: Decimal, miles: Int)] {
+        struct GroupKey: Hashable {
+            let source: MileageSource
+            let accelerator: AcceleratorCategory?
+        }
+        let grouped = Dictionary(grouping: filteredTransactions) {
+            GroupKey(source: $0.source,
+                     accelerator: $0.source == .cardAccelerator ? $0.acceleratorCategory : nil)
+        }
+        return grouped.map { key, transactions in
             let amount = transactions.reduce(Decimal(0)) { $0 + $1.amount }
             let miles = transactions.reduce(0) { $0 + $1.earnedMiles }
-            return (source, amount, miles)
-        }.sorted { $0.miles > $1.miles } // 按哩程數排序
+            return (key.source, key.accelerator, amount, miles)
+        }.sorted { abs($0.miles) > abs($1.miles) }
     }
     
     var monthlyTotal: (amount: Decimal, miles: Int) {
@@ -96,15 +104,42 @@ struct LedgerView: View {
                                         .foregroundColor(AviationTheme.Colors.successColor(colorScheme))
                                 }
                                 
-                                // 右側：類別統計細項
+                                // 右側：類別統計細項（可折疊）
                                 VStack(alignment: .leading, spacing: AviationTheme.Spacing.xs) {
-                                    ForEach(categoryStats, id: \.source) { stat in
+                                    let maxVisible = 3
+                                    let statsToShow = isStatsExpanded ? categoryStats : Array(categoryStats.prefix(maxVisible))
+                                    
+                                    ForEach(Array(statsToShow.enumerated()), id: \.offset) { _, stat in
                                         CompactCategoryStatRow(
                                             source: stat.source,
+                                            accelerator: stat.accelerator,
                                             amount: stat.amount,
                                             miles: stat.miles,
                                             colorScheme: colorScheme
                                         )
+                                    }
+                                    
+                                    if categoryStats.count > maxVisible {
+                                        Button {
+                                            withAnimation(.easeInOut(duration: 0.25)) {
+                                                isStatsExpanded.toggle()
+                                            }
+                                        } label: {
+                                            HStack(spacing: 4) {
+                                                Text(isStatsExpanded ? "收合" : "展開全部（\(categoryStats.count)）")
+                                                    .font(.system(size: 11, weight: .medium))
+                                                Image(systemName: isStatsExpanded ? "chevron.up" : "chevron.down")
+                                                    .font(.system(size: 9, weight: .semibold))
+                                            }
+                                            .foregroundColor(
+                                                colorScheme == .dark
+                                                    ? Color.white.opacity(0.55)
+                                                    : Color.black.opacity(0.4)
+                                            )
+                                            .padding(.vertical, 6)
+                                            .padding(.horizontal, 8)
+                                            .contentShape(Rectangle())
+                                        }
                                     }
                                 }
                             }
@@ -220,6 +255,9 @@ struct LedgerView: View {
                     }
                 }
             }
+            .onChange(of: selectedMonth) {
+                isStatsExpanded = false
+            }
             .sheet(isPresented: $showingAddTransaction) {
                 CalculatorLedgerView(viewModel: viewModel)
             }
@@ -249,6 +287,7 @@ struct LedgerView: View {
 // MARK: - 精簡版類別統計列（用於統計卡片右側）
 struct CompactCategoryStatRow: View {
     let source: MileageSource
+    var accelerator: AcceleratorCategory? = nil
     let amount: Decimal
     let miles: Int
     let colorScheme: ColorScheme
@@ -257,17 +296,39 @@ struct CompactCategoryStatRow: View {
         amount > 0
     }
     
+    /// 顯示名稱：加速器帶子類別
+    var displayName: String {
+        if source == .cardAccelerator, let acc = accelerator {
+            return "\(source.rawValue)・\(acc.rawValue)"
+        }
+        return source.rawValue
+    }
+
+    /// 圖標：加速器用子類別 icon
+    var displayIcon: String {
+        if source == .cardAccelerator, let acc = accelerator {
+            return acc.icon
+        }
+        return source.icon
+    }
+
+    var milesColor: Color {
+        source == .ticketRedemption
+            ? AviationTheme.Colors.danger
+            : AviationTheme.Colors.brandColor(colorScheme)
+    }
+    
     var body: some View {
         HStack(spacing: 6) {
             // 圖標
-            Image(systemName: source.icon)
+            Image(systemName: displayIcon)
                 .font(.caption2)
-                .foregroundColor(AviationTheme.Colors.brandColor(colorScheme))
+                .foregroundColor(milesColor)
                 .frame(width: 16)
             
             // 類別名稱
             VStack(alignment: .leading, spacing: 1) {
-                Text(source.rawValue)
+                Text(displayName)
                     .font(AviationTheme.Typography.caption)
                     .foregroundColor(AviationTheme.Colors.primaryText(colorScheme))
                     .lineLimit(1)
@@ -286,10 +347,10 @@ struct CompactCategoryStatRow: View {
             Text("\(miles.formatted())")
                 .font(AviationTheme.Typography.subheadline)
                 .fontWeight(.semibold)
-                .foregroundColor(AviationTheme.Colors.brandColor(colorScheme))
+                .foregroundColor(milesColor)
             + Text(" 哩")
                 .font(AviationTheme.Typography.caption)
-                .foregroundColor(AviationTheme.Colors.brandColor(colorScheme))
+                .foregroundColor(milesColor)
         }
         .padding(.vertical, 2)
     }
@@ -621,11 +682,11 @@ struct TransactionDetailRow: View {
     }
 
     var isRedeemTransaction: Bool {
-        transaction.earnedMiles < 0
+        transaction.source == .ticketRedemption
     }
 
     var displayTitle: String {
-        isRedeemTransaction ? "機票兌換" : transaction.source.rawValue
+        transaction.source.rawValue
     }
 
     var milesTintColor: Color {
@@ -634,6 +695,22 @@ struct TransactionDetailRow: View {
 
     var redeemAccentColor: Color {
         colorScheme == .dark ? AviationTheme.Colors.starluxIndigoLight : AviationTheme.Colors.starluxIndigo
+    }
+
+    /// 根據來源類型回傳對應的明細文字
+    var sourceDetail: String? {
+        switch transaction.source {
+        case .cardAccelerator:
+            return transaction.acceleratorCategory?.rawValue
+        case .specialMerchant:
+            return transaction.merchantName
+        case .pointsConversion, .pointsTransfer:
+            return transaction.conversionSource
+        case .promotion:
+            return transaction.promotionName
+        default:
+            return nil
+        }
     }
 
     var cleanedNoteText: String {
@@ -661,6 +738,15 @@ struct TransactionDetailRow: View {
                     .font(AviationTheme.Typography.body)
                     .fontWeight(.semibold)
                     .foregroundColor(AviationTheme.Colors.primaryText(colorScheme))
+
+                // 來源明細：加速器類別 / 商家名稱 / 轉點來源 / 活動名稱
+                if let detail = sourceDetail, !detail.isEmpty {
+                    Text(detail)
+                        .font(AviationTheme.Typography.caption)
+                        .foregroundColor(AviationTheme.Colors.secondaryText(colorScheme))
+                        .lineLimit(1)
+                        .truncationMode(.tail)
+                }
 
                 if hasAmount {
                     Text("NT$ \((transaction.amount as NSDecimalNumber).intValue.formatted())")

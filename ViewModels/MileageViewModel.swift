@@ -204,7 +204,7 @@ class MileageViewModel {
             date: redeemedDate,
             amount: taxPaid,
             earnedMiles: -goal.requiredMiles,
-            source: .flight,
+            source: .ticketRedemption,
             notes: redeemNote,
             flightRoute: "\(goal.origin)-\(goal.destination)",
             linkedTicketID: ticket.id
@@ -298,7 +298,7 @@ class MileageViewModel {
 
         if linkedTransaction == nil {
             linkedTransaction = transactions.first(where: {
-                $0.source == .flight &&
+                ($0.source == .ticketRedemption || $0.source == .flight) &&
                 $0.earnedMiles == -ticket.spentMiles &&
                 $0.flightRoute == "\(ticket.originIATA)-\(ticket.destinationIATA)" &&
                 $0.amount == ticket.taxPaid
@@ -391,7 +391,8 @@ class MileageViewModel {
                 single.cardBrandRaw = CardBrand.cathayUnitedBank.rawValue
                 single.cardTierRaw = tier.rawValue
             }
-            // 確保有台新卡
+            // 確保有台新卡與國泰卡
+            ensureCathayCardExists()
             ensureTaishinCardExists()
             return
         }
@@ -439,6 +440,18 @@ class MileageViewModel {
         }
     }
     
+    // 確保國泰卡存在
+    private func ensureCathayCardExists() {
+        guard let context = modelContext else { return }
+        let hasCathay = creditCards.contains { $0.cardBrandRaw == CardBrand.cathayUnitedBank.rawValue }
+        if !hasCathay {
+            let cathayCard = CreditCardRule.cathayCard(tier: .world)
+            context.insert(cathayCard)
+            creditCards.append(cathayCard)
+            saveContext()
+        }
+    }
+    
     // 取得本月交易統計
     func monthlyStats() -> (totalAmount: Decimal, totalMiles: Int) {
         let calendar = Calendar.current
@@ -450,7 +463,7 @@ class MileageViewModel {
         
         // 兌換機票的附加稅不計入「本月消費」
         let totalAmount = monthTransactions
-            .filter { $0.earnedMiles >= 0 }
+            .filter { $0.source != .ticketRedemption }
             .reduce(Decimal(0)) { $0 + $1.amount }
         let totalMiles = monthTransactions.reduce(0) { $0 + $1.earnedMiles }
         

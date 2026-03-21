@@ -555,15 +555,15 @@ struct RecentActivityCard: View {
     }
 
     private func activityIcon(for transaction: Transaction) -> String {
-        transaction.earnedMiles < 0 ? "ticket.fill" : transaction.source.icon
+        transaction.source.icon
     }
 
     private func activityTitle(for transaction: Transaction) -> String {
-        transaction.earnedMiles < 0 ? "機票兌換" : transaction.source.rawValue
+        transaction.source.rawValue
     }
 
     private func activityIconColor(for transaction: Transaction) -> Color {
-        transaction.earnedMiles < 0 ? AviationTheme.Colors.starluxIndigo : AviationTheme.Colors.brandColor(colorScheme)
+        transaction.source == .ticketRedemption ? AviationTheme.Colors.starluxIndigo : AviationTheme.Colors.brandColor(colorScheme)
     }
     
     var body: some View {
@@ -630,7 +630,7 @@ struct RecentActivityCard: View {
                             // 哩程數
                             Text("\(transaction.earnedMiles > 0 ? "+" : "")\(transaction.earnedMiles.formatted())")
                                 .font(AviationTheme.Typography.headline)
-                                .foregroundColor(transaction.earnedMiles < 0 ? AviationTheme.Colors.danger : AviationTheme.Colors.brandColor(colorScheme))
+                                .foregroundColor(transaction.source == .ticketRedemption ? AviationTheme.Colors.danger : AviationTheme.Colors.brandColor(colorScheme))
                         }
                         .padding(.vertical, 10)
                         
