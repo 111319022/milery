@@ -490,6 +490,8 @@ struct MonthlyCockpitCard: View {
                         .font(AviationTheme.Typography.title3)
                         .fontWeight(.bold)
                         .foregroundColor(AviationTheme.Colors.primaryText(colorScheme))
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.5)
                     
                     Text("本月消費")
                         .font(AviationTheme.Typography.caption)

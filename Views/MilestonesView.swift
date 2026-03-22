@@ -294,7 +294,7 @@ struct MilestonesView: View {
 
                 // 機場標記點
                 ForEach(uniqueAirports) { pin in
-                    Annotation("", coordinate: pin.coordinate, anchor: .bottom) {
+                    Annotation("", coordinate: pin.coordinate, anchor: .center) {
                         AirportAnnotationView(cityNameEN: pin.cityNameEN, iata: pin.iata, isGoal: pin.isGoal)
                     }
                 }
@@ -899,37 +899,34 @@ private struct AirportAnnotationView: View {
     }
 
     var body: some View {
-
-        VStack(spacing: 3) {
-            // 標籤
-            HStack(spacing: 4) {
-                Text(cityNameEN)
-                    .font(.system(size: 10, weight: .medium, design: .rounded))
-                    .foregroundStyle(.white.opacity(isGoal ? 0.6 : 0.75))
-                    .lineLimit(1)
-                Text(iata)
-                    .font(.system(size: 10, weight: .bold, design: .rounded))
-                    .foregroundStyle(isGoal ? .orange : .white)
+        // 圓點為錨定中心，標籤浮在上方
+        Circle()
+            .fill(dotColor)
+            .frame(width: 8, height: 8)
+            .shadow(color: dotColor.opacity(0.6), radius: 4, x: 0, y: 0)
+            .overlay(alignment: .bottom) {
+                HStack(spacing: 4) {
+                    Text(cityNameEN)
+                        .font(.system(size: 10, weight: .medium, design: .rounded))
+                        .foregroundStyle(.white.opacity(isGoal ? 0.6 : 0.75))
+                        .lineLimit(1)
+                    Text(iata)
+                        .font(.system(size: 10, weight: .bold, design: .rounded))
+                        .foregroundStyle(isGoal ? .orange : .white)
+                }
+                .padding(.horizontal, 8)
+                .padding(.vertical, 4)
+                .background(
+                    Capsule()
+                        .fill(Color.black.opacity(0.6))
+                )
+                .overlay(
+                    Capsule()
+                        .stroke(isGoal ? Color.orange.opacity(0.3) : Color.white.opacity(0.2), lineWidth: 0.5)
+                )
+                .fixedSize()
+                .offset(y: -14) // 標籤向上偏移，不遮擋圓點
             }
-            .padding(.horizontal, 8)
-            .padding(.vertical, 4)
-            .background(
-                Capsule()
-                    .fill(Color.black.opacity(0.6))
-            )
-            .overlay(
-                Capsule()
-                    .stroke(isGoal ? Color.orange.opacity(0.3) : Color.white.opacity(0.2), lineWidth: 0.5)
-            )
-            .fixedSize()
-
-            // 圓點
-            Circle()
-                .fill(dotColor)
-                .frame(width: 8, height: 8)
-                .shadow(color: dotColor.opacity(0.6), radius: 4, x: 0, y: 0)
-        }
-
     }
 
 }
