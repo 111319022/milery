@@ -12,7 +12,7 @@ Milery是一款專為航空常客與哩程使用者開發之 iOS 原生應用程
 
 目前提供正式上架版本與Testflight測試版本，可透過以下管道取得：
 
-* **App Store 正式版:** [Apple審核中]()
+* **App Store 正式版:** Apple審核中
 * **TestFlight 公測版:** [點此加入 TestFlight 測試計畫](https://testflight.apple.com/join/gWaMP1w2)
 
 ## 核心系統模組
@@ -83,8 +83,13 @@ Milery是一款專為航空常客與哩程使用者開發之 iOS 原生應用程
 
 ### 系統需求
 
-* **作業系統:** iOS 26.0 或以上版本
-* **開發環境:** 建議 Xcode 26.3 以上版本
+* **機型與作業系統:** 
+* **iPhone:** 需運行 iOS 26.0 或以上版本。硬體支援 iPhone 11 及後續機型、iPhone SE (第 2 代) 及後續機型。
+  * **多裝置相容性支援 (以 iPhone 模式運行):** 本系統基於 iOS 原生架構開發，可於以下平台執行並保持 iPhone 原始操作體驗與顯示比例：
+    * **iPad:** 需運行 iPadOS 26.0 或以上版本。
+    * **Mac:** 僅支援搭載 Apple Silicon 晶片之機型運行。
+    * **Apple Vision Pro:** 支援於 visionOS 空間環境下執行。
+* **開發環境:** 建議使用 Xcode 26.3 或以上版本進行編譯。
 
 ### 安裝與執行指引
 
