@@ -67,7 +67,7 @@ Milery是一款專為航空常客與哩程使用者開發之 iOS 原生應用程
 * **`AviationTheme.swift`**
   全域視覺主題設定，管理色彩、字體與元件風格。
 * **`Assets.xcassets/`**
-  影像與色票資產庫，包含 App Icon、航空圖片與自訂色彩。
+  影像與色票資產庫，包含 App Icon、圖片與自訂色彩。
 * **`Database/`**
   靜態資料與規則來源，例如機場資料表、航點資料與兌換規則。
 * **`Models/`**
@@ -83,12 +83,12 @@ Milery是一款專為航空常客與哩程使用者開發之 iOS 原生應用程
 
 ### 系統需求
 
-* **機型與作業系統:** 
-* **iPhone:** 需運行 iOS 26.0 或以上版本。硬體支援 iPhone 11 及後續機型、iPhone SE (第 2 代) 及後續機型。
-  * **多裝置相容性支援 (以 iPhone 模式運行):** 本系統基於 iOS 原生架構開發，可於以下平台執行並保持 iPhone 原始操作體驗與顯示比例：
-    * **iPad:** 需運行 iPadOS 26.0 或以上版本。
-    * **Mac:** 僅支援搭載 Apple Silicon 晶片之機型運行。
-    * **Apple Vision Pro:** 支援於 visionOS 空間環境下執行。
+* **機型與作業系統**
+    * **iPhone**: 需為 **iOS 26.0** 或以上版本 (支援 iPhone 11、iPhone SE 2 及後續機型)。
+    * **多平台相容性**: 本系統採 iOS 原生架構開發，可於下列裝置以 **iPhone 相容模式**執行：
+        * **iPad**: 需運行 iPadOS 26.0 或以上版本。
+        * **Mac**: 僅支援搭載 **Apple Silicon** 晶片之機型。
+        * **Apple Vision Pro**: 支援於 visionOS 空間環境下執行。
 * **開發環境:** 建議使用 Xcode 26.3 或以上版本進行編譯。
 
 ### 安裝與執行指引
