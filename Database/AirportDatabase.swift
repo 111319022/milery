@@ -39,148 +39,37 @@ class AirportDatabase {
     
     private var airports: [String: Airport] = [:]
     
+    // 熱門機場 IATA 代碼<在此新增或移除 IATA 代碼來調整熱門機場清單>
+    static let popularIATACodes: [String] = [
+        // 台灣
+        "TPE", "TSA",
+        // 港澳
+        "HKG",
+        // 日本
+        "NRT", "HND", "KIX", "FUK", "CTS", "OKA", "NGO",
+        // 韓國
+        "ICN", "PUS",
+        // 東南亞
+        "BKK", "SIN", "KUL", "MNL", "SGN", "HAN",
+        // 中國大陸
+        "PVG", "PEK", "CAN", "SZX",
+        // 中東
+        "DXB", "DOH",
+        // 印度
+        "DEL", "BOM",
+        // 澳紐
+        "SYD", "MEL", "AKL",
+        // 北美
+        "LAX", "SFO", "JFK", "SEA", "YVR",
+        // 歐洲
+        "LHR", "CDG", "FRA", "AMS",
+    ]
+    
     private init() {
-        loadAirportsFromCSV()
-    }
-    
-    // 從 CSV 檔案載入機場資料
-    private func loadAirportsFromCSV() {
-        // 直接使用預設資料（已包含主要國際機場）
-        // CSV 檔案太大（12MB），不適合打包到 App 中
         loadDefaultAirports()
-        
-        /* 如果需要從 CSV 載入更多機場，可取消以下註解：
-        guard let csvPath = Bundle.main.path(forResource: "airports", ofType: "csv"),
-              let csvContent = try? String(contentsOfFile: csvPath) else {
-            loadDefaultAirports()
-            return
-        }
-        
-        let lines = csvContent.components(separatedBy: .newlines)
-        
-        // 跳過標題行
-        for line in lines.dropFirst() {
-            guard !line.isEmpty else { continue }
-            
-            // 解析 CSV（考慮引號包裹的欄位）
-            let fields = parseCSVLine(line)
-            
-            guard fields.count >= 14 else { continue }
-            
-            // 只載入有 IATA 代碼的大型/中型機場
-            let type = fields[2].replacingOccurrences(of: "\"", with: "")
-            let iataCode = fields[13].replacingOccurrences(of: "\"", with: "")
-            
-            guard !iataCode.isEmpty,
-                  (type == "large_airport" || type == "medium_airport"),
-                  let latitude = Double(fields[4]),
-                  let longitude = Double(fields[5]) else {
-                continue
-            }
-            
-            let name = fields[3].replacingOccurrences(of: "\"", with: "")
-            let municipality = fields[10].replacingOccurrences(of: "\"", with: "")
-            let country = fields[8].replacingOccurrences(of: "\"", with: "")
-            
-            // 建立機場物件（使用英文名稱，稍後可補充中文）
-            let airport = Airport(
-                iataCode: iataCode,
-                cityName: getChineseCityName(iataCode: iataCode, municipality: municipality),
-                cityNameEN: municipality,
-                airportName: getChineseAirportName(iataCode: iataCode, name: name),
-                airportNameEN: name,
-                country: getChineseCountry(country: country),
-                latitude: latitude,
-                longitude: longitude
-            )
-            
-            airports[iataCode] = airport
-        }
-        
-        print("成功載入 \(airports.count) 個機場")
-        */
     }
     
-    // 解析 CSV 行（處理引號包裹的欄位）
-    private func parseCSVLine(_ line: String) -> [String] {
-        var fields: [String] = []
-        var currentField = ""
-        var insideQuotes = false
-        
-        for char in line {
-            if char == "\"" {
-                insideQuotes.toggle()
-                currentField.append(char)
-            } else if char == "," && !insideQuotes {
-                fields.append(currentField)
-                currentField = ""
-            } else {
-                currentField.append(char)
-            }
-        }
-        
-        if !currentField.isEmpty {
-            fields.append(currentField)
-        }
-        
-        return fields
-    }
-    
-    // 取得中文城市名稱（常見機場）
-    private func getChineseCityName(iataCode: String, municipality: String) -> String {
-        let chineseNames: [String: String] = [
-            "TPE": "台北(桃園)", "TSA(松山)": "台北", "KHH": "高雄", "RMQ": "台中",
-            "HKG": "香港", "MFM": "澳門",
-            "NRT": "東京", "HND": "東京", "KIX": "大阪", "NGO": "名古屋", 
-            "FUK": "福岡", "CTS": "札幌", "OKA": "沖繩", "SDJ": "仙台",
-            "ICN": "首爾", "GMP": "首爾", "PUS": "釜山",
-            "PEK": "北京", "PVG": "上海", "SHA": "上海", "CAN": "廣州", 
-            "SZX": "深圳", "CTU": "成都", "XIY": "西安",
-            "BKK": "曼谷", "SIN": "新加坡", "KUL": "吉隆坡", "MNL": "馬尼拉",
-            "SGN": "胡志明市", "HAN": "河內", "CGK": "雅加達",
-            "SYD": "雪梨", "MEL": "墨爾本", "BNE": "布里斯本", "PER": "伯斯",
-            "AKL": "奧克蘭",
-            "LAX": "洛杉磯", "SFO": "舊金山", "JFK": "紐約", "ORD": "芝加哥",
-            "SEA": "西雅圖", "YVR": "溫哥華", "YYZ": "多倫多",
-            "LHR": "倫敦", "CDG": "巴黎", "FRA": "法蘭克福", "AMS": "阿姆斯特丹",
-            "MAD": "馬德里", "FCO": "羅馬", "MUC": "慕尼黑", "ZRH": "蘇黎世",
-            "DXB": "杜拜", "DOH": "杜哈", "DEL": "德里", "BOM": "孟買"
-        ]
-        
-        return chineseNames[iataCode] ?? municipality
-    }
-    
-    // 取得中文機場名稱
-    private func getChineseAirportName(iataCode: String, name: String) -> String {
-        let chineseNames: [String: String] = [
-            "TPE": "桃園國際機場", "TSA": "松山機場",
-            "HKG": "香港國際機場",
-            "NRT": "成田國際機場", "HND": "羽田機場", "KIX": "關西國際機場",
-            "ICN": "仁川國際機場", "GMP": "金浦機場",
-            "BKK": "素萬那普機場", "SIN": "樟宜機場"
-        ]
-        
-        return chineseNames[iataCode] ?? name
-    }
-    
-    // 取得中文國家名稱
-    private func getChineseCountry(country: String) -> String {
-        let countryNames: [String: String] = [
-            "TW": "台灣", "HK": "香港", "MO": "澳門",
-            "JP": "日本", "KR": "韓國", "CN": "中國",
-            "TH": "泰國", "SG": "新加坡", "MY": "馬來西亞", 
-            "PH": "菲律賓", "VN": "越南", "ID": "印尼",
-            "AU": "澳洲", "NZ": "紐西蘭",
-            "US": "美國", "CA": "加拿大",
-            "GB": "英國", "FR": "法國", "DE": "德國", "IT": "義大利",
-            "ES": "西班牙", "NL": "荷蘭", "CH": "瑞士",
-            "AE": "阿聯酋", "QA": "卡達", "IN": "印度"
-        ]
-        
-        return countryNames[country] ?? country
-    }
-    
-    // 預設機場資料（當 CSV 載入失敗時使用）
+    // 預設機場資料
     private func loadDefaultAirports() {
         let airportList: [Airport] = [
             // 台灣
@@ -317,6 +206,9 @@ class AirportDatabase {
             Airport(iataCode: "YYZ", cityName: "多倫多", cityNameEN: "Toronto",
                    airportName: "多倫多皮爾遜國際機場", airportNameEN: "Toronto Pearson International Airport",
                    country: "加拿大", latitude: 43.6759, longitude: -79.6294),
+            Airport(iataCode: "PHX", cityName: "鳳凰城", cityNameEN: "Phoenix",
+                   airportName: "鳳凰城天港國際機場", airportNameEN: "Phoenix Sky Harbor International Airport",
+                   country: "美國", latitude: 33.4353, longitude: -112.0059),
             
             // 歐洲
             Airport(iataCode: "LHR", cityName: "倫敦", cityNameEN: "London",
@@ -358,6 +250,11 @@ class AirportDatabase {
     // 取得所有機場列表
     func getAllAirports() -> [Airport] {
         return Array(airports.values).sorted { $0.cityNameEN < $1.cityNameEN }
+    }
+    
+    // 取得熱門機場列表（保持 popularIATACodes 的排列順序）
+    func getPopularAirports() -> [Airport] {
+        return Self.popularIATACodes.compactMap { airports[$0] }
     }
     
     // 計算兩個機場之間的距離（使用 CoreLocation，單位：英哩）

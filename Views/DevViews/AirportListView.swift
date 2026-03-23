@@ -159,13 +159,74 @@ private extension String {
     }
 }
 
+// MARK: - 機場匯入暫存項目
+
+struct AirportImportItem: Identifiable {
+    let id = UUID()
+    var iataCode: String
+    var cityName: String
+    var cityNameEN: String
+    var airportName: String
+    var airportNameEN: String
+    var country: String
+    var latitude: Double
+    var longitude: Double
+    
+    init(from csv: CSVAirport) {
+        self.iataCode = csv.iataCode
+        self.cityName = ""
+        self.cityNameEN = csv.municipality
+        self.airportName = ""
+        self.airportNameEN = csv.name
+        self.country = csv.countryDisplayName
+        self.latitude = csv.latitude
+        self.longitude = csv.longitude
+    }
+}
+
+// MARK: - Swift 程式碼產生器
+
+enum AirportCodeGenerator {
+    static func generateSwiftCode(from items: [AirportImportItem]) -> String {
+        var lines: [String] = []
+        lines.append("// === 以下由 AirportListView 匯入工具產生 ===")
+        lines.append("// 請貼到 AirportDatabase.swift → loadDefaultAirports() → airportList 陣列中")
+        lines.append("")
+        
+        for item in items {
+            // 處理字串中的特殊字元
+            let cityName = item.cityName.replacingOccurrences(of: "\"", with: "\\\"")
+            let cityNameEN = item.cityNameEN.replacingOccurrences(of: "\"", with: "\\\"")
+            let airportName = item.airportName.replacingOccurrences(of: "\"", with: "\\\"")
+            let airportNameEN = item.airportNameEN.replacingOccurrences(of: "\"", with: "\\\"")
+            let country = item.country.replacingOccurrences(of: "\"", with: "\\\"")
+            
+            let code = """
+            Airport(iataCode: "\(item.iataCode)", cityName: "\(cityName)", cityNameEN: "\(cityNameEN)",
+                   airportName: "\(airportName)", airportNameEN: "\(airportNameEN)",
+                   country: "\(country)", latitude: \(String(format: "%.4f", item.latitude)), longitude: \(String(format: "%.4f", item.longitude))),
+            """
+            lines.append(code)
+        }
+        
+        return lines.joined(separator: "\n")
+    }
+}
+
 // MARK: - AirportListView
+
 struct AirportListView: View {
     @State private var searchText = ""
     @State private var selectedGrouping: GroupingOption = .continent
     @State private var selectedType: TypeFilter = .all
     @State private var allAirports: [CSVAirport] = []
     @State private var isLoading = true
+    
+    // 匯入相關狀態
+    @State private var importQueue: [AirportImportItem] = []
+    @State private var selectedCSVAirport: CSVAirport?
+    @State private var showingImportEdit = false
+    @State private var showingImportQueue = false
     
     enum GroupingOption: String, CaseIterable {
         case continent = "大洲"
@@ -304,7 +365,13 @@ struct AirportListView: View {
                     ForEach(sortedGroupKeys, id: \.self) { section in
                         Section(header: sectionHeader(section)) {
                             ForEach(groupedAirports[section] ?? []) { airport in
-                                CSVAirportRowView(airport: airport)
+                                Button {
+                                    selectedCSVAirport = airport
+                                    showingImportEdit = true
+                                } label: {
+                                    CSVAirportRowView(airport: airport)
+                                }
+                                .buttonStyle(.plain)
                             }
                         }
                     }
@@ -314,10 +381,39 @@ struct AirportListView: View {
         }
         .navigationTitle("機場資料")
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button {
+                    showingImportQueue = true
+                } label: {
+                    ZStack(alignment: .topTrailing) {
+                        Image(systemName: "tray.and.arrow.down.fill")
+                        if !importQueue.isEmpty {
+                            Text("\(importQueue.count)")
+                                .font(.caption2)
+                                .fontWeight(.bold)
+                                .foregroundColor(.white)
+                                .padding(4)
+                                .background(Color.red)
+                                .clipShape(Circle())
+                                .offset(x: 8, y: -8)
+                        }
+                    }
+                }
+            }
+        }
         .onAppear {
             if allAirports.isEmpty {
                 loadAirports()
             }
+        }
+        .sheet(isPresented: $showingImportEdit) {
+            if let csv = selectedCSVAirport {
+                AirportImportEditForm(csvAirport: csv, importQueue: $importQueue)
+            }
+        }
+        .sheet(isPresented: $showingImportQueue) {
+            AirportImportQueueView(importQueue: $importQueue)
         }
     }
     
@@ -421,6 +517,393 @@ struct CSVAirportRowView: View {
             }
         }
         .padding(.vertical, 4)
+    }
+}
+
+// MARK: - 機場匯入編輯表單
+
+struct AirportImportEditForm: View {
+    @Environment(\.dismiss) private var dismiss
+    let csvAirport: CSVAirport
+    @Binding var importQueue: [AirportImportItem]
+    
+    @State private var cityName: String = ""
+    @State private var cityNameEN: String = ""
+    @State private var airportName: String = ""
+    @State private var airportNameEN: String = ""
+    @State private var country: String = ""
+    
+    var body: some View {
+        NavigationStack {
+            Form {
+                // 基本資訊（唯讀）
+                Section("基本資訊") {
+                    HStack {
+                        Text("IATA")
+                            .foregroundColor(.secondary)
+                        Spacer()
+                        Text(csvAirport.iataCode)
+                            .fontWeight(.bold)
+                            .foregroundColor(AviationTheme.Colors.cathayJade)
+                    }
+                    if !csvAirport.icaoCode.isEmpty {
+                        HStack {
+                            Text("ICAO")
+                                .foregroundColor(.secondary)
+                            Spacer()
+                            Text(csvAirport.icaoCode)
+                        }
+                    }
+                    HStack {
+                        Text("類型")
+                            .foregroundColor(.secondary)
+                        Spacer()
+                        Text(csvAirport.typeDisplayName)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 2)
+                            .background(csvAirport.type == "large_airport"
+                                        ? Color.blue.opacity(0.15)
+                                        : Color.orange.opacity(0.15))
+                            .foregroundColor(csvAirport.type == "large_airport" ? .blue : .orange)
+                            .cornerRadius(4)
+                    }
+                }
+                
+                // 中文資料（可編輯）
+                Section("中文資料") {
+                    HStack {
+                        Text("城市名稱")
+                            .foregroundColor(.secondary)
+                            .frame(width: 80, alignment: .leading)
+                        TextField("輸入城市中文名稱", text: $cityName)
+                    }
+                    HStack {
+                        Text("機場名稱")
+                            .foregroundColor(.secondary)
+                            .frame(width: 80, alignment: .leading)
+                        TextField("輸入機場中文名稱", text: $airportName)
+                    }
+                    HStack {
+                        Text("國家")
+                            .foregroundColor(.secondary)
+                            .frame(width: 80, alignment: .leading)
+                        TextField("國家名稱", text: $country)
+                    }
+                }
+                
+                // 英文資料（預填，可修改）
+                Section("英文資料") {
+                    HStack {
+                        Text("City")
+                            .foregroundColor(.secondary)
+                            .frame(width: 80, alignment: .leading)
+                        TextField("City name", text: $cityNameEN)
+                    }
+                    HStack {
+                        Text("Airport")
+                            .foregroundColor(.secondary)
+                            .frame(width: 80, alignment: .leading)
+                        TextField("Airport name", text: $airportNameEN)
+                    }
+                }
+                
+                // 座標（唯讀）
+                Section("座標") {
+                    HStack {
+                        Text("緯度")
+                            .foregroundColor(.secondary)
+                        Spacer()
+                        Text(String(format: "%.4f", csvAirport.latitude))
+                            .font(.system(.body, design: .monospaced))
+                    }
+                    HStack {
+                        Text("經度")
+                            .foregroundColor(.secondary)
+                        Spacer()
+                        Text(String(format: "%.4f", csvAirport.longitude))
+                            .font(.system(.body, design: .monospaced))
+                    }
+                }
+            }
+            .navigationTitle("匯入機場")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("取消") { dismiss() }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("加入佇列") {
+                        var item = AirportImportItem(from: csvAirport)
+                        item.cityName = cityName
+                        item.cityNameEN = cityNameEN
+                        item.airportName = airportName
+                        item.airportNameEN = airportNameEN
+                        item.country = country
+                        importQueue.append(item)
+                        dismiss()
+                    }
+                    .disabled(cityName.isEmpty || airportName.isEmpty)
+                }
+            }
+            .onAppear {
+                cityNameEN = csvAirport.municipality
+                airportNameEN = csvAirport.name
+                country = csvAirport.countryDisplayName
+            }
+        }
+    }
+}
+
+// MARK: - 匯入佇列管理
+
+struct AirportImportQueueView: View {
+    @Environment(\.dismiss) private var dismiss
+    @Binding var importQueue: [AirportImportItem]
+    @State private var copiedToClipboard = false
+    @State private var editingItem: AirportImportItem?
+    
+    private var generatedCode: String {
+        AirportCodeGenerator.generateSwiftCode(from: importQueue)
+    }
+    
+    var body: some View {
+        NavigationStack {
+            Group {
+                if importQueue.isEmpty {
+                    // 空狀態
+                    VStack(spacing: 16) {
+                        Spacer()
+                        Image(systemName: "tray")
+                            .font(.system(size: 48))
+                            .foregroundColor(.gray)
+                        Text("匯入佇列為空")
+                            .font(.headline)
+                        Text("從機場列表點選機場來加入匯入佇列")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                        Spacer()
+                    }
+                } else {
+                    List {
+                        // 提示
+                        Section {
+                            HStack(spacing: 12) {
+                                Image(systemName: "info.circle.fill")
+                                    .foregroundColor(.blue)
+                                    .font(.title3)
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text("貼回位置")
+                                        .font(.subheadline)
+                                        .fontWeight(.semibold)
+                                    Text("AirportDatabase.swift → loadDefaultAirports() → airportList 陣列中")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                }
+                            }
+                            .padding(.vertical, 4)
+                        }
+                        
+                        // 佇列列表
+                        Section("佇列（\(importQueue.count) 筆）") {
+                            ForEach(importQueue) { item in
+                                Button {
+                                    editingItem = item
+                                } label: {
+                                    HStack(spacing: 12) {
+                                        Text(item.iataCode)
+                                            .font(.headline)
+                                            .fontWeight(.bold)
+                                            .foregroundColor(.white)
+                                            .frame(width: 44, height: 44)
+                                            .background(AviationTheme.Colors.cathayJade)
+                                            .cornerRadius(8)
+                                        
+                                        VStack(alignment: .leading, spacing: 2) {
+                                            Text(item.airportName.isEmpty ? item.airportNameEN : item.airportName)
+                                                .font(.subheadline)
+                                                .fontWeight(.medium)
+                                                .foregroundColor(.primary)
+                                            Text("\(item.cityName.isEmpty ? item.cityNameEN : item.cityName) · \(item.country)")
+                                                .font(.caption)
+                                                .foregroundColor(.secondary)
+                                        }
+                                    }
+                                }
+                                .buttonStyle(.plain)
+                            }
+                            .onDelete { offsets in
+                                importQueue.remove(atOffsets: offsets)
+                            }
+                        }
+                        
+                        // 程式碼預覽
+                        Section("產生的程式碼") {
+                            ScrollView(.horizontal) {
+                                Text(generatedCode)
+                                    .font(.system(.caption, design: .monospaced))
+                                    .foregroundColor(.primary)
+                                    .padding(8)
+                            }
+                            .frame(maxHeight: 200)
+                            .background(Color(.systemGray6))
+                            .cornerRadius(8)
+                        }
+                        
+                        // 操作按鈕
+                        Section {
+                            Button {
+                                UIPasteboard.general.string = generatedCode
+                                copiedToClipboard = true
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                                    copiedToClipboard = false
+                                }
+                            } label: {
+                                Label(
+                                    copiedToClipboard ? "已複製！" : "複製到剪貼簿",
+                                    systemImage: copiedToClipboard ? "checkmark.circle.fill" : "doc.on.doc"
+                                )
+                                .foregroundColor(copiedToClipboard ? .green : AviationTheme.Colors.cathayJade)
+                            }
+                            
+                            ShareLink(
+                                item: generatedCode,
+                                preview: SharePreview("Airport Import Code (\(importQueue.count) airports)")
+                            ) {
+                                Label("匯出檔案", systemImage: "square.and.arrow.up")
+                                    .foregroundColor(AviationTheme.Colors.cathayJade)
+                            }
+                            
+                            Button(role: .destructive) {
+                                importQueue.removeAll()
+                            } label: {
+                                Label("清空佇列", systemImage: "trash")
+                            }
+                        }
+                    }
+                }
+            }
+            .navigationTitle("匯入佇列")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("完成") { dismiss() }
+                }
+            }
+            .sheet(item: $editingItem) { item in
+                AirportImportItemEditForm(item: item, importQueue: $importQueue)
+            }
+        }
+    }
+}
+
+// MARK: - 佇列中項目的編輯表單
+
+struct AirportImportItemEditForm: View {
+    @Environment(\.dismiss) private var dismiss
+    let item: AirportImportItem
+    @Binding var importQueue: [AirportImportItem]
+    
+    @State private var cityName: String = ""
+    @State private var cityNameEN: String = ""
+    @State private var airportName: String = ""
+    @State private var airportNameEN: String = ""
+    @State private var country: String = ""
+    
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section("基本資訊") {
+                    HStack {
+                        Text("IATA")
+                            .foregroundColor(.secondary)
+                        Spacer()
+                        Text(item.iataCode)
+                            .fontWeight(.bold)
+                            .foregroundColor(AviationTheme.Colors.cathayJade)
+                    }
+                }
+                
+                Section("中文資料") {
+                    HStack {
+                        Text("城市名稱")
+                            .foregroundColor(.secondary)
+                            .frame(width: 80, alignment: .leading)
+                        TextField("輸入城市中文名稱", text: $cityName)
+                    }
+                    HStack {
+                        Text("機場名稱")
+                            .foregroundColor(.secondary)
+                            .frame(width: 80, alignment: .leading)
+                        TextField("輸入機場中文名稱", text: $airportName)
+                    }
+                    HStack {
+                        Text("國家")
+                            .foregroundColor(.secondary)
+                            .frame(width: 80, alignment: .leading)
+                        TextField("國家名稱", text: $country)
+                    }
+                }
+                
+                Section("英文資料") {
+                    HStack {
+                        Text("City")
+                            .foregroundColor(.secondary)
+                            .frame(width: 80, alignment: .leading)
+                        TextField("City name", text: $cityNameEN)
+                    }
+                    HStack {
+                        Text("Airport")
+                            .foregroundColor(.secondary)
+                            .frame(width: 80, alignment: .leading)
+                        TextField("Airport name", text: $airportNameEN)
+                    }
+                }
+                
+                Section("座標") {
+                    HStack {
+                        Text("緯度")
+                            .foregroundColor(.secondary)
+                        Spacer()
+                        Text(String(format: "%.4f", item.latitude))
+                            .font(.system(.body, design: .monospaced))
+                    }
+                    HStack {
+                        Text("經度")
+                            .foregroundColor(.secondary)
+                        Spacer()
+                        Text(String(format: "%.4f", item.longitude))
+                            .font(.system(.body, design: .monospaced))
+                    }
+                }
+            }
+            .navigationTitle("編輯 \(item.iataCode)")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("取消") { dismiss() }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("儲存") {
+                        if let index = importQueue.firstIndex(where: { $0.id == item.id }) {
+                            importQueue[index].cityName = cityName
+                            importQueue[index].cityNameEN = cityNameEN
+                            importQueue[index].airportName = airportName
+                            importQueue[index].airportNameEN = airportNameEN
+                            importQueue[index].country = country
+                        }
+                        dismiss()
+                    }
+                    .disabled(cityName.isEmpty || airportName.isEmpty)
+                }
+            }
+            .onAppear {
+                cityName = item.cityName
+                cityNameEN = item.cityNameEN
+                airportName = item.airportName
+                airportNameEN = item.airportNameEN
+                country = item.country
+            }
+        }
     }
 }
 

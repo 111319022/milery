@@ -1040,41 +1040,65 @@ struct AirportPickerView: View {
     
     @State private var searchText = ""
     
-    var filteredAirports: [Airport] {
-        if searchText.isEmpty {
-            return airports.prefix(50).map { $0 } // 只顯示前 50 個，避免列表太長
-        } else {
-            // 優先顯示 IATA 代碼完全匹配的結果
-            let exactMatch = airports.filter { 
-                $0.iataCode.uppercased() == searchText.uppercased()
-            }
-            
-            if !exactMatch.isEmpty {
-                return exactMatch
-            }
-            
-            // 然後顯示部分匹配的結果
-            return AirportDatabase.shared.searchAirports(query: searchText).prefix(50).map { $0 }
+    var popularAirports: [Airport] {
+        AirportDatabase.shared.getPopularAirports()
+    }
+    
+    var searchResults: [Airport] {
+        guard !searchText.isEmpty else { return [] }
+        
+        let exactMatch = airports.filter {
+            $0.iataCode.uppercased() == searchText.uppercased()
         }
+        if !exactMatch.isEmpty {
+            return exactMatch
+        }
+        return AirportDatabase.shared.searchAirports(query: searchText).prefix(50).map { $0 }
     }
     
     var body: some View {
         NavigationStack {
             List {
-                Section {
-                    ForEach(filteredAirports) { airport in
-                        Button {
-                            selectedAirport = airport
-                            dismiss()
-                        } label: {
-                            AirportRowView(airport: airport, isSelected: selectedAirport?.id == airport.id)
+                if searchText.isEmpty {
+                    Section {
+                        ForEach(popularAirports) { airport in
+                            Button {
+                                selectedAirport = airport
+                                dismiss()
+                            } label: {
+                                AirportRowView(airport: airport, isSelected: selectedAirport?.id == airport.id)
+                            }
                         }
-                    }
-                } header: {
-                    if !searchText.isEmpty {
-                        Text("搜尋結果")
-                    } else {
+                    } header: {
                         Text("熱門機場")
+                    }
+                    
+                    Section {
+                        ForEach(airports.filter { airport in
+                            !AirportDatabase.popularIATACodes.contains(airport.iataCode)
+                        }) { airport in
+                            Button {
+                                selectedAirport = airport
+                                dismiss()
+                            } label: {
+                                AirportRowView(airport: airport, isSelected: selectedAirport?.id == airport.id)
+                            }
+                        }
+                    } header: {
+                        Text("所有機場")
+                    }
+                } else {
+                    Section {
+                        ForEach(searchResults) { airport in
+                            Button {
+                                selectedAirport = airport
+                                dismiss()
+                            } label: {
+                                AirportRowView(airport: airport, isSelected: selectedAirport?.id == airport.id)
+                            }
+                        }
+                    } header: {
+                        Text("搜尋結果")
                     }
                 }
             }
