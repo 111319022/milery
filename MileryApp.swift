@@ -12,7 +12,8 @@ struct MileryApp: App {
             RedeemedTicket.self
         ])
         
-        let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
+        // cloudKitDatabase: .none 避免 SwiftData 自動同步 CloudKit（備份由 CloudBackupService 手動管理）
+        let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false, cloudKitDatabase: .none)
         
         do {
             return try ModelContainer(for: schema, configurations: [modelConfiguration])

@@ -10,6 +10,8 @@
 		FB40838F2F703C0D00993DF0 /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = FB40838E2F703C0100993DF0 /* README.md */; };
 		FB419C212F6B1C3B00A30AF9 /* CalculatorComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB419C202F6B1C3B00A30AF9 /* CalculatorComponents.swift */; };
 		FB419C242F6C1BA700A30AF9 /* CreditCardPageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB419C232F6C1BA700A30AF9 /* CreditCardPageView.swift */; };
+		FB6BC0C02F70F45E0011877D /* CloudBackupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB6BC0BF2F70F45E0011877D /* CloudBackupView.swift */; };
+		FB6BC0C22F70F4DC0011877D /* CloudBackupService.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB6BC0C12F70F4DC0011877D /* CloudBackupService.swift */; };
 		FBCA10212F70000100A1B2C3 /* RedeemedTicket.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBCA10202F70000100A1B2C3 /* RedeemedTicket.swift */; };
 		FBCA10232F70000200A1B2C3 /* MilestonesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBCA10222F70000200A1B2C3 /* MilestonesView.swift */; };
 		FBF2F7CB2F6D333F0047DCE8 /* EditTransactionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBF2F7CA2F6D333F0047DCE8 /* EditTransactionView.swift */; };
@@ -37,7 +39,10 @@
 		FB40838E2F703C0100993DF0 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		FB419C202F6B1C3B00A30AF9 /* CalculatorComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalculatorComponents.swift; sourceTree = "<group>"; };
 		FB419C232F6C1BA700A30AF9 /* CreditCardPageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreditCardPageView.swift; sourceTree = "<group>"; };
-		FBB3ADDA2F67A60600D7ADE3 /* milery.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = milery.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		FB6BC0BF2F70F45E0011877D /* CloudBackupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudBackupView.swift; sourceTree = "<group>"; };
+		FB6BC0C12F70F4DC0011877D /* CloudBackupService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudBackupService.swift; sourceTree = "<group>"; };
+		FB6BC0C42F70FCF20011877D /* milery.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = milery.entitlements; sourceTree = "<group>"; };
+		FB6BC0C52F70FCF20011877D /* milery.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; name = milery.app; path = "/Users/rayhsu/Documents/73app-mid/build/Debug-iphoneos/milery.app"; sourceTree = "<absolute>"; };
 		FBCA10202F70000100A1B2C3 /* RedeemedTicket.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RedeemedTicket.swift; sourceTree = "<group>"; };
 		FBCA10222F70000200A1B2C3 /* MilestonesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MilestonesView.swift; sourceTree = "<group>"; };
 		FBF2F7CA2F6D333F0047DCE8 /* EditTransactionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditTransactionView.swift; sourceTree = "<group>"; };
@@ -80,9 +85,18 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		FB6BC0C32F70F5550011877D /* Service */ = {
+			isa = PBXGroup;
+			children = (
+				FB6BC0C12F70F4DC0011877D /* CloudBackupService.swift */,
+			);
+			path = Service;
+			sourceTree = "<group>";
+		};
 		FBB3ADD12F67A60600D7ADE3 = {
 			isa = PBXGroup;
 			children = (
+				FB6BC0C42F70FCF20011877D /* milery.entitlements */,
 				FBF89D942F6AC2EE003DB1EB /* MileryApp.swift */,
 				FBF89D962F6AC2EE003DB1EB /* Assets.xcassets */,
 				FB40838E2F703C0100993DF0 /* README.md */,
@@ -91,16 +105,8 @@
 				FBF89DA02F6AC2EE003DB1EB /* Models */,
 				FBF89DA22F6AC2EE003DB1EB /* ViewModels */,
 				FBF89DAB2F6AC2EE003DB1EB /* Views */,
-				FBB3ADDB2F67A60600D7ADE3 /* Products */,
+				FB6BC0C32F70F5550011877D /* Service */,
 			);
-			sourceTree = "<group>";
-		};
-		FBB3ADDB2F67A60600D7ADE3 /* Products */ = {
-			isa = PBXGroup;
-			children = (
-				FBB3ADDA2F67A60600D7ADE3 /* milery.app */,
-			);
-			name = Products;
 			sourceTree = "<group>";
 		};
 		FBF89D9B2F6AC2EE003DB1EB /* Database */ = {
@@ -148,6 +154,7 @@
 				FB419C202F6B1C3B00A30AF9 /* CalculatorComponents.swift */,
 				FB419C232F6C1BA700A30AF9 /* CreditCardPageView.swift */,
 				FBF2F7CA2F6D333F0047DCE8 /* EditTransactionView.swift */,
+				FB6BC0BF2F70F45E0011877D /* CloudBackupView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -174,7 +181,7 @@
 			packageProductDependencies = (
 			);
 			productName = "73app-mid";
-			productReference = FBB3ADDA2F67A60600D7ADE3 /* milery.app */;
+			productReference = FB6BC0C52F70FCF20011877D /* milery.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -202,7 +209,7 @@
 			mainGroup = FBB3ADD12F67A60600D7ADE3;
 			minimizedProjectReferenceProxies = 1;
 			preferredProjectObjectVersion = 77;
-			productRefGroup = FBB3ADDB2F67A60600D7ADE3 /* Products */;
+			productRefGroup = FBB3ADD12F67A60600D7ADE3;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
@@ -234,7 +241,9 @@
 				FBF89DB12F6AC2EE003DB1EB /* ProgressView.swift in Sources */,
 				FBF89DB22F6AC2EE003DB1EB /* MileryApp.swift in Sources */,
 				FBF2F7CB2F6D333F0047DCE8 /* EditTransactionView.swift in Sources */,
+				FB6BC0C22F70F4DC0011877D /* CloudBackupService.swift in Sources */,
 				FB419C212F6B1C3B00A30AF9 /* CalculatorComponents.swift in Sources */,
+				FB6BC0C02F70F45E0011877D /* CloudBackupView.swift in Sources */,
 				FBF89DB32F6AC2EE003DB1EB /* MainTabView.swift in Sources */,
 				FBF89DB42F6AC2EE003DB1EB /* MileageAccount.swift in Sources */,
 				FBCA10212F70000100A1B2C3 /* RedeemedTicket.swift in Sources */,
@@ -382,6 +391,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = milery.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 12;
 				DEVELOPMENT_TEAM = 45SQT63B67;
@@ -419,6 +429,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = milery.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 12;
 				DEVELOPMENT_TEAM = 45SQT63B67;

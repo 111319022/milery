@@ -16,6 +16,15 @@ struct SettingsView: View {
     @State private var showingDevPasswordAlert = false
     @State private var devPasswordInput = ""
     @AppStorage("developerPassword") private var developerPassword: String = "7373"
+    @AppStorage("lastBackupDate") private var lastBackupDateTimestamp: Double = 0
+    
+    private var lastBackupText: String {
+        if lastBackupDateTimestamp > 0 {
+            let date = Date(timeIntervalSince1970: lastBackupDateTimestamp)
+            return date.formatted(.dateTime.month().day().hour().minute())
+        }
+        return "尚未備份"
+    }
     
     var themeDisplayName: String {
         switch userColorScheme {
@@ -143,6 +152,31 @@ struct SettingsView: View {
                                     subtitle: "接收哩程到期與目標提醒",
                                     isOn: $enableNotifications
                                 )
+                            }
+                            .background(AviationTheme.Colors.cardBackground(colorScheme))
+                            .clipShape(RoundedRectangle(cornerRadius: AviationTheme.CornerRadius.lg))
+                            .shadow(color: AviationTheme.Shadows.cardShadow(colorScheme).opacity(0.5), radius: 8, x: 0, y: 2)
+                        }
+                        .padding(.horizontal, AviationTheme.Spacing.md)
+                        
+                        // MARK: - 備份
+                        VStack(alignment: .leading, spacing: 8) {
+                            SectionHeaderView(title: "備份", colorScheme: colorScheme)
+                            
+                            VStack(spacing: 0) {
+                                NavigationLink(destination: CloudBackupView(viewModel: viewModel)) {
+                                    SettingRow(
+                                        icon: "icloud.and.arrow.up.fill",
+                                        title: "iCloud 備份",
+                                        subtitle: lastBackupText
+                                    ) {
+                                        Image(systemName: "chevron.right")
+                                            .foregroundColor(AviationTheme.Colors.tertiaryText(colorScheme))
+                                            .font(.subheadline)
+                                            .fontWeight(.semibold)
+                                    }
+                                }
+                                .buttonStyle(.plain)
                             }
                             .background(AviationTheme.Colors.cardBackground(colorScheme))
                             .clipShape(RoundedRectangle(cornerRadius: AviationTheme.CornerRadius.lg))
