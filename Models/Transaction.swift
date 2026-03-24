@@ -5,10 +5,10 @@ import SwiftData
 final class Transaction {
     var id: UUID = UUID()
     var date: Date = Date()
-    var amount: Decimal = 0 // 消費金額或成本
+    var amountValue: Double = 0 // 持久化用：CloudKit 友善型別
     var earnedMiles: Int = 0
-    var source: MileageSource = MileageSource.cardGeneral
-    var acceleratorCategory: AcceleratorCategory? // 加速器類別（如果適用）
+    var sourceRaw: String = MileageSource.cardGeneral.rawValue
+    var acceleratorCategoryRaw: String? // 加速器類別（如果適用）
     var notes: String = ""
     var costPerMile: Double = 0 // 每哩成本（自動計算）
     
@@ -20,6 +20,21 @@ final class Transaction {
     var linkedTicketID: UUID? // 兌換機票時連結的 RedeemedTicket ID
     
     var account: MileageAccount? // CloudKit 要求 relationship 必須為 optional
+
+    var amount: Decimal {
+        get { NSDecimalNumber(value: amountValue).decimalValue }
+        set { amountValue = NSDecimalNumber(decimal: newValue).doubleValue }
+    }
+
+    var source: MileageSource {
+        get { MileageSource(rawValue: sourceRaw) ?? .cardGeneral }
+        set { sourceRaw = newValue.rawValue }
+    }
+
+    var acceleratorCategory: AcceleratorCategory? {
+        get { acceleratorCategoryRaw.flatMap { AcceleratorCategory(rawValue: $0) } }
+        set { acceleratorCategoryRaw = newValue?.rawValue }
+    }
     
     init(date: Date = Date(), 
          amount: Decimal, 
@@ -34,10 +49,10 @@ final class Transaction {
          linkedTicketID: UUID? = nil) {
         self.id = UUID()
         self.date = date
-        self.amount = amount
+        self.amountValue = NSDecimalNumber(decimal: amount).doubleValue
         self.earnedMiles = earnedMiles
-        self.source = source
-        self.acceleratorCategory = acceleratorCategory
+        self.sourceRaw = source.rawValue
+        self.acceleratorCategoryRaw = acceleratorCategory?.rawValue
         self.notes = notes
         self.flightRoute = flightRoute
         self.conversionSource = conversionSource

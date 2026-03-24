@@ -40,25 +40,50 @@ final class CreditCardRule {
     var cardTierRaw: String = ""
     
     // 基礎回饋率 (多少元 = 1 哩)
-    var baseRate: Decimal = 30 // 例如：30 表示 30元/哩
+    var baseRateValue: Double = 30 // 持久化用：CloudKit 友善型別
     
     // 加速器回饋率（哩程加速器消費適用）
-    var acceleratorRate: Decimal = 30 // 例如：10 表示 10元/哩
+    var acceleratorRateValue: Double = 30 // 持久化用：CloudKit 友善型別
     
     // 特約商店回饋率
-    var specialMerchantRate: Decimal = 30 // 例如：10 表示 10元/哩
+    var specialMerchantRateValue: Double = 30 // 持久化用：CloudKit 友善型別
     
     // 生日當月加碼倍數
-    var birthdayMultiplier: Decimal = 1.0 // 例如：2.0 表示雙倍
+    var birthdayMultiplierValue: Double = 1.0 // 持久化用：CloudKit 友善型別
     
     // 進位方式
-    var roundingMode: RoundingMode = RoundingMode.down
+    var roundingModeRaw: String = RoundingMode.down.rawValue
     
     // 每月結帳日
     var billingDay: Int = 1
     
     // 年費
     var annualFee: Int = 0
+
+    var baseRate: Decimal {
+        get { NSDecimalNumber(value: baseRateValue).decimalValue }
+        set { baseRateValue = NSDecimalNumber(decimal: newValue).doubleValue }
+    }
+
+    var acceleratorRate: Decimal {
+        get { NSDecimalNumber(value: acceleratorRateValue).decimalValue }
+        set { acceleratorRateValue = NSDecimalNumber(decimal: newValue).doubleValue }
+    }
+
+    var specialMerchantRate: Decimal {
+        get { NSDecimalNumber(value: specialMerchantRateValue).decimalValue }
+        set { specialMerchantRateValue = NSDecimalNumber(decimal: newValue).doubleValue }
+    }
+
+    var birthdayMultiplier: Decimal {
+        get { NSDecimalNumber(value: birthdayMultiplierValue).decimalValue }
+        set { birthdayMultiplierValue = NSDecimalNumber(decimal: newValue).doubleValue }
+    }
+
+    var roundingMode: RoundingMode {
+        get { RoundingMode(rawValue: roundingModeRaw) ?? .down }
+        set { roundingModeRaw = newValue.rawValue }
+    }
     
     // Computed: 卡片品牌
     var cardBrand: CardBrand {
@@ -92,11 +117,11 @@ final class CreditCardRule {
         self.id = UUID()
         self.cardName = cardName
         self.bankName = bankName
-        self.baseRate = baseRate
-        self.acceleratorRate = acceleratorRate
-        self.specialMerchantRate = specialMerchantRate
-        self.birthdayMultiplier = birthdayMultiplier
-        self.roundingMode = roundingMode
+        self.baseRateValue = NSDecimalNumber(decimal: baseRate).doubleValue
+        self.acceleratorRateValue = NSDecimalNumber(decimal: acceleratorRate).doubleValue
+        self.specialMerchantRateValue = NSDecimalNumber(decimal: specialMerchantRate).doubleValue
+        self.birthdayMultiplierValue = NSDecimalNumber(decimal: birthdayMultiplier).doubleValue
+        self.roundingModeRaw = roundingMode.rawValue
         self.billingDay = billingDay
         self.annualFee = annualFee
         self.isActive = isActive

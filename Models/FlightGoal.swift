@@ -8,7 +8,7 @@ final class FlightGoal {
     var destination: String = "" // 目的地 IATA 代碼
     var originName: String = "" // 出發地中文名稱
     var destinationName: String = "" // 目的地中文名稱
-    var cabinClass: CabinClass = CabinClass.economy
+    var cabinClassRaw: String = CabinClass.economy.rawValue
     var requiredMiles: Int = 0
     var isOneworld: Bool = false // 是否為寰宇一家夥伴航空
     var isPriority: Bool = false // 是否為優先目標
@@ -17,6 +17,11 @@ final class FlightGoal {
     var sortOrder: Int = 0 // 排序順序（越小越前面，釘選與非釘選分開排序）
     
     var account: MileageAccount? // CloudKit 要求 relationship 必須為 optional
+
+    var cabinClass: CabinClass {
+        get { CabinClass(rawValue: cabinClassRaw) ?? .economy }
+        set { cabinClassRaw = newValue.rawValue }
+    }
     
     init(origin: String,
          destination: String,
@@ -32,7 +37,7 @@ final class FlightGoal {
         self.destination = destination
         self.originName = originName
         self.destinationName = destinationName
-        self.cabinClass = cabinClass
+        self.cabinClassRaw = cabinClass.rawValue
         self.requiredMiles = requiredMiles
         self.isOneworld = isOneworld
         self.isPriority = isPriority

@@ -9,15 +9,25 @@ final class RedeemedTicket {
     var originName: String = ""
     var destinationName: String = ""
     var isRoundTrip: Bool = false
-    var cabinClass: CabinClass = CabinClass.economy
+    var cabinClassRaw: String = CabinClass.economy.rawValue
     var spentMiles: Int = 0
-    var taxPaid: Decimal = 0
+    var taxPaidValue: Double = 0
     var flightDate: Date = Date()
     var pnr: String = ""
     var airline: String = ""
     var flightNumber: String = ""
     var redeemedDate: Date = Date()
     var linkedTransactionID: UUID?
+
+    var cabinClass: CabinClass {
+        get { CabinClass(rawValue: cabinClassRaw) ?? .economy }
+        set { cabinClassRaw = newValue.rawValue }
+    }
+
+    var taxPaid: Decimal {
+        get { NSDecimalNumber(value: taxPaidValue).decimalValue }
+        set { taxPaidValue = NSDecimalNumber(decimal: newValue).doubleValue }
+    }
 
     init(
         id: UUID = UUID(),
@@ -42,9 +52,9 @@ final class RedeemedTicket {
         self.originName = originName
         self.destinationName = destinationName
         self.isRoundTrip = isRoundTrip
-        self.cabinClass = cabinClass
+        self.cabinClassRaw = cabinClass.rawValue
         self.spentMiles = spentMiles
-        self.taxPaid = taxPaid
+        self.taxPaidValue = NSDecimalNumber(decimal: taxPaid).doubleValue
         self.flightDate = flightDate
         self.pnr = pnr
         self.airline = airline
