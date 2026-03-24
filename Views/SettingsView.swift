@@ -264,6 +264,22 @@ struct SettingsView: View {
 
                                     CustomDivider(colorScheme: colorScheme)
 
+                                    NavigationLink(destination: DataManagementView()) {
+                                        SettingRow(
+                                            icon: "externaldrive.fill.badge.icloud",
+                                            title: "資料管理",
+                                            subtitle: "檢視 SwiftData 全量資料與清理舊版異常"
+                                        ) {
+                                            Image(systemName: "chevron.right")
+                                                .foregroundColor(AviationTheme.Colors.tertiaryText(colorScheme))
+                                                .font(.subheadline)
+                                                .fontWeight(.semibold)
+                                        }
+                                    }
+                                    .buttonStyle(.plain)
+
+                                    CustomDivider(colorScheme: colorScheme)
+
                                     NavigationLink(destination: ConsoleLogView()) {
                                         SettingRow(
                                             icon: "terminal.fill",

@@ -11,6 +11,7 @@ final class AppConsoleStore {
 
     private(set) var entries: [String] = []
     private let maxEntries = 800
+    private let retentionDays = 7
     private let formatter: DateFormatter
     private let fileURL: URL
 
@@ -28,9 +29,16 @@ final class AppConsoleStore {
            let text = String(data: data, encoding: .utf8) {
             entries = text.split(separator: "\n", omittingEmptySubsequences: true).map(String.init)
         }
+
+        pruneExpiredEntries()
+        if entries.count > maxEntries {
+            entries.removeFirst(entries.count - maxEntries)
+        }
+        persistToFile()
     }
 
     func log(_ message: String) {
+        pruneExpiredEntries()
         let line = "[\(formatter.string(from: Date()))] \(message)"
         entries.append(line)
         if entries.count > maxEntries {
@@ -48,6 +56,27 @@ final class AppConsoleStore {
     private func persistToFile() {
         let content = entries.joined(separator: "\n")
         try? content.data(using: .utf8)?.write(to: fileURL)
+    }
+
+    private func pruneExpiredEntries() {
+        let cutoff = Calendar.current.date(byAdding: .day, value: -retentionDays, to: Date()) ?? .distantPast
+        entries = entries.filter { entry in
+            guard let timestamp = extractTimestamp(from: entry) else {
+                return true
+            }
+            return timestamp >= cutoff
+        }
+    }
+
+    private func extractTimestamp(from line: String) -> Date? {
+        guard let start = line.firstIndex(of: "["),
+              let end = line.firstIndex(of: "]"),
+              start < end else {
+            return nil
+        }
+
+        let value = String(line[line.index(after: start)..<end])
+        return formatter.date(from: value)
     }
 }
 
