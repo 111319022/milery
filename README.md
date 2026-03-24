@@ -120,6 +120,16 @@ Milery是一款專為航空常客與哩程使用者開發之 iOS 原生應用程
 3. App 會自動進行 CloudKit 白名單驗證。
 4. 驗證通過後，顯示「開發者」區塊。
 
+### TestFlight / 正式版部署重點
+
+* **TestFlight 與 App Store 版本會使用 CloudKit Production 環境。**
+* 請確認 Production 也建立以下資料（不是只有 Development）：
+  * Record Type：`DevAccessPolicy`
+  * Record Name：`main-dev-access-policy`（相容舊版：`default`）
+  * `enabled = 1`
+  * `allowedUserHashes` 已加入目標使用者 hash
+* 若只在 Development 設定白名單，TestFlight / 正式版會驗證失敗。
+
 ### 各工具頁用途說明
 
 * **機場資料列表** (`Views/DevViews/AirportListView.swift`)
