@@ -112,7 +112,7 @@ struct SettingsView: View {
                                 // 2. 生日月份設定
                                 SettingRow(
                                     icon: "gift.fill",
-                                    title: "生日月份設定",
+                                    title: "生日月份設定（開發中）",
                                     subtitle: "用於計算生日當月哩程雙倍加碼"
                                 ) {
                                     DatePicker("", selection: $viewModel.userBirthday, displayedComponents: .date)
