@@ -5,10 +5,10 @@ import SwiftData
 final class Transaction {
     var id: UUID = UUID()
     var date: Date = Date()
-    var amountValue: Double = 0 // 持久化用：CloudKit 友善型別
+    @Attribute(originalName: "amount") var amountValue: Double = 0 // 持久化用：CloudKit 友善型別
     var earnedMiles: Int = 0
-    var sourceRaw: String = MileageSource.cardGeneral.rawValue
-    var acceleratorCategoryRaw: String? // 加速器類別（如果適用）
+    @Attribute(originalName: "source") var sourceRaw: String = MileageSource.cardGeneral.rawValue
+    @Attribute(originalName: "acceleratorCategory") var acceleratorCategoryRaw: String? // 加速器類別（如果適用）
     var notes: String = ""
     var costPerMile: Double = 0 // 每哩成本（自動計算）
     

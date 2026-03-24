@@ -9,9 +9,9 @@ final class RedeemedTicket {
     var originName: String = ""
     var destinationName: String = ""
     var isRoundTrip: Bool = false
-    var cabinClassRaw: String = CabinClass.economy.rawValue
+    @Attribute(originalName: "cabinClass") var cabinClassRaw: String = CabinClass.economy.rawValue
     var spentMiles: Int = 0
-    var taxPaidValue: Double = 0
+    @Attribute(originalName: "taxPaid") var taxPaidValue: Double = 0
     var flightDate: Date = Date()
     var pnr: String = ""
     var airline: String = ""

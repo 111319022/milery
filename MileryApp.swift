@@ -108,10 +108,12 @@ final class SyncDiagnosticsObserver {
 
             if let error = event.error {
                 appLog("[SyncDiag] CloudKit event=\(typeText) 失敗: \(error.localizedDescription)")
+                // 印出完整錯誤以供排查
+                appLog("[SyncDiag] 完整錯誤: \(error)")
             } else if event.endDate != nil {
-                appLog("[SyncDiag] CloudKit event=\(typeText) 完成")
+                appLog("[SyncDiag] CloudKit event=\(typeText) 完成 ✓")
             } else {
-                appLog("[SyncDiag] CloudKit event=\(typeText) 開始")
+                appLog("[SyncDiag] CloudKit event=\(typeText) 開始...")
             }
         })
 

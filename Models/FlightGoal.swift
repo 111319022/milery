@@ -8,7 +8,7 @@ final class FlightGoal {
     var destination: String = "" // 目的地 IATA 代碼
     var originName: String = "" // 出發地中文名稱
     var destinationName: String = "" // 目的地中文名稱
-    var cabinClassRaw: String = CabinClass.economy.rawValue
+    @Attribute(originalName: "cabinClass") var cabinClassRaw: String = CabinClass.economy.rawValue
     var requiredMiles: Int = 0
     var isOneworld: Bool = false // 是否為寰宇一家夥伴航空
     var isPriority: Bool = false // 是否為優先目標

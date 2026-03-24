@@ -40,19 +40,19 @@ final class CreditCardRule {
     var cardTierRaw: String = ""
     
     // 基礎回饋率 (多少元 = 1 哩)
-    var baseRateValue: Double = 30 // 持久化用：CloudKit 友善型別
+    @Attribute(originalName: "baseRate") var baseRateValue: Double = 30 // 持久化用：CloudKit 友善型別
     
     // 加速器回饋率（哩程加速器消費適用）
-    var acceleratorRateValue: Double = 30 // 持久化用：CloudKit 友善型別
+    @Attribute(originalName: "acceleratorRate") var acceleratorRateValue: Double = 30 // 持久化用：CloudKit 友善型別
     
     // 特約商店回饋率
-    var specialMerchantRateValue: Double = 30 // 持久化用：CloudKit 友善型別
+    @Attribute(originalName: "specialMerchantRate") var specialMerchantRateValue: Double = 30 // 持久化用：CloudKit 友善型別
     
     // 生日當月加碼倍數
-    var birthdayMultiplierValue: Double = 1.0 // 持久化用：CloudKit 友善型別
+    @Attribute(originalName: "birthdayMultiplier") var birthdayMultiplierValue: Double = 1.0 // 持久化用：CloudKit 友善型別
     
     // 進位方式
-    var roundingModeRaw: String = RoundingMode.down.rawValue
+    @Attribute(originalName: "roundingMode") var roundingModeRaw: String = RoundingMode.down.rawValue
     
     // 每月結帳日
     var billingDay: Int = 1
