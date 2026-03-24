@@ -161,10 +161,10 @@ class CloudBackupService {
     private func ensureCustomZoneExists() async {
         do {
             _ = try await database.modifyRecordZones(saving: [customZone], deleting: [])
-            print("[CloudBackup] 自訂 Zone '\(customZone.zoneID.zoneName)' 已建立或已存在")
+            appLog("[CloudBackup] 自訂 Zone '\(customZone.zoneID.zoneName)' 已建立或已存在")
         } catch {
             // Zone 已存在時會報錯，可忽略
-            print("[CloudBackup] Zone 建立結果：\(error.localizedDescription)")
+            appLog("[CloudBackup] Zone 建立結果：\(error.localizedDescription)")
         }
     }
     
@@ -301,9 +301,9 @@ class CloudBackupService {
         
         do {
             let savedRecord = try await database.save(record)
-            print("[CloudBackup] 備份上傳成功！RecordID: \(savedRecord.recordID.recordName), Zone: \(savedRecord.recordID.zoneID.zoneName)")
+            appLog("[CloudBackup] 備份上傳成功！RecordID: \(savedRecord.recordID.recordName), Zone: \(savedRecord.recordID.zoneID.zoneName)")
         } catch {
-            print("[CloudBackup] 備份上傳失敗：\(error.localizedDescription)")
+            appLog("[CloudBackup] 備份上傳失敗：\(error.localizedDescription)")
             throw BackupError.cloudKitError(error)
         }
         
@@ -317,12 +317,12 @@ class CloudBackupService {
         isLoadingList = true
         defer { isLoadingList = false }
         
-        print("[CloudBackup] 開始取得備份列表...")
+        appLog("[CloudBackup] 開始取得備份列表...")
         
         do {
             try await ensureiCloudAvailable()
         } catch {
-            print("[CloudBackup] iCloud 不可用")
+            appLog("[CloudBackup] iCloud 不可用")
             return
         }
         
@@ -332,7 +332,7 @@ class CloudBackupService {
         var changeToken: CKServerChangeToken? = nil
         var moreComing = true
         
-        print("[CloudBackup] 查詢 Zone: \(zoneID.zoneName)")
+        appLog("[CloudBackup] 查詢 Zone: \(zoneID.zoneName)")
         
         do {
             while moreComing {
@@ -341,25 +341,25 @@ class CloudBackupService {
                     since: changeToken
                 )
                 
-                print("[CloudBackup] 收到 modifications: \(changes.modificationResultsByID.count), deletions: \(changes.deletions.count), moreComing: \(changes.moreComing)")
+                appLog("[CloudBackup] 收到 modifications: \(changes.modificationResultsByID.count), deletions: \(changes.deletions.count), moreComing: \(changes.moreComing)")
                 
                 for (recordID, result) in changes.modificationResultsByID {
                     switch result {
                     case .success(let modification):
                         let record = modification.record
-                        print("[CloudBackup] Record: \(recordID.recordName), type: \(record.recordType)")
+                        appLog("[CloudBackup] Record: \(recordID.recordName), type: \(record.recordType)")
                         if record.recordType == recordType {
                             allRecords.append(record)
                         }
                     case .failure(let error):
-                        print("[CloudBackup] Record \(recordID.recordName) error: \(error.localizedDescription)")
+                        appLog("[CloudBackup] Record \(recordID.recordName) error: \(error.localizedDescription)")
                     }
                 }
                 
                 // 移除已刪除的記錄
                 let deletedIDs = Set(changes.deletions.map { $0.recordID })
                 if !deletedIDs.isEmpty {
-                    print("[CloudBackup] 刪除 \(deletedIDs.count) 筆記錄")
+                    appLog("[CloudBackup] 刪除 \(deletedIDs.count) 筆記錄")
                 }
                 allRecords.removeAll { deletedIDs.contains($0.recordID) }
                 
@@ -367,7 +367,7 @@ class CloudBackupService {
                 moreComing = changes.moreComing
             }
             
-            print("[CloudBackup] 共找到 \(allRecords.count) 筆備份記錄")
+            appLog("[CloudBackup] 共找到 \(allRecords.count) 筆備份記錄")
             
             backupRecords = allRecords.compactMap { record in
                 BackupRecord(
@@ -380,9 +380,9 @@ class CloudBackupService {
             }
             .sorted { $0.backupDate > $1.backupDate }
             
-            print("[CloudBackup] 備份列表更新完成，共 \(backupRecords.count) 筆")
+            appLog("[CloudBackup] 備份列表更新完成，共 \(backupRecords.count) 筆")
         } catch {
-            print("[CloudBackup] 取得備份列表失敗：\(error.localizedDescription)")
+            appLog("[CloudBackup] 取得備份列表失敗：\(error.localizedDescription)")
             backupRecords = []
         }
     }

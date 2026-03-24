@@ -1,9 +1,11 @@
 import SwiftUI
 import SwiftData
+import Combine
 
 struct DashboardView: View {
     @Environment(\.colorScheme) var colorScheme
     @Bindable var viewModel: MileageViewModel
+    private let syncCheckTimer = Timer.publish(every: 20, on: .main, in: .common).autoconnect()
     var switchToProgress: (() -> Void)? = nil
     var switchToLedger: (() -> Void)? = nil
     
@@ -20,7 +22,7 @@ struct DashboardView: View {
                         if viewModel.hasRemoteChanges {
                             SyncBannerView {
                                 withAnimation(.easeInOut(duration: 0.3)) {
-                                    viewModel.acknowledgeRemoteChanges()
+                                    viewModel.manualSyncNow()
                                 }
                             }
                             .transition(.move(edge: .top).combined(with: .opacity))
@@ -81,6 +83,9 @@ struct DashboardView: View {
             .navigationBarTitleDisplayMode(.large)
             .toolbarBackgroundVisibility(.automatic, for: .navigationBar)
             .onAppear {
+                viewModel.checkForRemoteChanges()
+            }
+            .onReceive(syncCheckTimer) { _ in
                 viewModel.checkForRemoteChanges()
             }
         }

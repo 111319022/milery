@@ -21,8 +21,7 @@ class MileageViewModel {
     
     // MARK: - CloudKit 遠端同步狀態
     var hasRemoteChanges: Bool = false
-    private var knownTransactionCount: Int = 0
-    private var knownGoalCount: Int = 0
+    private var knownDataFingerprint: String = ""
     
     init() {}
     
@@ -41,10 +40,7 @@ class MileageViewModel {
     func initialize(context: ModelContext) {
         self.modelContext = context
         loadData()
-        
-        // 記錄初始資料量，用於比對遠端變更
-        knownTransactionCount = transactions.count
-        knownGoalCount = flightGoals.count
+        knownDataFingerprint = fetchDataFingerprint()
         
         // 監聽 CloudKit 遠端變更通知
         NotificationCenter.default.addObserver(
@@ -58,34 +54,75 @@ class MileageViewModel {
     
     /// 收到遠端變更通知時，檢查是否有新資料
     private func handleRemoteChange() {
-        guard let context = modelContext else { return }
-        
-        let newTransactionCount = (try? context.fetchCount(FetchDescriptor<Transaction>())) ?? 0
-        let newGoalCount = (try? context.fetchCount(FetchDescriptor<FlightGoal>())) ?? 0
-        
-        if newTransactionCount != knownTransactionCount || newGoalCount != knownGoalCount {
+        let latestFingerprint = fetchDataFingerprint()
+        if latestFingerprint != knownDataFingerprint {
             hasRemoteChanges = true
         }
     }
     
     /// 用戶確認同步後，刷新 UI
     func acknowledgeRemoteChanges() {
+        manualSyncNow()
+    }
+
+    /// 手動同步：重新讀取本地 store（含已匯入的 CloudKit 變更）
+    func manualSyncNow() {
         loadData()
-        knownTransactionCount = transactions.count
-        knownGoalCount = flightGoals.count
+        knownDataFingerprint = fetchDataFingerprint()
         hasRemoteChanges = false
     }
     
     /// App 回到前台時呼叫，檢查是否有待同步的遠端資料
     func checkForRemoteChanges() {
-        guard let context = modelContext else { return }
-        
-        let currentTransactionCount = (try? context.fetchCount(FetchDescriptor<Transaction>())) ?? 0
-        let currentGoalCount = (try? context.fetchCount(FetchDescriptor<FlightGoal>())) ?? 0
-        
-        if currentTransactionCount != knownTransactionCount || currentGoalCount != knownGoalCount {
+        let latestFingerprint = fetchDataFingerprint()
+        if latestFingerprint != knownDataFingerprint {
             hasRemoteChanges = true
         }
+    }
+
+    private func fetchDataFingerprint() -> String {
+        guard let context = modelContext else { return "" }
+
+        let accounts = (try? context.fetch(FetchDescriptor<MileageAccount>())) ?? []
+        let txs = (try? context.fetch(FetchDescriptor<Transaction>())) ?? []
+        let goals = (try? context.fetch(FetchDescriptor<FlightGoal>())) ?? []
+        let cards = (try? context.fetch(FetchDescriptor<CreditCardRule>())) ?? []
+        let tickets = (try? context.fetch(FetchDescriptor<RedeemedTicket>())) ?? []
+
+        let accountPart = accounts
+            .sorted { $0.lastActivityDate < $1.lastActivityDate }
+            .map { "\($0.totalMiles)|\($0.lastActivityDate.timeIntervalSince1970)" }
+            .joined(separator: ";")
+
+        let txPart = txs
+            .sorted { $0.id.uuidString < $1.id.uuidString }
+            .map {
+                "\($0.id.uuidString)|\($0.date.timeIntervalSince1970)|\($0.amountValue)|\($0.earnedMiles)|\($0.sourceRaw)|\($0.acceleratorCategoryRaw ?? "")|\($0.notes)|\($0.costPerMile)|\($0.flightRoute ?? "")|\($0.conversionSource ?? "")|\($0.merchantName ?? "")|\($0.promotionName ?? "")|\($0.linkedTicketID?.uuidString ?? "")"
+            }
+            .joined(separator: ";")
+
+        let goalPart = goals
+            .sorted { $0.id.uuidString < $1.id.uuidString }
+            .map {
+                "\($0.id.uuidString)|\($0.origin)|\($0.destination)|\($0.originName)|\($0.destinationName)|\($0.cabinClassRaw)|\($0.requiredMiles)|\($0.isOneworld)|\($0.isPriority)|\($0.isRoundTrip)|\($0.createdDate.timeIntervalSince1970)|\($0.sortOrder)"
+            }
+            .joined(separator: ";")
+
+        let cardPart = cards
+            .sorted { $0.id.uuidString < $1.id.uuidString }
+            .map {
+                "\($0.id.uuidString)|\($0.cardName)|\($0.bankName)|\($0.isActive)|\($0.cardBrandRaw)|\($0.cardTierRaw)|\($0.baseRateValue)|\($0.acceleratorRateValue)|\($0.specialMerchantRateValue)|\($0.birthdayMultiplierValue)|\($0.roundingModeRaw)|\($0.billingDay)|\($0.annualFee)"
+            }
+            .joined(separator: ";")
+
+        let ticketPart = tickets
+            .sorted { $0.id.uuidString < $1.id.uuidString }
+            .map {
+                "\($0.id.uuidString)|\($0.originIATA)|\($0.destinationIATA)|\($0.originName)|\($0.destinationName)|\($0.isRoundTrip)|\($0.cabinClassRaw)|\($0.spentMiles)|\($0.taxPaidValue)|\($0.flightDate.timeIntervalSince1970)|\($0.pnr)|\($0.airline)|\($0.flightNumber)|\($0.redeemedDate.timeIntervalSince1970)|\($0.linkedTransactionID?.uuidString ?? "")"
+            }
+            .joined(separator: ";")
+
+        return [accountPart, txPart, goalPart, cardPart, ticketPart].joined(separator: "||")
     }
     
     // 載入資料
