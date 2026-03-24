@@ -80,11 +80,63 @@ Milery是一款專為航空常客與哩程使用者開發之 iOS 原生應用程
   商業邏輯與狀態管理層，處理資料計算與畫面同步。
 * **`Views/`**
   UI 畫面與元件，涵蓋儀表板、計算器、里程本與設定頁。
-  * **`DevViews/`** 開發者模式專用工具頁面（有密碼與隱藏開啟方式），處理機場資料瀏覽與匯入IDE、分頁顯示管理。
+  * **`DevViews/`** 開發者模式專用頁面（詳細請見下方「開發者模式專區」）。
 * **`Service/`**
   服務層，包含 CloudKit 備份與還原等後端邏輯。
 * **`milery.xcodeproj/`**
   Xcode 專案設定與建置檔案。
+
+## 開發者模式專區（Developer Tools）
+
+為了讓維運與除錯流程更清楚，開發者功能已獨立成專區。
+
+### 開發者功能樹狀圖
+
+```text
+設定
+└── 開發者（隱藏，需密碼啟用）
+    ├── 機場資料列表（AirportListView.swift）
+    │   └── 搜尋 CSV 機場資料、協助完善 AirportDatabase
+    ├── 分頁顯示管理（TabVisibilitySettingsView.swift）
+    │   └── 控制 TabView 顯示哪些分頁
+    ├── 資料管理（DataManagementView.swift）
+    │   ├── SwiftData 全量資料檢視（Account / Transaction / Goal / Ticket / Legacy Card）
+    │   ├── 每筆資料可右滑刪除（清理異常資料）
+    │   ├── 安全清理（重複帳戶、孤兒資料、舊版殘留）
+    │   ├── CloudKit 狀態摘要（同步開關 / iCloud 帳號 / 備份筆數）
+    │   └── CloudKit record 詳細檢視（進階，CloudKitAdvancedView.swift）
+    └── Console 日誌（ConsoleLogView.swift）
+        ├── 全量日誌檢視
+        ├── 只看同步相關（Sync / iCloud / CloudKit）
+        ├── 複製目前清單
+        └── 自動清理 7 天前日誌
+```
+
+### 開發者模式啟用方式
+
+1. 進入「設定」。
+2. 連續點擊「版本資訊」10 次。
+3. 輸入開發者密碼後，顯示「開發者」區塊。
+
+### 各工具頁用途說明
+
+* **機場資料列表** (`Views/DevViews/AirportListView.swift`)
+  用於查閱與匯入機場基礎資料，協助維護 `AirportDatabase`。
+* **分頁顯示管理** (`Views/DevViews/TabVisibilitySettingsView.swift`)
+  用於快速開關 Tab 頁籤，便於測試不同資訊架構與導覽流程。
+* **資料管理** (`Views/DevViews/DataManagementView.swift`)
+  用於資料庫層級除錯：查看所有 SwiftData 記錄、逐筆刪除異常、執行安全清理、檢查 CloudKit 概況。
+* **CloudKit record 詳細檢視（進階）** (`Views/DevViews/CloudKitAdvancedView.swift`)
+  用於查看雲端備份 Record 細節（recordName / zone / schema / device / 日期）。
+* **Console 日誌** (`Views/DevViews/ConsoleLogView.swift`)
+  用於檢查同步與備份事件；支援同步關鍵字過濾，並採 7 天保留策略避免日誌無限成長。
+
+### 資料異常時建議除錯流程
+
+1. 先到「Console 日誌」開啟「只看同步相關」，確認近期同步事件與錯誤訊息。
+2. 到「資料管理」查看是否有孤兒資料或重複帳戶。
+3. 針對異常記錄進行逐筆刪除；若資料污染範圍大，再使用「安全清理」。
+4. 如需比對雲端狀態，進入「CloudKit record 詳細檢視（進階）」確認 Record 是否更新。
 
 ## 系統需求與安裝執行
 
