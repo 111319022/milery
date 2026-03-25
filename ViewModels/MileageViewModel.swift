@@ -186,8 +186,16 @@ class MileageViewModel {
         
         // 從 SwiftData 讀取 CardPreference（可透過 CloudKit 同步）
         let prefs = (try? context.fetch(FetchDescriptor<CardPreference>())) ?? []
-        let cathayPref = prefs.first { $0.cardBrandRaw == CardBrand.cathayUnitedBank.rawValue }
-        let taishinPref = prefs.first { $0.cardBrandRaw == CardBrand.taishinCathay.rawValue }
+        
+        // CloudKit 不支援 unique constraints，手動清除重複記錄
+        let grouped = Dictionary(grouping: prefs, by: \.cardBrandRaw)
+        for (_, group) in grouped where group.count > 1 {
+            for dup in group.dropFirst() { context.delete(dup) }
+        }
+        let dedupedPrefs = grouped.compactMapValues(\.first).values
+        
+        let cathayPref = dedupedPrefs.first { $0.cardBrandRaw == CardBrand.cathayUnitedBank.rawValue }
+        let taishinPref = dedupedPrefs.first { $0.cardBrandRaw == CardBrand.taishinCathay.rawValue }
         
         // 決定偏好值（優先使用 SwiftData，再 fallback 舊 UserDefaults，最後用預設值）
         let cathayActive = cathayPref?.isActive

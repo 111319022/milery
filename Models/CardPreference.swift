@@ -5,8 +5,8 @@ import SwiftData
 /// 信用卡定義（費率等）以程式碼為準，此 Model 僅儲存用戶的啟用狀態與等級選擇。
 @Model
 final class CardPreference {
-    /// 使用 CardBrand.rawValue 作為唯一識別
-    @Attribute(.unique) var cardBrandRaw: String = ""
+    /// 使用 CardBrand.rawValue 作為識別（不使用 .unique，因 CloudKit 不支援 unique constraints）
+    var cardBrandRaw: String = ""
     var isActive: Bool = false
     var tierRaw: String = ""
     
