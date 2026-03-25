@@ -12,8 +12,15 @@ struct MileryBackup: Codable {
     let account: AccountBackup
     let transactions: [TransactionBackup]
     let flightGoals: [FlightGoalBackup]
-    let creditCards: [CreditCardRuleBackup]
+    let creditCards: [CreditCardRuleBackup]  // 舊版備份相容用，新版不再寫入
     let redeemedTickets: [RedeemedTicketBackup]
+    let cardPreferences: [CardPreferenceBackup]?  // v2: 信用卡偏好設定
+}
+
+struct CardPreferenceBackup: Codable {
+    let cardBrandRaw: String
+    let isActive: Bool
+    let tierRaw: String
 }
 
 struct AccountBackup: Codable {
@@ -158,13 +165,20 @@ class CloudBackupService {
     
     // MARK: - 確保自訂 Zone 存在
     
-    private func ensureCustomZoneExists() async {
+    private func ensureCustomZoneExists() async throws {
         do {
             _ = try await database.modifyRecordZones(saving: [customZone], deleting: [])
             appLog("[CloudBackup] 自訂 Zone '\(customZone.zoneID.zoneName)' 已建立或已存在")
+        } catch let error as CKError where error.code == .serverRejectedRequest || error.code == .zoneNotFound {
+            // 真正的伺服器錯誤，不應忽略
+            appLog("[CloudBackup] Zone 建立失敗（伺服器拒絕）：\(error.localizedDescription)")
+            throw BackupError.cloudKitError(error)
+        } catch let error as CKError where error.code == .partialFailure {
+            // Zone 已存在會回傳 partialFailure，屬於正常情況
+            appLog("[CloudBackup] Zone 已存在，繼續操作")
         } catch {
-            // Zone 已存在時會報錯，可忽略
-            appLog("[CloudBackup] Zone 建立結果：\(error.localizedDescription)")
+            // 其他未預期錯誤（網路問題等），記錄但不阻斷流程
+            appLog("[CloudBackup] Zone 建立遇到非預期錯誤：\(error.localizedDescription)")
         }
     }
     
@@ -181,8 +195,8 @@ class CloudBackupService {
         let accounts = try modelContext.fetch(FetchDescriptor<MileageAccount>())
         let transactions = try modelContext.fetch(FetchDescriptor<Transaction>())
         let flightGoals = try modelContext.fetch(FetchDescriptor<FlightGoal>())
-        let creditCards = try modelContext.fetch(FetchDescriptor<CreditCardRule>())
         let redeemedTickets = try modelContext.fetch(FetchDescriptor<RedeemedTicket>())
+        let cardPrefs = (try? modelContext.fetch(FetchDescriptor<CardPreference>())) ?? []
         
         guard let account = accounts.first else {
             throw BackupError.noAccountData
@@ -232,23 +246,7 @@ class CloudBackupService {
                     sortOrder: g.sortOrder
                 )
             },
-            creditCards: creditCards.map { c in
-                CreditCardRuleBackup(
-                    id: c.id,
-                    cardName: c.cardName,
-                    bankName: c.bankName,
-                    isActive: c.isActive,
-                    cardBrandRaw: c.cardBrandRaw,
-                    cardTierRaw: c.cardTierRaw,
-                    baseRate: c.baseRate,
-                    acceleratorRate: c.acceleratorRate,
-                    specialMerchantRate: c.specialMerchantRate,
-                    birthdayMultiplier: c.birthdayMultiplier,
-                    roundingModeRaw: c.roundingMode.rawValue,
-                    billingDay: c.billingDay,
-                    annualFee: c.annualFee
-                )
-            },
+            creditCards: [],  // 不再備份完整信用卡規則，改用 cardPreferences
             redeemedTickets: redeemedTickets.map { r in
                 RedeemedTicketBackup(
                     id: r.id,
@@ -266,6 +264,13 @@ class CloudBackupService {
                     flightNumber: r.flightNumber,
                     redeemedDate: r.redeemedDate,
                     linkedTransactionID: r.linkedTransactionID
+                )
+            },
+            cardPreferences: cardPrefs.map { p in
+                CardPreferenceBackup(
+                    cardBrandRaw: p.cardBrandRaw,
+                    isActive: p.isActive,
+                    tierRaw: p.tierRaw
                 )
             }
         )
@@ -290,16 +295,13 @@ class CloudBackupService {
         
         // 5. 建立 CKRecord 並上傳（使用自訂 Zone 以支援 change token fetch）
         uploadProgress = "正在上傳至 iCloud..."
-        await ensureCustomZoneExists()
+        try await ensureCustomZoneExists()
         let recordID = CKRecord.ID(recordName: UUID().uuidString, zoneID: customZone.zoneID)
         let record = CKRecord(recordType: recordType, recordID: recordID)
         record["backupDate"] = Date() as CKRecordValue
         record["deviceName"] = UIDevice.current.name as CKRecordValue
         record["schemaVersion"] = 1 as CKRecordValue
-        let cathayActive = UserDefaults.standard.object(forKey: "card_cathay_active") as? Bool ?? true
-        let taishinActive = UserDefaults.standard.object(forKey: "card_taishin_active") as? Bool ?? false
-        let activeCardCount = (cathayActive ? 1 : 0) + (taishinActive ? 1 : 0)
-        record["recordCounts"] = "\(transactions.count) 筆交易、\(flightGoals.count) 個目標、\(activeCardCount) 張已啟用信用卡、\(redeemedTickets.count) 張機票" as CKRecordValue
+        record["recordCounts"] = "\(transactions.count) 筆交易、\(flightGoals.count) 個目標、\(redeemedTickets.count) 張機票" as CKRecordValue
         record["backupData"] = CKAsset(fileURL: tempURL)
         
         do {
@@ -427,6 +429,7 @@ class CloudBackupService {
         try modelContext.delete(model: Transaction.self)
         try modelContext.delete(model: FlightGoal.self)
         try modelContext.delete(model: CreditCardRule.self)
+        try modelContext.delete(model: CardPreference.self)
         try modelContext.delete(model: RedeemedTicket.self)
         try modelContext.delete(model: MileageAccount.self)
         
@@ -480,24 +483,31 @@ class CloudBackupService {
             newAccount.flightGoals?.append(goal)
         }
         
-        // 7. 重建 CreditCardRules
-        for c in backup.creditCards {
-            let card = CreditCardRule(
-                cardName: c.cardName,
-                bankName: c.bankName,
-                baseRate: c.baseRate,
-                acceleratorRate: c.acceleratorRate,
-                specialMerchantRate: c.specialMerchantRate,
-                birthdayMultiplier: c.birthdayMultiplier,
-                roundingMode: RoundingMode(rawValue: c.roundingModeRaw) ?? .down,
-                billingDay: c.billingDay,
-                annualFee: c.annualFee,
-                isActive: c.isActive,
-                cardBrand: CardBrand(rawValue: c.cardBrandRaw) ?? .cathayUnitedBank,
-                cathayTier: CathayCardTier(rawValue: c.cardTierRaw)
-            )
-            card.id = c.id
-            modelContext.insert(card)
+        // 7. 重建 CardPreference（信用卡偏好）
+        if let cardPrefBackups = backup.cardPreferences, !cardPrefBackups.isEmpty {
+            // 新版備份：直接還原 CardPreference
+            for p in cardPrefBackups {
+                if let brand = CardBrand(rawValue: p.cardBrandRaw) {
+                    let pref = CardPreference(
+                        cardBrand: brand,
+                        isActive: p.isActive,
+                        tier: CathayCardTier(rawValue: p.tierRaw)
+                    )
+                    modelContext.insert(pref)
+                }
+            }
+        } else if !backup.creditCards.isEmpty {
+            // 舊版備份相容：從 CreditCardRuleBackup 提取偏好
+            for c in backup.creditCards {
+                if let brand = CardBrand(rawValue: c.cardBrandRaw) {
+                    let pref = CardPreference(
+                        cardBrand: brand,
+                        isActive: c.isActive,
+                        tier: CathayCardTier(rawValue: c.cardTierRaw)
+                    )
+                    modelContext.insert(pref)
+                }
+            }
         }
         
         // 8. 重建 RedeemedTickets

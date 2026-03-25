@@ -24,8 +24,16 @@ class MileageViewModel {
     private var knownDataFingerprint: String = ""
     private var isInitialLoad: Bool = true  // 只有首次載入時才建立預設資料
     private var remoteChangeWorkItem: DispatchWorkItem?  // 防抖用
+    private var remoteChangeObserver: NSObjectProtocol?  // 儲存 observer 以便清理
     
     init() {}
+    
+    deinit {
+        if let observer = remoteChangeObserver {
+            NotificationCenter.default.removeObserver(observer)
+        }
+        remoteChangeWorkItem?.cancel()
+    }
     
     /// 集中式儲存方法，取代所有 try? context.save()
     func saveContext() {
@@ -46,8 +54,8 @@ class MileageViewModel {
         isInitialLoad = false
         knownDataFingerprint = fetchDataFingerprint()
         
-        // 監聯 CloudKit 遠端變更通知
-        NotificationCenter.default.addObserver(
+        // 監聯 CloudKit 遠端變更通知（儲存 token 以便 deinit 清理）
+        remoteChangeObserver = NotificationCenter.default.addObserver(
             forName: NSNotification.Name.NSPersistentStoreRemoteChange,
             object: nil,
             queue: .main
@@ -104,6 +112,7 @@ class MileageViewModel {
         let txs = (try? context.fetch(FetchDescriptor<Transaction>())) ?? []
         let goals = (try? context.fetch(FetchDescriptor<FlightGoal>())) ?? []
         let tickets = (try? context.fetch(FetchDescriptor<RedeemedTicket>())) ?? []
+        let cardPrefs = (try? context.fetch(FetchDescriptor<CardPreference>())) ?? []
 
         let accountPart = accounts
             .sorted { $0.lastActivityDate < $1.lastActivityDate }
@@ -131,7 +140,12 @@ class MileageViewModel {
             }
             .joined(separator: ";")
 
-        return [accountPart, txPart, goalPart, ticketPart].joined(separator: "||")
+        let cardPrefPart = cardPrefs
+            .sorted { $0.cardBrandRaw < $1.cardBrandRaw }
+            .map { "\($0.cardBrandRaw)|\($0.isActive)|\($0.tierRaw)" }
+            .joined(separator: ";")
+
+        return [accountPart, txPart, goalPart, ticketPart, cardPrefPart].joined(separator: "||")
     }
     
     // 載入資料
@@ -140,8 +154,8 @@ class MileageViewModel {
         
         // 載入哩程帳戶（選擇哩程最高的帳戶，避免選到 CloudKit 同步造成的空帳戶）
         let accountDescriptor = FetchDescriptor<MileageAccount>()
-        if let accounts = try? context.fetch(accountDescriptor), !accounts.isEmpty {
-            let account = accounts.sorted(by: { $0.totalMiles > $1.totalMiles }).first!
+        if let accounts = try? context.fetch(accountDescriptor), !accounts.isEmpty,
+           let account = accounts.sorted(by: { $0.totalMiles > $1.totalMiles }).first {
             self.mileageAccount = account
             self.transactions = (account.transactions ?? []).sorted { $0.date > $1.date }
             self.flightGoals = account.flightGoals ?? []
@@ -166,14 +180,25 @@ class MileageViewModel {
         appLog("[Sync] loadData 完成: 哩程=\(mileageAccount?.totalMiles ?? -1), 交易=\(transactions.count)筆, 目標=\(flightGoals.count)個, 機票=\(redeemedTickets.count)張, 已啟用卡片: [\(activeCards.isEmpty ? "無" : activeCards)]")
     }
     
-    /// 信用卡規則以程式碼為準，用戶偏好（isActive / tier）存在 UserDefaults。
-    /// 不再透過 SwiftData 持久化信用卡，避免 CloudKit 同步重複。
+    /// 信用卡規則以程式碼為準，用戶偏好（isActive / tier）透過 SwiftData CardPreference 同步。
     private func rebuildCreditCards() {
-        // 從 UserDefaults 讀取用戶偏好
-        let cathayActive = UserDefaults.standard.object(forKey: "card_cathay_active") as? Bool ?? true
-        let cathayTierRaw = UserDefaults.standard.string(forKey: "card_cathay_tier") ?? CathayCardTier.world.rawValue
-        let cathayTier = CathayCardTier(rawValue: cathayTierRaw) ?? .world
-        let taishinActive = UserDefaults.standard.object(forKey: "card_taishin_active") as? Bool ?? false
+        guard let context = modelContext else { return }
+        
+        // 從 SwiftData 讀取 CardPreference（可透過 CloudKit 同步）
+        let prefs = (try? context.fetch(FetchDescriptor<CardPreference>())) ?? []
+        let cathayPref = prefs.first { $0.cardBrandRaw == CardBrand.cathayUnitedBank.rawValue }
+        let taishinPref = prefs.first { $0.cardBrandRaw == CardBrand.taishinCathay.rawValue }
+        
+        // 決定偏好值（優先使用 SwiftData，再 fallback 舊 UserDefaults，最後用預設值）
+        let cathayActive = cathayPref?.isActive
+            ?? (UserDefaults.standard.object(forKey: "card_cathay_active") as? Bool)
+            ?? true
+        let cathayTier = cathayPref?.cathayTier
+            ?? CathayCardTier(rawValue: UserDefaults.standard.string(forKey: "card_cathay_tier") ?? "")
+            ?? .world
+        let taishinActive = taishinPref?.isActive
+            ?? (UserDefaults.standard.object(forKey: "card_taishin_active") as? Bool)
+            ?? false
         
         // 從程式碼建立標準的 2 張卡，套用用戶偏好（純 in-memory，不存 SwiftData）
         let cathayCard = CreditCardRule.cathayCard(tier: cathayTier)
@@ -184,45 +209,49 @@ class MileageViewModel {
         
         self.creditCards = [cathayCard, taishinCard]
         
-        // 清理 store 中殘留的信用卡記錄（一次性清理 CloudKit 同步造成的垃圾）
-        if let context = modelContext {
-            let existing = (try? context.fetch(FetchDescriptor<CreditCardRule>())) ?? []
-            if !existing.isEmpty {
-                // 首次清理時，先從 store 遷移偏好到 UserDefaults
-                if UserDefaults.standard.object(forKey: "card_prefs_migrated") == nil {
-                    for card in existing {
-                        if card.cardBrand == .cathayUnitedBank {
-                            UserDefaults.standard.set(card.isActive, forKey: "card_cathay_active")
-                            if let tier = card.cathayTier {
-                                UserDefaults.standard.set(tier.rawValue, forKey: "card_cathay_tier")
-                            }
-                            cathayCard.isActive = card.isActive
-                            cathayCard.updateTier(card.cathayTier ?? .world)
-                        } else if card.cardBrand == .taishinCathay {
-                            UserDefaults.standard.set(card.isActive, forKey: "card_taishin_active")
-                            taishinCard.isActive = card.isActive
-                        }
-                    }
-                    UserDefaults.standard.set(true, forKey: "card_prefs_migrated")
-                }
-                for card in existing {
-                    context.delete(card)
-                }
-                try? context.save()
+        // 確保 CardPreference 記錄存在（首次執行或從舊版遷移時建立）
+        if cathayPref == nil {
+            let newPref = CardPreference(cardBrand: .cathayUnitedBank, isActive: cathayActive, tier: cathayTier)
+            context.insert(newPref)
+        }
+        if taishinPref == nil {
+            let newPref = CardPreference(cardBrand: .taishinCathay, isActive: taishinActive)
+            context.insert(newPref)
+        }
+        if cathayPref == nil || taishinPref == nil {
+            try? context.save()
+        }
+        
+        // 清理 store 中殘留的舊版 CreditCardRule 記錄
+        let existing = (try? context.fetch(FetchDescriptor<CreditCardRule>())) ?? []
+        if !existing.isEmpty {
+            for card in existing {
+                context.delete(card)
             }
+            try? context.save()
         }
     }
     
-    /// 儲存信用卡用戶偏好到 UserDefaults
+    /// 儲存信用卡用戶偏好到 SwiftData CardPreference（透過 CloudKit 同步）
     func saveCardPreferences() {
+        guard let context = modelContext else { return }
+        let prefs = (try? context.fetch(FetchDescriptor<CardPreference>())) ?? []
+        
         for card in creditCards {
-            if card.cardBrand == .cathayUnitedBank {
-                UserDefaults.standard.set(card.isActive, forKey: "card_cathay_active")
-                UserDefaults.standard.set(card.cathayTier?.rawValue ?? CathayCardTier.world.rawValue, forKey: "card_cathay_tier")
-            } else if card.cardBrand == .taishinCathay {
-                UserDefaults.standard.set(card.isActive, forKey: "card_taishin_active")
+            if let pref = prefs.first(where: { $0.cardBrandRaw == card.cardBrandRaw }) {
+                pref.isActive = card.isActive
+                pref.tierRaw = card.cathayTier?.rawValue ?? ""
+            } else {
+                // 正常不應該走到這裡，但保險起見補建
+                let newPref = CardPreference(
+                    cardBrand: card.cardBrand,
+                    isActive: card.isActive,
+                    tier: card.cathayTier
+                )
+                context.insert(newPref)
             }
         }
+        saveContext()
     }
     
     // 新增交易

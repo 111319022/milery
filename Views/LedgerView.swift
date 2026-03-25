@@ -65,13 +65,14 @@ struct LedgerView: View {
                                         .font(AviationTheme.Typography.caption)
                                         .foregroundColor(AviationTheme.Colors.secondaryText(colorScheme))
                                 }
-                                Text("\(monthlyTotal.miles.formatted())")
-                                    .font(AviationTheme.Typography.title2)
-                                    .fontWeight(.bold)
-                                    .foregroundColor(AviationTheme.Colors.success)
-                                + Text(" 哩")
-                                    .font(AviationTheme.Typography.subheadline)
-                                    .foregroundColor(AviationTheme.Colors.success)
+                                HStack(alignment: .firstTextBaseline, spacing: 2) {
+                                    Text("\(monthlyTotal.miles.formatted())")
+                                        .font(AviationTheme.Typography.title2)
+                                        .fontWeight(.bold)
+                                    Text("哩")
+                                        .font(AviationTheme.Typography.subheadline)
+                                }
+                                .foregroundColor(AviationTheme.Colors.success)
                             }
                             .frame(maxWidth: .infinity)
                             .padding(AviationTheme.Spacing.md)
@@ -88,13 +89,14 @@ struct LedgerView: View {
                                             .font(AviationTheme.Typography.caption)
                                             .foregroundColor(AviationTheme.Colors.secondaryText(colorScheme))
                                     }
-                                    Text("\(monthlyTotal.miles.formatted())")
-                                        .font(AviationTheme.Typography.title2)
-                                        .fontWeight(.bold)
-                                        .foregroundColor(AviationTheme.Colors.successColor(colorScheme))
-                                    + Text(" 哩")
-                                        .font(AviationTheme.Typography.subheadline)
-                                        .foregroundColor(AviationTheme.Colors.successColor(colorScheme))
+                                    HStack(alignment: .firstTextBaseline, spacing: 2) {
+                                        Text("\(monthlyTotal.miles.formatted())")
+                                            .font(AviationTheme.Typography.title2)
+                                            .fontWeight(.bold)
+                                        Text("哩")
+                                            .font(AviationTheme.Typography.subheadline)
+                                    }
+                                    .foregroundColor(AviationTheme.Colors.successColor(colorScheme))
                                 }
                                 
                                 // 右側：類別統計細項（可折疊）
@@ -337,13 +339,14 @@ struct CompactCategoryStatRow: View {
             Spacer()
             
             // 哩程
-            Text("\(miles.formatted())")
-                .font(AviationTheme.Typography.subheadline)
-                .fontWeight(.semibold)
-                .foregroundColor(milesColor)
-            + Text(" 哩")
-                .font(AviationTheme.Typography.caption)
-                .foregroundColor(milesColor)
+            HStack(alignment: .firstTextBaseline, spacing: 1) {
+                Text("\(miles.formatted())")
+                    .font(AviationTheme.Typography.subheadline)
+                    .fontWeight(.semibold)
+                Text("哩")
+                    .font(AviationTheme.Typography.caption)
+            }
+            .foregroundColor(milesColor)
         }
         .padding(.vertical, 2)
     }
