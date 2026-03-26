@@ -154,7 +154,7 @@ struct SettingsView: View {
                                 
                                 SettingToggleRow(
                                     icon: "bell.fill",
-                                    title: "通知提醒",
+                                    title: "通知提醒（開發中）",
                                     subtitle: "接收哩程到期與目標提醒",
                                     isOn: $enableNotifications
                                 )
