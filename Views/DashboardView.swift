@@ -78,6 +78,7 @@ struct DashboardView: View {
                     .padding(.top, AviationTheme.Spacing.sm)
                     .padding(.bottom, AviationTheme.Spacing.xxl)
                 }
+                .scrollIndicators(.hidden)
             }
             .navigationTitle("儀表板")
             .navigationBarTitleDisplayMode(.large)

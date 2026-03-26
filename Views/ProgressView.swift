@@ -55,6 +55,7 @@ struct ProgressView: View {
                     }
                     .padding(.bottom, AviationTheme.Spacing.lg)
                 }
+                .scrollIndicators(.hidden)
             }
             .navigationTitle("進度")
             .navigationBarTitleDisplayMode(.large)
