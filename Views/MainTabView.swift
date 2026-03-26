@@ -24,8 +24,8 @@ struct MainTabView: View {
             if dashboardVisible {
                 DashboardView(
                     viewModel: viewModel,
-                    switchToProgress: { selectedTab = 1 },
-                    switchToLedger: { selectedTab = 2 }
+                    switchToProgress: { withAnimation(.smooth(duration: 0.3)) { selectedTab = 1 } },
+                    switchToLedger: { withAnimation(.smooth(duration: 0.3)) { selectedTab = 2 } }
                 )
                     .tag(0)
                     .tabItem {
@@ -65,6 +65,7 @@ struct MainTabView: View {
         }
         .tint(AviationTheme.Colors.cathayJade)
         .preferredColorScheme(preferredColorScheme)
+        .animation(.smooth(duration: 0.3), value: selectedTab)
         .onAppear {
             viewModel.initialize(context: modelContext)
         }

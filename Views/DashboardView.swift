@@ -185,6 +185,8 @@ struct HeroMilesCard: View {
     let expiryDate: Date
     let daysUntilExpiry: Int
     
+    @State private var displayedMiles: Int = 0
+    
     var expiryColor: Color {
         if daysUntilExpiry < 30 {
             return AviationTheme.Colors.danger
@@ -227,8 +229,9 @@ struct HeroMilesCard: View {
                 
                 // 大數字哩程
                 HStack(alignment: .firstTextBaseline, spacing: 8) {
-                    Text("\(totalMiles.formatted())")
+                    Text("\(displayedMiles.formatted())")
                         .font(.system(size: 48, weight: .bold, design: .rounded))
+                        .monospacedDigit()
                         .foregroundStyle(
                             LinearGradient(
                                 colors: [
@@ -248,6 +251,12 @@ struct HeroMilesCard: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .accessibilityElement(children: .combine)
                 .accessibilityLabel("可用哩程 \(totalMiles) 哩")
+                .onAppear {
+                    startCountAnimation(to: totalMiles)
+                }
+                .onChange(of: totalMiles) {
+                    startCountAnimation(to: totalMiles)
+                }
             }
             .padding(AviationTheme.Spacing.lg)
             
@@ -336,6 +345,27 @@ struct HeroMilesCard: View {
             x: 0,
             y: 3
         )
+    }
+    
+    /// 數字遞增計數動畫
+    private func startCountAnimation(to target: Int) {
+        displayedMiles = 0
+        guard target > 0 else { return }
+        
+        let totalDuration: Double = 0.9
+        let steps = 30
+        let interval = totalDuration / Double(steps)
+        
+        for step in 1...steps {
+            let progress = Double(step) / Double(steps)
+            // easeOut 曲線：先快後慢
+            let eased = 1 - pow(1 - progress, 3)
+            let value = Int(Double(target) * eased)
+            
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.25 + interval * Double(step)) {
+                displayedMiles = min(value, target)
+            }
+        }
     }
 }
 
