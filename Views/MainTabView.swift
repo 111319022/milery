@@ -65,7 +65,6 @@ struct MainTabView: View {
         }
         .tint(AviationTheme.Colors.cathayJade)
         .preferredColorScheme(preferredColorScheme)
-        .animation(.smooth(duration: 0.3), value: selectedTab)
         .onAppear {
             viewModel.initialize(context: modelContext)
         }

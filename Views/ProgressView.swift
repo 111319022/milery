@@ -256,6 +256,7 @@ struct HalfCircleProgressView: View {
     private var radius: CGFloat { arcDiameter / 2 }
     
     @State private var animatedProgress: Double = 0
+    @State private var hasAppeared = false
     
     private var targetProgress: Double {
         min(goal.progress(currentMiles: currentMiles), 1.0)
@@ -284,6 +285,7 @@ struct HalfCircleProgressView: View {
                         ),
                         style: StrokeStyle(lineWidth: strokeWidth, lineCap: .round)
                     )
+                    .animation(.easeOut(duration: 1.0), value: animatedProgress)
             }
             .frame(width: arcDiameter, height: radius)
             .padding(.horizontal, strokeWidth / 2)
@@ -321,7 +323,7 @@ struct HalfCircleProgressView: View {
                         .foregroundColor(AviationTheme.Colors.tertiaryText(colorScheme))
                 }
                 
-                Text("\(Int(animatedProgress * 100))%")
+                Text("\(Int(targetProgress * 100))%")
                     .font(AviationTheme.Typography.caption)
                     .foregroundColor(AviationTheme.Colors.tertiaryText(colorScheme))
                     .padding(.horizontal, 12)
@@ -335,15 +337,14 @@ struct HalfCircleProgressView: View {
         }
         .padding(.bottom, 35)
         .onAppear {
-            animatedProgress = 0
-            withAnimation(.easeOut(duration: 1.0).delay(0.2)) {
+            guard !hasAppeared else { return }
+            hasAppeared = true
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
                 animatedProgress = targetProgress
             }
         }
         .onChange(of: targetProgress) {
-            withAnimation(.easeOut(duration: 0.6)) {
-                animatedProgress = targetProgress
-            }
+            animatedProgress = targetProgress
         }
     }
 }
@@ -482,7 +483,11 @@ struct GoalProgressCard: View {
     
     @State private var showingDeleteAlert = false
     @State private var showingRedeemSheet = false
+    @State private var showingActions = false
+    @State private var actionPopoverEdge: Edge = .top
+    @State private var actionButtonFrame: CGRect = .zero
     @State private var animatedProgress: Double = 0
+    @State private var hasAppeared = false
     
     var currentMiles: Int {
         viewModel.mileageAccount?.totalMiles ?? 0
@@ -499,66 +504,140 @@ struct GoalProgressCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: AviationTheme.Spacing.md) {
             // 頂部：目標資訊
-            HStack {
-                VStack(alignment: .leading, spacing: 4) {
-                    HStack(spacing: 6) {
-                        Image(systemName: goal.isPriority ? "pin.fill" : "location.fill")
-                            .foregroundColor(goal.isPriority ? AviationTheme.Colors.cathayJade : AviationTheme.Colors.secondaryText(colorScheme))
-                            .font(.caption)
-                        
-                        Text("\(goal.originName) (\(goal.origin))")
-                            .font(AviationTheme.Typography.subheadline)
+            ZStack(alignment: .topTrailing) {
+                HStack(alignment: .top) {
+                    VStack(alignment: .leading, spacing: 4) {
+                        HStack(spacing: 6) {
+                            Image(systemName: goal.isPriority ? "pin.fill" : "location.fill")
+                                .foregroundColor(goal.isPriority ? AviationTheme.Colors.cathayJade : AviationTheme.Colors.secondaryText(colorScheme))
+                                .font(.caption)
+
+                            Text("\(goal.originName) (\(goal.origin))")
+                                .font(AviationTheme.Typography.subheadline)
+                                .foregroundColor(AviationTheme.Colors.secondaryText(colorScheme))
+
+                            Image(systemName: goal.isRoundTrip ? "arrow.left.arrow.right" : "arrow.right")
+                                .font(.caption2)
+                                .foregroundColor(AviationTheme.Colors.secondaryText(colorScheme))
+
+                            Text("\(goal.destinationName) (\(goal.destination))")
+                                .font(AviationTheme.Typography.headline)
+                                .foregroundColor(AviationTheme.Colors.primaryText(colorScheme))
+                        }
+
+                        Text("\(goal.cabinClass.rawValue)")
+                            .font(AviationTheme.Typography.caption)
                             .foregroundColor(AviationTheme.Colors.secondaryText(colorScheme))
-                        
-                        Image(systemName: goal.isRoundTrip ? "arrow.left.arrow.right" : "arrow.right")
-                            .font(.caption2)
-                            .foregroundColor(AviationTheme.Colors.secondaryText(colorScheme))
-                        
-                        Text("\(goal.destinationName) (\(goal.destination))")
-                            .font(AviationTheme.Typography.headline)
-                            .foregroundColor(AviationTheme.Colors.primaryText(colorScheme))
                     }
-                    
-                    Text("\(goal.cabinClass.rawValue)")
-                        .font(AviationTheme.Typography.caption)
-                        .foregroundColor(AviationTheme.Colors.secondaryText(colorScheme))
+
+                    Spacer(minLength: 0)
                 }
-                
-                Spacer()
-                
-                Menu {
-                    Button {
-                        onEdit?()
-                    } label: {
-                        Label("編輯目標", systemImage: "pencil")
-                    }
-                    
-                    Button {
-                        // 切換釘選時，設定新群組的 sortOrder 為最後一位
-                        let targetGroup = viewModel.flightGoals.filter { $0.isPriority == !goal.isPriority }
-                        let maxOrder = targetGroup.map { $0.sortOrder }.max() ?? -1
-                        goal.sortOrder = maxOrder + 1
-                        goal.isPriority.toggle()
-                        viewModel.saveContext()
-                        viewModel.loadData()
-                    } label: {
-                        Label(
-                            goal.isPriority ? "取消釘選" : "釘選至進度",
-                            systemImage: goal.isPriority ? "pin.slash" : "pin.fill"
-                        )
-                    }
-                    
-                    Divider()
-                    
-                    Button(role: .destructive) {
-                        showingDeleteAlert = true
-                    } label: {
-                        Label("刪除目標", systemImage: "trash")
-                    }
+                .padding(.trailing, 36)
+
+                Button {
+                    let screenHeight = UIScreen.main.bounds.height
+                    let estimatedMenuHeight: CGFloat = 190
+                    let availableBelow = screenHeight - actionButtonFrame.maxY
+                    actionPopoverEdge = availableBelow < estimatedMenuHeight ? .bottom : .top
+                    showingActions = true
                 } label: {
                     Image(systemName: "ellipsis.circle")
                         .foregroundColor(AviationTheme.Colors.tertiaryText(colorScheme))
                         .font(.title3)
+                        .frame(width: 28, height: 28)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .background {
+                    GeometryReader { proxy in
+                        Color.clear
+                            .onAppear {
+                                actionButtonFrame = proxy.frame(in: .global)
+                            }
+                            .onChange(of: proxy.frame(in: .global)) { _, newFrame in
+                                actionButtonFrame = newFrame
+                            }
+                    }
+                }
+                .transaction { transaction in
+                    transaction.animation = nil
+                }
+                .popover(isPresented: $showingActions, attachmentAnchor: .rect(.bounds), arrowEdge: actionPopoverEdge) {
+                    VStack(spacing: 0) {
+                        Button {
+                            showingActions = false
+                            onEdit?()
+                        } label: {
+                            HStack(spacing: 10) {
+                                Image(systemName: "pencil")
+                                    .font(.system(size: 14, weight: .semibold))
+                                    .frame(width: 18)
+                                Text("編輯目標")
+                                    .font(.system(size: 15, weight: .medium))
+                                Spacer()
+                            }
+                            .foregroundStyle(.primary)
+                            .padding(.horizontal, 12)
+                            .frame(height: 42)
+                            .contentShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+                        }
+                        .buttonStyle(.plain)
+                        .padding(.horizontal, 6)
+                        .padding(.top, 6)
+
+                        Button {
+                            showingActions = false
+                            let targetGroup = viewModel.flightGoals.filter { $0.isPriority == !goal.isPriority }
+                            let maxOrder = targetGroup.map { $0.sortOrder }.max() ?? -1
+                            goal.sortOrder = maxOrder + 1
+                            goal.isPriority.toggle()
+                            viewModel.saveContext()
+                            viewModel.loadData()
+                        } label: {
+                            HStack(spacing: 10) {
+                                Image(systemName: goal.isPriority ? "pin.slash" : "pin.fill")
+                                    .font(.system(size: 14, weight: .semibold))
+                                    .frame(width: 18)
+                                Text(goal.isPriority ? "取消釘選" : "釘選至進度")
+                                    .font(.system(size: 15, weight: .medium))
+                                Spacer()
+                            }
+                            .foregroundStyle(.primary)
+                            .padding(.horizontal, 12)
+                            .frame(height: 42)
+                            .contentShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+                        }
+                        .buttonStyle(.plain)
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 2)
+
+                        Divider()
+                            .padding(.horizontal, 14)
+                            .padding(.vertical, 2)
+
+                        Button(role: .destructive) {
+                            showingActions = false
+                            showingDeleteAlert = true
+                        } label: {
+                            HStack(spacing: 10) {
+                                Image(systemName: "trash")
+                                    .font(.system(size: 14, weight: .semibold))
+                                    .frame(width: 18)
+                                Text("刪除目標")
+                                    .font(.system(size: 15, weight: .medium))
+                                Spacer()
+                            }
+                            .foregroundStyle(.red)
+                            .padding(.horizontal, 12)
+                            .frame(height: 42)
+                            .contentShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+                        }
+                        .buttonStyle(.plain)
+                        .padding(.horizontal, 6)
+                        .padding(.bottom, 6)
+                    }
+                    .frame(width: 210)
+                    .presentationCompactAdaptation(.popover)
                 }
             }
             
@@ -571,7 +650,7 @@ struct GoalProgressCard: View {
                     
                     Spacer()
                     
-                    Text("\(Int(animatedProgress * 100))%")
+                    Text("\(Int(targetProgress * 100))%")
                         .font(AviationTheme.Typography.caption)
                         .foregroundColor(AviationTheme.Colors.secondaryText(colorScheme))
                 }
@@ -594,6 +673,7 @@ struct GoalProgressCard: View {
                                 )
                             )
                             .frame(width: geometry.size.width * animatedProgress, height: 8)
+                            .animation(.easeOut(duration: 0.7), value: animatedProgress)
                     }
                 }
                 .frame(height: 8)
@@ -642,15 +722,14 @@ struct GoalProgressCard: View {
             onEdit?()
         }
         .onAppear {
-            animatedProgress = 0
-            withAnimation(.easeOut(duration: 0.7).delay(0.3)) {
+            guard !hasAppeared else { return }
+            hasAppeared = true
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
                 animatedProgress = targetProgress
             }
         }
         .onChange(of: targetProgress) {
-            withAnimation(.easeOut(duration: 0.5)) {
-                animatedProgress = targetProgress
-            }
+            animatedProgress = targetProgress
         }
         .alert("確定要刪除此目標？", isPresented: $showingDeleteAlert) {
             Button("取消", role: .cancel) {}
