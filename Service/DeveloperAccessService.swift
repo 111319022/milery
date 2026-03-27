@@ -49,12 +49,12 @@ final class DeveloperAccessService {
             let allowedHashes = normalizedHashes(from: policyRecord["allowedUserHashes"] as? [String] ?? [])
 
             if allowedHashes.isEmpty {
-                return .denied("白名單目前為空。請先在 CloudKit 的 DevAccessPolicy/main-dev-access-policy 填入 allowedUserHashes。\n目前使用者識別碼：\n\(userHash)")
+                return .denied("白名單目前為空。需要在 CloudKit 的 DevAccessPolicy/main-dev-access-policy 填入 allowedUserHashes。\n目前使用者識別碼：\n\(userHash)")
             }
 
             guard allowedHashes.contains(userHash) else {
                 let preview = allowedHashes.prefix(3).joined(separator: "\n")
-                return .denied("您目前不在白名單內。\n請提供以下識別碼給管理者加入白名單：\n\(userHash)\n\n目前白名單筆數：\(allowedHashes.count)\n白名單前幾筆：\n\(preview)")
+                return .denied("您目前不在白名單內。\n請提供以下識別碼給管理者加入白名單：\n\(userHash)\n\n目前白名單筆數：\(allowedHashes.count)")
             }
 
             return .allowed

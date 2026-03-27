@@ -80,8 +80,8 @@
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "168"
             endingLineNumber = "168"
-            landmarkName = "CathayCardTier"
-            landmarkType = "13">
+            landmarkName = "calculateMiles(amount:source:acceleratorCategory:isBirthdayMonth:)"
+            landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
