@@ -397,7 +397,7 @@ struct DreamRadarCard: View {
         VStack(alignment: .leading, spacing: AviationTheme.Spacing.md) {
             // 標題列
             HStack {
-                Image(systemName: "radar")
+                Image(systemName: "scope")
                     .font(.body)
                     .foregroundStyle(AviationTheme.Colors.brandColor(colorScheme))
                 Text("夢想雷達")
@@ -526,7 +526,7 @@ struct MonthlyCockpitCard: View {
                 Image(systemName: "gauge.open.with.lines.needle.33percent.and.arrowtriangle")
                     .font(.body)
                     .foregroundStyle(AviationTheme.Colors.brandColor(colorScheme))
-                Text("本月駕駛艙")
+                Text("本月總覽")
                     .font(AviationTheme.Typography.headline)
                     .foregroundColor(AviationTheme.Colors.primaryText(colorScheme))
                 Spacer()
