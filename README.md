@@ -10,7 +10,7 @@ Milery是一款專為航空常客與哩程使用者開發之 iOS 原生應用程
 
 ## 應用程式取得方式
 
-目前提供正式上架版本與Testflight測試版本，可透過以下管道取得：
+目前提供正式上架版本與Testflight測試版本，可透過以下管道取得（Testflight測試版本更新較快）：
 
 * **App Store 正式版:** [點此下載](https://apps.apple.com/tw/app/milery-%E5%B0%88%E7%82%BA%E5%93%A9%E7%A8%8B%E7%8E%A9%E5%AE%B6%E6%89%93%E9%80%A0/id6760928932)
 * **TestFlight 公測版:** [點此加入 TestFlight 測試計畫](https://testflight.apple.com/join/gWaMP1w2)
@@ -19,6 +19,8 @@ Milery是一款專為航空常客與哩程使用者開發之 iOS 原生應用程
 
 * **哩程資產管理模組**
   提供結構化之資料輸入介面，精確記錄哩程之獲取、轉換與消耗。支援多源點數追蹤，確保帳務邏輯之完整性與正確性。
+* **信用卡規則引擎（可擴充架構）**
+  採用 `CardBrandDefinition` + `CardBrandRegistry` 設計，將各銀行/卡種規則以品牌定義方式註冊，支援多品牌、多等級與來源映射，降低硬編碼與擴充成本。
 * **兌換目標追蹤系統**
   依據使用者設定之起訖點 (如TPE-KIX)，系統動態計算並以量化之進度條呈現機票兌換之完成度。
 * **數位登機證生成器**
@@ -38,10 +40,14 @@ Milery是一款專為航空常客與哩程使用者開發之 iOS 原生應用程
   以宣告式 UI 建立儀表板、目標追蹤、明細編輯與設定頁面，並透過自訂主題集中管理色彩與視覺風格。
 * **資料模型與狀態管理:** `MVVM` + `Observable` ViewModel
   將哩程帳務、目標進度與票券邏輯集中在 ViewModel，維持畫面與資料同步，降低畫面耦合。
+* **信用卡規則架構:** `CardBrandDefinition` + `CardBrandRegistry`
+  信用卡品牌、等級、費率欄位、來源對應與子類別由註冊表統一管理，新增卡片時只需新增定義檔並註冊。
 * **本地資料持久化:** `SwiftData`
   儲存哩程帳戶、交易紀錄、目標與兌換票券等資料，提供離線可用且高效率的資料讀寫體驗。
+* **交易表單組件化:** `TransactionFormView`
+  新增與編輯記帳畫面共用同一套表單元件，確保欄位規則、費率預覽與驗證流程一致。
 * **雲端備份:** `CloudKit`
-  透過 iCloud 私有資料庫進行資料備份與還原，將所有 SwiftData 資料序列化為 JSON 並以 CKAsset 上傳，支援多版本備份管理。
+  透過 iCloud 私有資料庫進行資料備份與還原，將所有 SwiftData 資料序列化為 JSON 並以 CKAsset 上傳，支援多版本備份管理，且備份欄位已相容舊版交易子類別資料。
 * **地理空間資訊與航線呈現:** `MapKit` + `CoreLocation`
   用於機場座標查詢、航線路徑計算與 3D 空間視覺化，將兌換成果轉化為可視化飛行軌跡。
 * **資料來源與規則基礎:** `CSV` + 本地規則檔
@@ -58,8 +64,10 @@ Milery是一款專為航空常客與哩程使用者開發之 iOS 原生應用程
 ├── Assets.xcassets/
 ├── Database/
 ├── Models/
+│   └── CardDefinitions/
 ├── ViewModels/
 ├── Views/
+│   ├── TransactionFormView.swift
 │   └── DevViews/
 ├── Service/
 ├── milery.xcodeproj/
@@ -76,10 +84,14 @@ Milery是一款專為航空常客與哩程使用者開發之 iOS 原生應用程
   靜態資料與規則來源，例如機場資料表、航點資料與兌換規則。
 * **`Models/`**
   資料模型定義，如交易、目標、帳戶與兌換票券等核心結構。
+  * **`CardDefinitions/`**
+    信用卡品牌定義層，包含品牌協定、註冊表與各卡種規則實作。
 * **`ViewModels/`**
   商業邏輯與狀態管理層，處理資料計算與畫面同步。
 * **`Views/`**
   UI 畫面與元件，涵蓋儀表板、計算器、里程本與設定頁。
+  * **`TransactionFormView.swift`**
+    記帳共用表單元件，供新增與編輯交易流程共用。
   * **`DevViews/`** 開發者模式專用頁面（詳細請見下方「開發者模式專區」）。
 * **`Service/`**
   服務層，包含 CloudKit 備份與還原、開發者白名單驗證等邏輯。
@@ -121,16 +133,6 @@ Milery是一款專為航空常客與哩程使用者開發之 iOS 原生應用程
 3. App 會自動進行 CloudKit 白名單驗證。
 4. 驗證通過後，顯示「開發者」區塊。
 
-### TestFlight / 正式版部署重點
-
-* **TestFlight 與 App Store 版本會使用 CloudKit Production 環境。**
-* 請確認 Production 也建立以下資料（不是只有 Development）：
-  * Record Type：`DevAccessPolicy`
-  * Record Name：`main-dev-access-policy`（相容舊版：`default`）
-  * `enabled = 1`
-  * `allowedUserHashes` 已加入目標使用者 hash
-* 若只在 Development 設定白名單，TestFlight / 正式版會驗證失敗。
-
 ### 各工具頁用途說明
 
 * **機場資料列表** (`Views/DevViews/AirportListView.swift`)
@@ -143,13 +145,6 @@ Milery是一款專為航空常客與哩程使用者開發之 iOS 原生應用程
   用於查看雲端備份 Record 細節（recordName / zone / schema / device / 日期）。
 * **Console 日誌** (`Views/DevViews/ConsoleLogView.swift`)
   用於檢查同步與備份事件；支援同步關鍵字過濾，並採 7 天保留策略避免日誌無限成長。
-
-### 資料異常時建議除錯流程
-
-1. 先到「Console 日誌」開啟「只看同步相關」，確認近期同步事件與錯誤訊息。
-2. 到「資料管理」查看是否有孤兒資料或重複帳戶。
-3. 針對異常記錄進行逐筆刪除；若資料污染範圍大，再使用「安全清理」。
-4. 如需比對雲端狀態，進入「CloudKit record 詳細檢視（進階）」確認 Record 是否更新。
 
 ## 系統需求與安裝執行
 
