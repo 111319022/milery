@@ -78,9 +78,9 @@
             filePath = "Models/CreditCardRule.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "168"
-            endingLineNumber = "168"
-            landmarkName = "calculateMiles(amount:source:acceleratorCategory:isBirthdayMonth:)"
+            startingLineNumber = "127"
+            endingLineNumber = "127"
+            landmarkName = "calculateMiles(amount:source:subcategoryID:isBirthdayMonth:)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>

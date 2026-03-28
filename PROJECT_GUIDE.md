@@ -61,7 +61,6 @@ milery/
     ├── CreditCardPageView.swift        # 信用卡管理頁面
     ├── EditTransactionView.swift       # 編輯交易
     ├── CloudBackupView.swift           # 雲端備份 UI
-    ├── OnboardingView.swift            # 首次啟動引導（4 頁）
     ├── AllGoalsView.swift              # 完整目標清單
     ├── CalculatorComponents.swift      # 可重用 UI 元件
     ├── CalculatorLedgerView.swift      # 計算器帳本
@@ -70,7 +69,8 @@ milery/
         ├── CloudKitAdvancedView.swift  # CloudKit 除錯
         ├── ConsoleLogView.swift        # 日誌檢視器
         ├── AirportListView.swift       # 機場瀏覽
-        ├── ProgramSwitcherView.swift   # 里程計劃切換
+        ├── ProgramSwitcherView.swift   # [⚠️開發中]里程計劃切換
+        ├── OnboardingView.swift        # [⚠️開發中]首次啟動引導（4 頁）
         └── TabVisibilitySettingsView.swift # Tab 可見性設定
 ```
 
@@ -228,7 +228,7 @@ App 的啟動入口，負責：
 
 ---
 
-## 信用卡系統 (CardDefinitions)
+## 信用卡系統
 
 ### 架構說明
 
@@ -263,12 +263,12 @@ CardBrandRegistry (中央註冊表，靜態查詢)
 | 等級 | 一般消費 | 加速類別 |
 |------|---------|---------|
 | 世界卡 | 22 元/哩 | 10 元/哩 |
-| 鈦商卡 | 25 元/哩 | 12 元/哩 |
+| 鈦商卡 | 25 元/哩 | 10 元/哩 |
 | 白金卡 | 30 元/哩 | 15 元/哩 |
-| 里享卡 | 25 元/哩 | 12 元/哩 |
+| 里享卡 | 30 元/哩 | 30 元/哩 |
 
 - 加速類別：海外、旅遊交通、日常消費、休閒娛樂
-- 生日月加倍：2.0x
+- 生日月加倍：2.0x [⚠️尚未實作完成]
 - 有卡片圖片
 
 ### `TaishinCathayCard.swift` — 台新國泰航空聯名卡
@@ -280,9 +280,9 @@ CardBrandRegistry (中央註冊表，靜態查詢)
 | 鈦金卡 | 30 元/哩 | 25 元/哩 | 5 元/哩 |
 
 - 指定類別：4 種消費子分類
-- 無卡片圖片（使用漸層顯示）
+- ⚠️卡片待補
 
-### `CardBrandRegistry.swift` — 中央註冊表
+### `CardBrandRegistry.swift` — 註冊表
 
 **關鍵靜態方法：**
 
