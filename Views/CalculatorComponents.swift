@@ -57,7 +57,6 @@ struct CompactCardRow: View {
     
     var body: some View {
         HStack(spacing: 16) {
-            // 卡片圖標
             ZStack {
                 Circle()
                     .fill(AviationTheme.Colors.cathayJade.opacity(0.15))
@@ -67,7 +66,6 @@ struct CompactCardRow: View {
                     .font(.subheadline)
             }
             
-            // 卡片資訊
             VStack(alignment: .leading, spacing: 2) {
                 Text(card.cardName)
                     .font(AviationTheme.Typography.body)
@@ -80,7 +78,6 @@ struct CompactCardRow: View {
             
             Spacer()
             
-            // 選取狀態（打勾）
             if isSelected {
                 Image(systemName: "checkmark")
                     .font(.headline)
@@ -98,9 +95,9 @@ struct CompactCardRow: View {
     }
 }
 
-// MARK: - 精簡加速器按鈕 (現代化卡片風格)
-struct CompactAcceleratorButton: View {
-    let category: AcceleratorCategory
+// MARK: - 通用子類別按鈕（取代 CompactAcceleratorButton + CompactTaishinDesignatedButton）
+struct CompactSubcategoryButton: View {
+    let category: CardSpendingCategory
     let isSelected: Bool
     let colorScheme: ColorScheme
     let action: () -> Void
@@ -116,7 +113,7 @@ struct CompactAcceleratorButton: View {
                             : AviationTheme.Colors.warning
                     )
                 
-                Text(category.rawValue)
+                Text(category.id)
                     .font(AviationTheme.Typography.subheadline)
                     .fontWeight(isSelected ? .semibold : .regular)
                     .foregroundColor(
