@@ -19,6 +19,9 @@ final class Transaction {
     var notes: String = ""
     var costPerMile: Double = 0
     
+    // 使用的信用卡品牌（信用卡消費時記錄）
+    var cardBrandRaw: String?
+    
     // 額外資訊欄位
     var flightRoute: String?
     var conversionSource: String?
@@ -67,11 +70,27 @@ final class Transaction {
         }
     }
     
+    /// 使用的信用卡品牌（computed）
+    var cardBrand: CardBrand? {
+        get {
+            guard let raw = cardBrandRaw else { return nil }
+            return CardBrand(rawValue: raw)
+        }
+        set { cardBrandRaw = newValue?.rawValue }
+    }
+    
+    /// 使用的信用卡顯示名稱
+    var cardDisplayName: String? {
+        guard let brand = cardBrand else { return nil }
+        return brand.displayName
+    }
+    
     init(date: Date = Date(),
          amount: Decimal,
          earnedMiles: Int,
          source: MileageSource,
          subcategoryID: String? = nil,
+         cardBrand: CardBrand? = nil,
          notes: String = "",
          flightRoute: String? = nil,
          conversionSource: String? = nil,
@@ -84,6 +103,7 @@ final class Transaction {
         self.earnedMiles = earnedMiles
         self.sourceRaw = source.rawValue
         self.cardSubcategoryID = subcategoryID
+        self.cardBrandRaw = cardBrand?.rawValue
         // 同步舊欄位
         if source == .cardAccelerator {
             self.acceleratorCategoryRaw = subcategoryID

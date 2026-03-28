@@ -173,6 +173,7 @@ struct EditTransactionView: View {
             earnedMiles: miles,
             source: selectedSource,
             subcategoryID: selectedSubcategoryID,
+            cardBrand: selectedCard?.cardBrand,
             date: date,
             notes: notes,
             flightRoute: selectedSource == .flight && !flightRoute.isEmpty ? flightRoute : nil,

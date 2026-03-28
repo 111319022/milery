@@ -682,6 +682,10 @@ struct TransactionDetailRow: View {
         transaction.source == .ticketRedemption
     }
 
+    var isCardSource: Bool {
+        CardBrandRegistry.sourceNeedsCard(transaction.source)
+    }
+
     var displayTitle: String {
         transaction.source.rawValue
     }
@@ -735,6 +739,14 @@ struct TransactionDetailRow: View {
                     .font(AviationTheme.Typography.body)
                     .fontWeight(.semibold)
                     .foregroundColor(AviationTheme.Colors.primaryText(colorScheme))
+
+                // 信用卡名稱（信用卡消費來源時顯示）
+                if let cardName = transaction.cardDisplayName, isCardSource {
+                    Text(cardName)
+                        .font(AviationTheme.Typography.caption)
+                        .foregroundColor(AviationTheme.Colors.cathayJade)
+                        .lineLimit(1)
+                }
 
                 // 來源明細：加速器類別 / 商家名稱 / 轉點來源 / 活動名稱
                 if let detail = sourceDetail, !detail.isEmpty {

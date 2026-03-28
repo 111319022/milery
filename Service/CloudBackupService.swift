@@ -52,6 +52,7 @@ struct TransactionBackup: Codable {
     let merchantName: String?
     let promotionName: String?
     let linkedTicketID: UUID?
+    let cardBrandRaw: String?
 }
 
 struct FlightGoalBackup: Codable {
@@ -266,7 +267,8 @@ class CloudBackupService {
                     conversionSource: t.conversionSource,
                     merchantName: t.merchantName,
                     promotionName: t.promotionName,
-                    linkedTicketID: t.linkedTicketID
+                    linkedTicketID: t.linkedTicketID,
+                    cardBrandRaw: t.cardBrandRaw
                 )
             },
             flightGoals: flightGoals.map { g in
@@ -516,12 +518,14 @@ class CloudBackupService {
         for t in backup.transactions {
             // 優先使用新版 cardSubcategoryID，fallback 到舊版 acceleratorCategoryRaw
             let subcategoryID = t.cardSubcategoryID ?? t.acceleratorCategoryRaw
+            let cardBrand: CardBrand? = t.cardBrandRaw.flatMap { CardBrand(rawValue: $0) }
             let transaction = Transaction(
                 date: t.date,
                 amount: t.amount,
                 earnedMiles: t.earnedMiles,
                 source: MileageSource(rawValue: t.sourceRaw) ?? .cardGeneral,
                 subcategoryID: subcategoryID,
+                cardBrand: cardBrand,
                 notes: t.notes,
                 flightRoute: t.flightRoute,
                 conversionSource: t.conversionSource,

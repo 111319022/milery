@@ -517,6 +517,7 @@ class MileageViewModel {
                        earnedMiles: Int,
                        source: MileageSource,
                        subcategoryID: String? = nil,
+                       cardBrand: CardBrand? = nil,
                        date: Date = Date(),
                        notes: String = "",
                        flightRoute: String? = nil,
@@ -531,6 +532,7 @@ class MileageViewModel {
             earnedMiles: earnedMiles,
             source: source,
             subcategoryID: subcategoryID,
+            cardBrand: cardBrand,
             notes: notes,
             flightRoute: flightRoute,
             conversionSource: conversionSource,
@@ -657,6 +659,7 @@ class MileageViewModel {
                            earnedMiles: Int,
                            source: MileageSource,
                            subcategoryID: String? = nil,
+                           cardBrand: CardBrand? = nil,
                            date: Date,
                            notes: String = "",
                            flightRoute: String? = nil,
@@ -673,6 +676,7 @@ class MileageViewModel {
         transaction.earnedMiles = earnedMiles
         transaction.source = source
         transaction.resolvedSubcategoryID = subcategoryID
+        transaction.cardBrand = cardBrand
         transaction.notes = notes
         transaction.flightRoute = flightRoute
         transaction.conversionSource = conversionSource
