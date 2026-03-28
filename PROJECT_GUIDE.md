@@ -402,7 +402,7 @@ CardBrandRegistry (中央註冊表，靜態查詢)
 
 5 個 Tab 頁籤（儀表板、進度、帳本、里程碑、設定），每個 Tab 的可見性由 `@AppStorage` 控制。支援外觀模式切換（系統/亮色/暗色）。
 
-### `DashboardView.swift` — 儀表板（Tab 0）
+### `DashboardView.swift` — 儀表板（Tab 1）
 
 - **英雄區塊：** 總里程顯示、到期日警告
 - **可兌換雷達：** 顯示哪些目標已有足夠里程
@@ -411,26 +411,26 @@ CardBrandRegistry (中央註冊表，靜態查詢)
 - **近期動態：** 最新 3~5 筆交易
 - 20 秒自動檢查遠端變更
 
-### `ProgressView.swift` — 進度（Tab 1）
+### `ProgressView.swift` — 進度（Tab 2）
 
 - 半圓形進度指示器（釘選目標）
 - 所有目標列表（釘選優先）
 - 拖拉排序、新增/編輯目標
 
-### `LedgerView.swift` — 帳本（Tab 2）
+### `LedgerView.swift` — 帳本（Tab 3）
 
 - 月份選擇器與導覽
 - 統計：月度總計、分類統計
 - 交易列表（含排序）
 - 新增/編輯交易
 
-### `MilestonesView.swift` — 里程碑（Tab 3）
+### `MilestonesView.swift` — 里程碑（Tab 4）
 
-- 地圖顯示：已兌換（綠色）、可兌換（藍色）、未完成（灰色）航線
+- 地圖顯示：已兌換（藍色）、可兌換（橘色）、未完成（橘色虛線）航線
 - 航線統計
 - 記錄機票互動
 
-### `SettingsView.swift` — 設定（Tab 4）
+### `SettingsView.swift` — 設定（Tab 5）
 
 - 外觀設定、信用卡管理、使用者偏好
 - 雲端備份、同步開關
@@ -475,7 +475,7 @@ CardBrandRegistry (中央註冊表，靜態查詢)
 | `ConsoleLogView.swift` | 查看 App 日誌（來自 `AppConsoleStore`） |
 | `AirportListView.swift` | 瀏覽/搜尋機場資料庫 |
 | `ProgramSwitcherView.swift` | 管理多個里程計劃 |
-| `TabVisibilitySettingsView.swift` | 切換主 Tab 的可見性 |
+| `TabVisibilitySettingsView.swift` | 切換 MainTab 的可見性 |
 
 ---
 
