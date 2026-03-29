@@ -326,7 +326,7 @@ struct GlassmorphismStyle: ViewModifier {
             .background(
                 ZStack {
                     if colorScheme == .dark {
-                        Color.white.opacity(0.05)
+                        Color.white.opacity(0.06)
                         BlurView(style: .systemUltraThinMaterialDark)
                     } else {
                         Color.white.opacity(0.7)
@@ -339,7 +339,7 @@ struct GlassmorphismStyle: ViewModifier {
                 RoundedRectangle(cornerRadius: AviationTheme.CornerRadius.lg)
                     .stroke(
                         colorScheme == .dark
-                            ? Color.white.opacity(0.15)
+                            ? Color.white.opacity(0.18)
                             : Color.black.opacity(0.08),
                         lineWidth: 1
                     )

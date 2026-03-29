@@ -126,11 +126,7 @@ struct LedgerView: View {
                                                 Image(systemName: isStatsExpanded ? "chevron.up" : "chevron.down")
                                                     .font(.system(size: 9, weight: .semibold))
                                             }
-                                            .foregroundColor(
-                                                colorScheme == .dark
-                                                    ? Color.white.opacity(0.55)
-                                                    : Color.black.opacity(0.4)
-                                            )
+                                            .foregroundColor(AviationTheme.Colors.secondaryText(colorScheme))
                                             .padding(.vertical, 6)
                                             .padding(.horizontal, 8)
                                             .contentShape(Rectangle())
@@ -155,7 +151,7 @@ struct LedgerView: View {
                                     Circle()
                                         .fill(
                                             colorScheme == .dark
-                                                ? Color.white.opacity(0.05)
+                                                ? Color.white.opacity(0.08)
                                                 : AviationTheme.Colors.lightBeige
                                         )
                                         .frame(width: 100, height: 100)
@@ -473,11 +469,7 @@ struct MonthPicker: View {
                             .shadow(color: AviationTheme.Colors.brandColor(colorScheme).opacity(0.3), radius: 5)
                     } else {
                         Circle()
-                            .fill(
-                                colorScheme == .dark
-                                    ? Color.white.opacity(0.1)
-                                    : Color.black.opacity(0.1)
-                            )
+                            .fill(AviationTheme.Colors.tertiaryText(colorScheme).opacity(0.2))
                             .frame(width: 36, height: 36)
                     }
                     
@@ -817,11 +809,7 @@ struct TransactionDetailRow: View {
         .padding(AviationTheme.Spacing.md)
         .background(
             RoundedRectangle(cornerRadius: AviationTheme.CornerRadius.md)
-                .fill(
-                    colorScheme == .dark
-                        ? Color.white.opacity(0.03)
-                        : Color.white
-                )
+                .fill(AviationTheme.Colors.cardBackground(colorScheme))
         )
         .clipShape(RoundedRectangle(cornerRadius: AviationTheme.CornerRadius.md))
         .overlay(

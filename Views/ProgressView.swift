@@ -430,6 +430,7 @@ struct GoalReorderSheet: View {
 
 // MARK: - 排序用的目標行
 struct GoalReorderRow: View {
+    @Environment(\.colorScheme) var colorScheme
     let goal: FlightGoal
     let isPinned: Bool
     
@@ -469,7 +470,7 @@ struct GoalReorderRow: View {
         .listRowSeparator(.hidden)
         .listRowBackground(
             RoundedRectangle(cornerRadius: 14)
-                .fill(Color(.secondarySystemGroupedBackground))
+                .fill(AviationTheme.Colors.cardBackground(colorScheme))
                 .padding(.vertical, 2)
         )
     }

@@ -342,7 +342,7 @@ struct HeroMilesCard: View {
             .padding(AviationTheme.Spacing.md)
             .background(
                 colorScheme == .dark
-                    ? Color.white.opacity(0.03)
+                    ? Color.white.opacity(0.05)
                     : Color.black.opacity(0.02)
             )
         }
