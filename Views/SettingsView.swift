@@ -302,6 +302,22 @@ struct SettingsView: View {
                                         }
                                     }
                                     .buttonStyle(.plain)
+
+                                    CustomDivider(colorScheme: colorScheme)
+                                    
+                                    Button {
+                                        hasCompletedOnboarding = false
+                                        showDevToast("Onboarding 已重置")
+                                    } label: {
+                                        SettingRow(
+                                            icon: "arrow.clockwise.circle.fill",
+                                            title: "重新觸發 Onboarding",
+                                            subtitle: "重置狀態，下次啟動時會顯示歡迎頁面"
+                                        ) {
+                                            Image(systemName: "")
+                                        }
+                                    }
+                                    .buttonStyle(.plain)
                                     
                                 }
                                 .background(AviationTheme.Colors.cardBackground(colorScheme))
@@ -325,22 +341,6 @@ struct SettingsView: View {
                                                 .foregroundColor(AviationTheme.Colors.tertiaryText(colorScheme))
                                                 .font(.subheadline)
                                                 .fontWeight(.semibold)
-                                        }
-                                    }
-                                    .buttonStyle(.plain)
-                                    
-                                    CustomDivider(colorScheme: colorScheme)
-                                    
-                                    Button {
-                                        hasCompletedOnboarding = false
-                                        showDevToast("Onboarding 已重置，下次啟動 App 會顯示歡迎頁面")
-                                    } label: {
-                                        SettingRow(
-                                            icon: "arrow.clockwise.circle.fill",
-                                            title: "重新觸發 Onboarding",
-                                            subtitle: "重置狀態，下次啟動時會顯示歡迎頁面"
-                                        ) {
-                                            Image(systemName: "")
                                         }
                                     }
                                     .buttonStyle(.plain)
