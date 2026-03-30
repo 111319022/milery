@@ -10,12 +10,26 @@ struct MainTabView: View {
     @AppStorage("tabVisible_milestones") private var milestonesVisible = true
     @State private var viewModel = MileageViewModel()
     @State private var selectedTab: Int = 0
+    @State private var themeOverlayOpacity: Double = 0
+    @State private var appliedColorSchemeSetting: String = "system"
     
     var preferredColorScheme: ColorScheme? {
-        switch userColorScheme {
+        switch appliedColorSchemeSetting {
         case "light": return .light
         case "dark": return .dark
         default: return nil
+        }
+    }
+    
+    private func animateThemeTransition(to newScheme: String) {
+        withAnimation(.easeOut(duration: 0.3)) {
+            themeOverlayOpacity = 0.36
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.28) {
+            appliedColorSchemeSetting = newScheme
+            withAnimation(.easeInOut(duration: 0.55)) {
+                themeOverlayOpacity = 0
+            }
         }
     }
     
@@ -65,8 +79,22 @@ struct MainTabView: View {
         }
         .tint(AviationTheme.Colors.cathayJade)
         .preferredColorScheme(preferredColorScheme)
+        .animation(nil, value: preferredColorScheme)
+        .overlay {
+            if themeOverlayOpacity > 0 {
+                Color(uiColor: .systemBackground)
+                    .opacity(themeOverlayOpacity)
+                    .ignoresSafeArea()
+                    .allowsHitTesting(false)
+            }
+        }
         .onAppear {
             viewModel.initialize(context: modelContext)
+            appliedColorSchemeSetting = userColorScheme
+        }
+        .onChange(of: userColorScheme) { oldValue, newValue in
+            guard oldValue != newValue else { return }
+            animateThemeTransition(to: newValue)
         }
         .onChange(of: dashboardVisible) { ensureValidTab() }
         .onChange(of: progressVisible) { ensureValidTab() }

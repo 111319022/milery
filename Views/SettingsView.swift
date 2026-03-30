@@ -18,6 +18,7 @@ struct SettingsView: View {
     @State private var developerAccessMessage = ""
     @AppStorage("lastBackupDate") private var lastBackupDateTimestamp: Double = 0
     @AppStorage("cloudKitSyncEnabled") private var cloudKitSyncEnabled: Bool = true
+    @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding: Bool = false
     @State private var showingSyncRestartAlert = false
     @State private var toastMessage: String?
     @State private var showToast = false
@@ -39,7 +40,7 @@ struct SettingsView: View {
         default: return "跟隨系統"
         }
     }
-    
+
     var body: some View {
         NavigationStack {
             ZStack {
@@ -330,16 +331,16 @@ struct SettingsView: View {
                                     
                                     CustomDivider(colorScheme: colorScheme)
                                     
-                                    NavigationLink(destination: OnboardingView(viewModel: viewModel)) {
+                                    Button {
+                                        hasCompletedOnboarding = false
+                                        showDevToast("Onboarding 已重置，下次啟動 App 會顯示歡迎頁面")
+                                    } label: {
                                         SettingRow(
-                                            icon: "hand.wave.fill",
-                                            title: "新用戶歡迎頁面（開發中）",
-                                            subtitle: "預覽 Onboarding 流程"
+                                            icon: "arrow.clockwise.circle.fill",
+                                            title: "重新觸發 Onboarding",
+                                            subtitle: "重置狀態，下次啟動時會顯示歡迎頁面"
                                         ) {
-                                            Image(systemName: "chevron.right")
-                                                .foregroundColor(AviationTheme.Colors.tertiaryText(colorScheme))
-                                                .font(.subheadline)
-                                                .fontWeight(.semibold)
+                                            Image(systemName: "")
                                         }
                                     }
                                     .buttonStyle(.plain)

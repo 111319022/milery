@@ -11,7 +11,7 @@ struct TaishinCathayCard: CardBrandDefinition {
     let defaultBillingDay = 15
     let defaultRoundingMode: RoundingMode = .down
     let birthdayMultiplier: Decimal = 1.0
-    let usesCardImage = false
+    let usesCardImage = true
     
     // MARK: - 等級定義
     
@@ -30,7 +30,7 @@ struct TaishinCathayCard: CardBrandDefinition {
                 Color(red: 0.08, green: 0.08, blue: 0.10),
                 Color(red: 0.25, green: 0.25, blue: 0.30)
             ],
-            cardImageName: nil,
+            cardImageName: "Taishin_World",
             benefits: [
                 "國內消費 22 元 1 哩",
                 "國外消費 15 元 1 哩",
@@ -51,7 +51,7 @@ struct TaishinCathayCard: CardBrandDefinition {
                 Color(red: 0.05, green: 0.25, blue: 0.15),
                 Color(red: 0.15, green: 0.5, blue: 0.35)
             ],
-            cardImageName: nil,
+            cardImageName: "Taishin_FlyTitanium",
             benefits: [
                 "國內消費 25 元 1 哩",
                 "國外消費 15 元 1 哩",
@@ -72,7 +72,7 @@ struct TaishinCathayCard: CardBrandDefinition {
                 Color(red: 0.3, green: 0.35, blue: 0.38),
                 Color(red: 0.5, green: 0.55, blue: 0.58)
             ],
-            cardImageName: nil,
+            cardImageName: "Taishin_Titanium",
             benefits: [
                 "國內消費 30 元 1 哩",
                 "國外消費 25 元 1 哩",

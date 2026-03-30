@@ -157,6 +157,7 @@ final class SyncDiagnosticsObserver {
 @main
 struct MileryApp: App {
     let sharedModelContainer: ModelContainer
+    @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding: Bool = false
     
     init() {
         SyncDiagnosticsObserver.shared.start()
@@ -197,7 +198,13 @@ struct MileryApp: App {
     
     var body: some Scene {
         WindowGroup {
-            MainTabView()
+            if hasCompletedOnboarding {
+                MainTabView()
+            } else {
+                NavigationStack {
+                    OnboardingView(viewModel: MileageViewModel())
+                }
+            }
         }
         .modelContainer(sharedModelContainer)
     }

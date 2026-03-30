@@ -50,6 +50,7 @@ milery/
 │   └── DeveloperAccessService.swift    # 開發者存取控制
 └── Views/
     ├── MainTabView.swift               # 根層 Tab 導覽
+    ├── OnboardingView.swift            # 首次啟動引導（正式上線，9 頁）
     ├── DashboardView.swift             # 儀表板
     ├── ProgressView.swift              # 進度/目標
     ├── LedgerView.swift                # 帳本/交易紀錄
@@ -68,7 +69,6 @@ milery/
         ├── ConsoleLogView.swift        # 日誌檢視器
         ├── AirportListView.swift       # 機場瀏覽
         ├── ProgramSwitcherView.swift   # [⚠️開發中]里程計劃切換
-        ├── OnboardingView.swift        # [⚠️開發中]首次啟動引導（4 頁）
         └── TabVisibilitySettingsView.swift # Tab 可見性設定
 ```
 
@@ -267,7 +267,6 @@ CardBrandRegistry (中央註冊表，靜態查詢)
 
 - 加速類別：海外、旅遊交通、日常消費、休閒娛樂
 - 生日月加倍：2.0x [⚠️尚未實作完成]
-- 有卡片圖片
 
 ### `TaishinCathayCard.swift` — 台新國泰航空聯名卡
 
@@ -278,7 +277,6 @@ CardBrandRegistry (中央註冊表，靜態查詢)
 | 鈦金卡 | 30 元/哩 | 25 元/哩 | 5 元/哩 |
 
 - 指定類別：4 種消費子分類
-- ⚠️卡片待補
 
 ### `CardBrandRegistry.swift` — 註冊表
 
@@ -457,7 +455,7 @@ CardBrandRegistry (中央註冊表，靜態查詢)
 |------|------|
 | `EditTransactionView.swift` | 編輯/刪除交易 |
 | `CloudBackupView.swift` | 備份狀態、備份/還原操作 |
-| `OnboardingView.swift` | 首次啟動 4 頁引導（歡迎、計劃選擇、卡片設定、同步設定） |
+| `OnboardingView.swift` | 首次啟動 9 頁引導（含卡片、主題、通知與同步設定） |
 | `AllGoalsView.swift` | 完整目標清單 Modal |
 | `CalculatorComponents.swift` | 可重用元件（`SourceButton`、`CompactCardRow`） |
 | `CalculatorLedgerView.swift` | 計算器帳本 |
@@ -477,6 +475,14 @@ CardBrandRegistry (中央註冊表，靜態查詢)
 | `ProgramSwitcherView.swift` | 管理多個里程計劃 |
 | `TabVisibilitySettingsView.swift` | 切換 MainTab 的可見性 |
 
+### Onboarding 測試重置按鈕
+
+為了方便測試首次引導流程，開發者模式提供「重置已讀 Onboarding」入口：
+
+1. 進入 `SettingsView`。
+2. 在「開發中頁面」點選「重新觸發 Onboarding」。
+3. 系統會將 `hasCompletedOnboarding` 設為 `false`。
+4. 並馬上顯示頁面，若未完成所有流程下次重啟後一樣進入Onboarding。
 ---
 
 ## 資料儲存與同步
@@ -495,6 +501,7 @@ CardBrandRegistry (中央註冊表，靜態查詢)
 | `userColorScheme` | String | 外觀偏好 |
 | `userName` | String | 使用者名稱 |
 | `preferredOrigin` | String | 偏好出發機場 |
+| `hasCompletedOnboarding` | Bool | 首次引導是否完成 |
 | `tabVisible_*` | Bool | 各 Tab 可見性 |
 | `lastBackupDate` | Date | 最後備份時間 |
 | `activeMileageProgramID` | UUID | 當前計劃 ID |
@@ -535,6 +542,15 @@ Settings → 里程計劃 → 選擇計劃
     → loadData() 依 programID 過濾
     → 重設資料指紋
     → 所有畫面重新渲染
+```
+
+### 重新測試 Onboarding
+
+```
+Settings（開發者模式） → 重新觸發 Onboarding
+    → hasCompletedOnboarding = false
+    → 重新啟動 App
+    → 顯示 OnboardingView（完整首次引導流程）
 ```
 
 ### 雲端備份與還原

@@ -24,6 +24,7 @@
 		FBC0CC212F78596500EEADFE /* PROJECT_GUIDE.md in Resources */ = {isa = PBXBuildFile; fileRef = FBC0CC202F78596500EEADFE /* PROJECT_GUIDE.md */; };
 		FBCA10212F70000100A1B2C3 /* RedeemedTicket.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBCA10202F70000100A1B2C3 /* RedeemedTicket.swift */; };
 		FBCA10232F70000200A1B2C3 /* MilestonesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBCA10222F70000200A1B2C3 /* MilestonesView.swift */; };
+		FBF23D242F7AA04000F6C330 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBF23D232F7AA04000F6C330 /* OnboardingView.swift */; };
 		FBF2F7CB2F6D333F0047DCE8 /* EditTransactionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBF2F7CA2F6D333F0047DCE8 /* EditTransactionView.swift */; };
 		FBF89DAE2F6AC2EE003DB1EB /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FBF89D962F6AC2EE003DB1EB /* Assets.xcassets */; };
 		FBF89DB02F6AC2EE003DB1EB /* CalculatorLedgerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBF89DA42F6AC2EE003DB1EB /* CalculatorLedgerView.swift */; };
@@ -65,6 +66,7 @@
 		FBC0CC202F78596500EEADFE /* PROJECT_GUIDE.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = PROJECT_GUIDE.md; sourceTree = "<group>"; };
 		FBCA10202F70000100A1B2C3 /* RedeemedTicket.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RedeemedTicket.swift; sourceTree = "<group>"; };
 		FBCA10222F70000200A1B2C3 /* MilestonesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MilestonesView.swift; sourceTree = "<group>"; };
+		FBF23D232F7AA04000F6C330 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
 		FBF2F7CA2F6D333F0047DCE8 /* EditTransactionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditTransactionView.swift; sourceTree = "<group>"; };
 		FBF89D942F6AC2EE003DB1EB /* MileryApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MileryApp.swift; sourceTree = "<group>"; };
 		FBF89D962F6AC2EE003DB1EB /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -192,6 +194,7 @@
 				FB419C232F6C1BA700A30AF9 /* CreditCardPageView.swift */,
 				FBF2F7CA2F6D333F0047DCE8 /* EditTransactionView.swift */,
 				FB6BC0BF2F70F45E0011877D /* CloudBackupView.swift */,
+				FBF23D232F7AA04000F6C330 /* OnboardingView.swift */,
 				FBC0CBEF2F78018300EEADFE /* TransactionFormView.swift */,
 			);
 			path = Views;
@@ -286,6 +289,7 @@
 				FBBABAF12F73273E0026B8D1 /* DeveloperAccessService.swift in Sources */,
 				FB6BC0C22F70F4DC0011877D /* CloudBackupService.swift in Sources */,
 				FB419C212F6B1C3B00A30AF9 /* CalculatorComponents.swift in Sources */,
+				FBF23D242F7AA04000F6C330 /* OnboardingView.swift in Sources */,
 				FB6BC0C02F70F45E0011877D /* CloudBackupView.swift in Sources */,
 				FB297D832F762AF6004A9DAC /* MileageProgram.swift in Sources */,
 				FBF89DB32F6AC2EE003DB1EB /* MainTabView.swift in Sources */,
