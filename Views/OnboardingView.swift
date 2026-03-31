@@ -52,6 +52,87 @@ struct PulseRingView: View {
     }
 }
 
+// MARK: - 歡迎頁英雄動畫視圖
+struct WelcomeHeroAnimationView: View {
+    @State private var isAnimating = false
+    
+    var body: some View {
+        ZStack {
+            // 中心擴散的漸層光暈
+            Circle()
+                .fill(
+                    RadialGradient(
+                        gradient: Gradient(colors: [
+                            AviationTheme.Colors.cathayJade.opacity(0.4),
+                            Color.clear
+                        ]),
+                        center: .center,
+                        startRadius: 20,
+                        endRadius: 90
+                    )
+                )
+                .frame(width: 180, height: 180)
+                .scaleEffect(isAnimating ? 1.15 : 0.85)
+                .opacity(isAnimating ? 1 : 0.6)
+                .animation(.easeInOut(duration: 3).repeatForever(autoreverses: true), value: isAnimating)
+
+            // 外圍點狀飛行軌道
+            Circle()
+                .stroke(
+                    LinearGradient(
+                        colors: [AviationTheme.Colors.cathayJade, AviationTheme.Colors.cathayJade.opacity(0.1)],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    ),
+                    style: StrokeStyle(lineWidth: 2, lineCap: .round, lineJoin: .round, dash: [6, 12])
+                )
+                .frame(width: 130, height: 130)
+                .rotationEffect(.degrees(isAnimating ? 360 : 0))
+                .animation(.linear(duration: 12).repeatForever(autoreverses: false), value: isAnimating)
+
+            // 中心實線裝飾軌道
+            Circle()
+                .stroke(AviationTheme.Colors.cathayJade.opacity(0.2), lineWidth: 1)
+                .frame(width: 75, height: 75)
+                .scaleEffect(isAnimating ? 1.05 : 0.95)
+                .animation(.easeInOut(duration: 4).repeatForever(autoreverses: true), value: isAnimating)
+
+            // 轉圈圈的飛機群組
+            ZStack {
+                // 飛機拖尾粒子
+                Circle()
+                    .fill(AviationTheme.Colors.cathayJade.opacity(0.8))
+                    .frame(width: 4, height: 4)
+                    .offset(x: -8, y: 15)
+                    .blur(radius: 2)
+
+                Image("73") 
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 70, height: 70) // 放大一倍
+                    .rotationEffect(.degrees(10)) 
+            }
+            .offset(y: -65) // 在軌道上 半徑是 65
+            .rotationEffect(.degrees(isAnimating ? 360 : 0))
+            .animation(.linear(duration: 6).repeatForever(autoreverses: false), value: isAnimating)
+
+            // 中央主要 Icon
+            Image(systemName: "globe.asia.australia.fill")
+                .resizable()
+                .scaledToFit()
+                .frame(width: 52, height: 52)
+                .foregroundColor(AviationTheme.Colors.cathayJade)
+                .shadow(color: AviationTheme.Colors.cathayJade.opacity(0.5), radius: 8, x: 0, y: 4)
+                .scaleEffect(isAnimating ? 1.05 : 0.95)
+                .animation(.easeInOut(duration: 3).repeatForever(autoreverses: true), value: isAnimating)
+        }
+        .frame(width: 180, height: 180)
+        .onAppear {
+            isAnimating = true
+        }
+    }
+}
+
 struct OnboardingView: View {
     @Environment(\.colorScheme) var colorScheme
     @Environment(\.dismiss) private var dismiss
@@ -291,16 +372,7 @@ struct OnboardingView: View {
         VStack(spacing: AviationTheme.Spacing.xl) {
             Spacer()
             
-            ZStack {
-                // 脈衝光環背景
-                PulseRingView(color: AviationTheme.Colors.cathayJade.opacity(0.4))
-                
-                Image(systemName: "airplane.circle.fill")
-                    .font(.system(size: 80))
-                    .foregroundStyle(
-                        AviationTheme.Gradients.cathayJadeGradient(colorScheme)
-                    )
-            }
+            WelcomeHeroAnimationView()
             
             VStack(spacing: AviationTheme.Spacing.md) {
                 Text("歡迎使用 Milery")
