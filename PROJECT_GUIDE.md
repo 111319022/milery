@@ -493,6 +493,9 @@ CardBrandRegistry (中央註冊表，靜態查詢)
 - CloudKit 私人資料庫（`iCloud.com.73app.milery`）
 - 自動同步由 `NSPersistentCloudKitContainer` 處理
 
+## Onboarding 開發者跳過
+- 開發者可於Onboarding第一頁長按下一步，做驗證跳過Guide。
+
 ### UserDefaults 儲存項目
 
 | Key | 類型 | 說明 |
