@@ -39,7 +39,7 @@ struct AppBackgroundView: View {
         case .none:
             return nil
         case .preset(let name):
-            return UIImage(named: name)
+            return BackgroundImageManager.shared.loadPresetImage(name: name)
         case .custom(let filename):
             return BackgroundImageManager.shared.loadCustomImage(filename: filename)
         }

@@ -19,7 +19,10 @@ struct BackgroundPickerView: View {
     @State private var activeCropSession: CropSession?
     @State private var rawOriginalImage: UIImage?
 
-    private let presetNames = BackgroundImageManager.shared.presetImageNames()
+    // 預設桌布名單直接維護在此（填 backgroundpic 資料夾內的 imageset 名稱，不含副檔名）
+    private let presetNames: [String] = [
+        "pikmin"
+    ]
 
     private let columns = [
         GridItem(.flexible(), spacing: 12),
@@ -138,7 +141,7 @@ struct BackgroundPickerView: View {
                 Image(systemName: "paintpalette.fill")
                     .font(.title2)
                     .foregroundColor(AviationTheme.Colors.cathayJade)
-                Text("預設漸層")
+                Text("預設")
                     .font(AviationTheme.Typography.caption)
                     .foregroundColor(AviationTheme.Colors.primaryText(colorScheme))
             }
@@ -162,7 +165,7 @@ struct BackgroundPickerView: View {
     private func presetThumbnail(name: String) -> some View {
         let isSelected = backgroundSelection == .preset(name: name)
         return ZStack {
-            if let uiImage = UIImage(named: name) {
+            if let uiImage = BackgroundImageManager.shared.loadPresetImage(name: name) {
                 Color.clear
                     .overlay(
                         Image(uiImage: uiImage)

@@ -67,11 +67,77 @@ final class BackgroundImageManager {
 
     // MARK: - 預設圖片（Asset Catalog）
 
-    /// Asset Catalog 中 backgroundpic 資料夾的圖片名稱。
-    /// 當有新增預設圖片到 Assets.xcassets/backgroundpic/ 時，請在此同步更新。
+    private let presetNamesInfoPlistKey = "BackgroundPresetNames"
+
+    /// 自動抓取 Asset Catalog 中 backgroundpic 資料夾的圖片名稱。
+    /// 僅讀取 App 內可存取清單，避免執行期沙盒無法掃描專案原始碼目錄。
     func presetImageNames() -> [String] {
-        // 目前資料夾為空，待加入圖片後在此列出名稱
-        return []
+        var results = configuredBackgroundPresetNamesFromInfoPlist()
+
+        // 開發階段 fallback：若 plist 尚未配置，嘗試掃描專案原始碼（在沙盒通常不可用）。
+        if results.isEmpty {
+            results = discoverBackgroundAssetNamesFromProject()
+        }
+
+        print("[BGDBG][presetImageNames] backgroundpic-only count=\(results.count) names=\(results)")
+        return results
+    }
+
+    private func configuredBackgroundPresetNamesFromInfoPlist() -> [String] {
+        guard let raw = Bundle.main.object(forInfoDictionaryKey: presetNamesInfoPlistKey) as? [String] else {
+            print("[BGDBG][presetImageNames] info plist key missing: \(presetNamesInfoPlistKey)")
+            return []
+        }
+
+        let sanitized = raw
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
+            .map { $0.replacingOccurrences(of: "backgroundpic/", with: "") }
+
+        return Array(Set(sanitized)).sorted()
+    }
+
+    private func discoverBackgroundAssetNamesFromProject() -> [String] {
+        let managerFileURL = URL(fileURLWithPath: #filePath)
+        let projectRoot = managerFileURL.deletingLastPathComponent().deletingLastPathComponent()
+        let backgroundGroupURL = projectRoot.appendingPathComponent("Assets.xcassets/backgroundpic")
+
+        guard let childPaths = try? FileManager.default.contentsOfDirectory(atPath: backgroundGroupURL.path) else {
+            print("[BGDBG][presetImageNames] project scan failed path=\(backgroundGroupURL.path)")
+            return []
+        }
+
+        let baseNames = childPaths
+            .filter { $0.hasSuffix(".imageset") }
+            .map { String($0.dropLast(".imageset".count)) }
+
+        // 僅回傳 backgroundpic 內的 base name。
+        return baseNames.sorted()
+    }
+
+    /// 從 backgroundpic 群組載入預設圖，優先 namespaced，次要回退 base name。
+    /// - Note: 仍只會用 presetImageNames() 掃到的名稱，不會額外擴散到其他資料夾。
+    func loadPresetImage(name: String) -> UIImage? {
+        // 相容舊版：已經存成 "backgroundpic/xxx" 的值
+        if name.contains("/") {
+            if let img = UIImage(named: name) {
+                print("[BGDBG][loadPresetImage] hit exact=\(name)")
+                return img
+            }
+        }
+
+        let baseName = name.replacingOccurrences(of: "backgroundpic/", with: "")
+
+        if let img = UIImage(named: "backgroundpic/\(baseName)") {
+            print("[BGDBG][loadPresetImage] hit namespaced=backgroundpic/\(baseName)")
+            return img
+        }
+        if let img = UIImage(named: baseName) {
+            print("[BGDBG][loadPresetImage] hit plain=\(baseName)")
+            return img
+        }
+        print("[BGDBG][loadPresetImage] miss name=\(name)")
+        return nil
     }
 
     // MARK: - 自訂圖片

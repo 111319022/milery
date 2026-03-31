@@ -6,6 +6,10 @@
 	<array>
 		<string>zh-Hant</string>
 	</array>
+	<key>BackgroundPresetNames</key>
+	<array>
+		<string>pikmin</string>
+	</array>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>需要存取您的照片以設定自訂背景圖片</string>
 	<key>UIBackgroundModes</key>
