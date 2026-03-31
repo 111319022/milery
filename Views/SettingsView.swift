@@ -8,6 +8,7 @@ struct SettingsView: View {
     @AppStorage("userName") private var userName: String = ""
     @AppStorage("preferredOrigin") private var preferredOrigin: String = ""
     @AppStorage("userColorScheme") private var userColorScheme: String = "system"
+    @AppStorage("backgroundSelection") private var backgroundSelection: BackgroundSelection = .none
     @AppStorage("enableNotifications") private var enableNotifications: Bool = true
     
     @State private var showingAirportPicker = false
@@ -22,6 +23,7 @@ struct SettingsView: View {
     @State private var showingSyncRestartAlert = false
     @State private var toastMessage: String?
     @State private var showToast = false
+    @State private var showingEasterEgg = false
     
     private var lastBackupText: String {
         if lastBackupDateTimestamp > 0 {
@@ -44,9 +46,7 @@ struct SettingsView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                //背景
-                AviationTheme.Gradients.dashboardBackground(colorScheme)
-                    .ignoresSafeArea()
+                AppBackgroundView()
                 
                 ScrollView {
                     VStack(spacing: AviationTheme.Spacing.xl) {
@@ -81,6 +81,29 @@ struct SettingsView: View {
                                         .foregroundColor(AviationTheme.Colors.tertiaryText(colorScheme))
                                     }
                                 }
+                                
+                                CustomDivider(colorScheme: colorScheme)
+                                
+                                NavigationLink {
+                                    BackgroundPickerView()
+                                } label: {
+                                    SettingRow(
+                                        icon: "photo.fill",
+                                        title: "背景圖片",
+                                        subtitle: nil
+                                    ) {
+                                        HStack(spacing: 4) {
+                                            Text(BackgroundImageManager.displayName(for: backgroundSelection))
+                                                .font(AviationTheme.Typography.subheadline)
+                                                .foregroundColor(AviationTheme.Colors.secondaryText(colorScheme))
+                                            Image(systemName: "chevron.right")
+                                                .font(.caption)
+                                                .fontWeight(.semibold)
+                                        }
+                                        .foregroundColor(AviationTheme.Colors.tertiaryText(colorScheme))
+                                    }
+                                }
+                                .buttonStyle(.plain)
                             }
                             .background(AviationTheme.Colors.cardBackground(colorScheme))
                             .clipShape(RoundedRectangle(cornerRadius: AviationTheme.CornerRadius.lg))
@@ -228,7 +251,11 @@ struct SettingsView: View {
                                     }
                                 }
                                 .buttonStyle(.plain)
-                            }
+                                .simultaneousGesture(LongPressGesture(minimumDuration: 1.0).onEnded { _ in
+                                    let generator = UINotificationFeedbackGenerator()
+                                    generator.notificationOccurred(.success)
+                                    showingEasterEgg = true
+                                })                            }
                             .background(AviationTheme.Colors.cardBackground(colorScheme))
                             .clipShape(RoundedRectangle(cornerRadius: AviationTheme.CornerRadius.lg))
                             .shadow(color: AviationTheme.Shadows.cardShadow(colorScheme).opacity(0.5), radius: 8, x: 0, y: 2)
@@ -371,6 +398,20 @@ struct SettingsView: View {
                 Button("我知道了", role: .cancel) { }
             } message: {
                 Text("iCloud 同步設定變更將在下次啟動 App 後生效。")
+            }
+            .sheet(isPresented: $showingEasterEgg) {
+                VStack(spacing: 20) {
+                    Image("73")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 200, height: 200)
+                        
+                    Text("嘿嘿～你找到73了！")
+                        .font(.title2)
+                        .fontWeight(.bold)
+                }
+                .presentationDetents([.fraction(0.4)])
+                .presentationDragIndicator(.visible)
             }
             .overlay(alignment: .bottom) {
                 if showToast, let message = toastMessage {

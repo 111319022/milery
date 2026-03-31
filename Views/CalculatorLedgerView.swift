@@ -22,8 +22,7 @@ struct CalculatorLedgerView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                AviationTheme.Gradients.dashboardBackground(colorScheme)
-                    .ignoresSafeArea()
+                AppBackgroundView()
                 
                 ScrollView {
                     TransactionFormView(

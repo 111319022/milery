@@ -39,8 +39,7 @@ struct EditTransactionView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                AviationTheme.Gradients.dashboardBackground(colorScheme)
-                    .ignoresSafeArea()
+                AppBackgroundView()
                 
                 ScrollView {
                     VStack(spacing: AviationTheme.Spacing.xl) {

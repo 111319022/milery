@@ -25,6 +25,9 @@
 		FBCA10212F70000100A1B2C3 /* RedeemedTicket.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBCA10202F70000100A1B2C3 /* RedeemedTicket.swift */; };
 		FBCA10232F70000200A1B2C3 /* MilestonesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBCA10222F70000200A1B2C3 /* MilestonesView.swift */; };
 		FBF23D242F7AA04000F6C330 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBF23D232F7AA04000F6C330 /* OnboardingView.swift */; };
+		FBF23D442F7BD68D00F6C330 /* BackgroundImageManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBF23D432F7BD68D00F6C330 /* BackgroundImageManager.swift */; };
+		FBF23D462F7BD69B00F6C330 /* AppBackgroundView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBF23D452F7BD69B00F6C330 /* AppBackgroundView.swift */; };
+		FBF23D482F7BD6FB00F6C330 /* BackgroundPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBF23D472F7BD6FB00F6C330 /* BackgroundPickerView.swift */; };
 		FBF2F7CB2F6D333F0047DCE8 /* EditTransactionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBF2F7CA2F6D333F0047DCE8 /* EditTransactionView.swift */; };
 		FBF89DAE2F6AC2EE003DB1EB /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FBF89D962F6AC2EE003DB1EB /* Assets.xcassets */; };
 		FBF89DB02F6AC2EE003DB1EB /* CalculatorLedgerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBF89DA42F6AC2EE003DB1EB /* CalculatorLedgerView.swift */; };
@@ -67,6 +70,9 @@
 		FBCA10202F70000100A1B2C3 /* RedeemedTicket.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RedeemedTicket.swift; sourceTree = "<group>"; };
 		FBCA10222F70000200A1B2C3 /* MilestonesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MilestonesView.swift; sourceTree = "<group>"; };
 		FBF23D232F7AA04000F6C330 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
+		FBF23D432F7BD68D00F6C330 /* BackgroundImageManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackgroundImageManager.swift; sourceTree = "<group>"; };
+		FBF23D452F7BD69B00F6C330 /* AppBackgroundView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppBackgroundView.swift; sourceTree = "<group>"; };
+		FBF23D472F7BD6FB00F6C330 /* BackgroundPickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackgroundPickerView.swift; sourceTree = "<group>"; };
 		FBF2F7CA2F6D333F0047DCE8 /* EditTransactionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditTransactionView.swift; sourceTree = "<group>"; };
 		FBF89D942F6AC2EE003DB1EB /* MileryApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MileryApp.swift; sourceTree = "<group>"; };
 		FBF89D962F6AC2EE003DB1EB /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -166,6 +172,7 @@
 				FBF89D9F2F6AC2EE003DB1EB /* Transaction.swift */,
 				FBBABAF22F73B8320026B8D1 /* CardPreference.swift */,
 				FB297D822F762AF6004A9DAC /* MileageProgram.swift */,
+				FBF23D432F7BD68D00F6C330 /* BackgroundImageManager.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -196,6 +203,8 @@
 				FB6BC0BF2F70F45E0011877D /* CloudBackupView.swift */,
 				FBF23D232F7AA04000F6C330 /* OnboardingView.swift */,
 				FBC0CBEF2F78018300EEADFE /* TransactionFormView.swift */,
+				FBF23D452F7BD69B00F6C330 /* AppBackgroundView.swift */,
+				FBF23D472F7BD6FB00F6C330 /* BackgroundPickerView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -294,6 +303,7 @@
 				FB297D832F762AF6004A9DAC /* MileageProgram.swift in Sources */,
 				FBF89DB32F6AC2EE003DB1EB /* MainTabView.swift in Sources */,
 				FBF89DB42F6AC2EE003DB1EB /* MileageAccount.swift in Sources */,
+				FBF23D442F7BD68D00F6C330 /* BackgroundImageManager.swift in Sources */,
 				FBCA10212F70000100A1B2C3 /* RedeemedTicket.swift in Sources */,
 				FBF89DB52F6AC2EE003DB1EB /* Transaction.swift in Sources */,
 				FBC0CBE82F78001700EEADFE /* CardBrandDefinition.swift in Sources */,
@@ -303,12 +313,14 @@
 				FBC0CBEC2F78005E00EEADFE /* TaishinCathayCard.swift in Sources */,
 				FBF89DB92F6AC2EE003DB1EB /* AirportDatabase.swift in Sources */,
 				FBF89DBA2F6AC2EE003DB1EB /* CathayAwardChart.swift in Sources */,
+				FBF23D482F7BD6FB00F6C330 /* BackgroundPickerView.swift in Sources */,
 				FBF89DBB2F6AC2EE003DB1EB /* FlightGoal.swift in Sources */,
 				FBF89DBC2F6AC2EE003DB1EB /* MileageViewModel.swift in Sources */,
 				FBF89DBD2F6AC2EE003DB1EB /* AviationTheme.swift in Sources */,
 				FBBABAF32F73B8320026B8D1 /* CardPreference.swift in Sources */,
 				FBF89DBE2F6AC2EE003DB1EB /* LedgerView.swift in Sources */,
 				FBF89DBF2F6AC2EE003DB1EB /* SettingsView.swift in Sources */,
+				FBF23D462F7BD69B00F6C330 /* AppBackgroundView.swift in Sources */,
 				FBF89DC02F6AC2EE003DB1EB /* AllGoalsView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

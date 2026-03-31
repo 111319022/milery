@@ -41,9 +41,7 @@ struct ProgressView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                // 航空風格背景
-                AviationTheme.Gradients.dashboardBackground(colorScheme)
-                    .ignoresSafeArea()
+                AppBackgroundView()
                 
                 ScrollView {
                     VStack(spacing: AviationTheme.Spacing.md) {

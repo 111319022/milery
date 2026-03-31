@@ -41,9 +41,7 @@ struct LedgerView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                // 統一背景
-                AviationTheme.Gradients.dashboardBackground(colorScheme)
-                    .ignoresSafeArea()
+                AppBackgroundView()
                 
                 VStack(spacing: 0) {
                     // 月份選擇器與統計 - 固定在頂部，不隨內容滾動
