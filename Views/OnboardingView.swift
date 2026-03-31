@@ -97,6 +97,10 @@ struct OnboardingView: View {
     @State private var themeOverlayColor: Color = .white
     @State private var appliedOnboardingColorSchemeSetting: String = "system"
     
+    // 開發者跳過 Onboarding
+    @State private var showDevSkipAlert = false
+    @State private var devVerificationMessage: String = ""
+    
     // 分段入場動畫狀態
     
     private let totalPages = 9
@@ -226,13 +230,13 @@ struct OnboardingView: View {
         .preferredColorScheme(preferredOnboardingColorScheme)
         .animation(nil, value: preferredOnboardingColorScheme)
         .navigationBarBackButtonHidden(true)
-        .toolbar {
-            ToolbarItem(placement: .navigationBarTrailing) {
-                Button("跳過") {
-                    skipOnboarding()
-                }
-                .foregroundColor(AviationTheme.Colors.cathayJade)
+        .alert("開發者模式", isPresented: $showDevSkipAlert) {
+            Button("跳過 Onboarding", role: .destructive) {
+                skipOnboarding()
             }
+            Button("繼續設定", role: .cancel) { }
+        } message: {
+            Text(devVerificationMessage)
         }
         .sheet(isPresented: $showingAirportPicker) {
             AirportPickerView(
@@ -1287,7 +1291,7 @@ struct OnboardingView: View {
             }
             .padding(.horizontal, AviationTheme.Spacing.md)
 
-            Text("點選「下一步」也會直接觸發系統權限詢問，您可以稍後在「設定 > 通知提醒」調整")
+            Text("點選「下一步」也會直接觸發系統權限詢問，\n您可以稍後在「設定 > 通知提醒」調整。")
                 .font(AviationTheme.Typography.caption)
                 .foregroundColor(AviationTheme.Colors.tertiaryText(colorScheme))
 
@@ -1471,6 +1475,15 @@ struct OnboardingView: View {
                             .stroke(bottomNextButtonStrokeColor, lineWidth: 1)
                     )
             }
+            .simultaneousGesture(
+                LongPressGesture(minimumDuration: 1)
+                    .onEnded { _ in
+                        guard currentPage == 0 else { return }
+                        let generator = UIImpactFeedbackGenerator(style: .heavy)
+                        generator.impactOccurred()
+                        verifyDevAndPromptSkip()
+                    }
+            )
         }
     }
 
@@ -1577,6 +1590,22 @@ struct OnboardingView: View {
     private func skipOnboarding() {
         hasCompletedOnboarding = true
         dismiss()
+    }
+
+    private func verifyDevAndPromptSkip() {
+        Task {
+            let result = await DeveloperAccessService.shared.verifyCurrentUserAccess()
+            await MainActor.run {
+                switch result {
+                case .allowed:
+                    devVerificationMessage = "已驗證白名單身分，是否要跳過 Onboarding 直接進入主畫面？"
+                    showDevSkipAlert = true
+                case .denied:
+                    // 非開發者，靜默忽略，不顯示任何提示
+                    break
+                }
+            }
+        }
     }
 
     private func requestNotificationPermission(advanceAfterRequest: Bool = false) {
