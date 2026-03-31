@@ -57,13 +57,21 @@ struct CompactCardRow: View {
     
     var body: some View {
         HStack(spacing: 16) {
-            ZStack {
-                Circle()
-                    .fill(AviationTheme.Colors.cathayJade.opacity(0.15))
-                    .frame(width: 36, height: 36)
-                Image(systemName: "creditcard.fill")
-                    .foregroundColor(AviationTheme.Colors.cathayJade)
-                    .font(.subheadline)
+            if let imageName = card.tierDefinition?.cardImageName {
+                Image(imageName)
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(width: 48)
+                    .clipShape(RoundedRectangle(cornerRadius: 4))
+            } else {
+                ZStack {
+                    Circle()
+                        .fill(AviationTheme.Colors.cathayJade.opacity(0.15))
+                        .frame(width: 36, height: 36)
+                    Image(systemName: "creditcard.fill")
+                        .foregroundColor(AviationTheme.Colors.cathayJade)
+                        .font(.subheadline)
+                }
             }
             
             VStack(alignment: .leading, spacing: 2) {
