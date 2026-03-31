@@ -18,6 +18,7 @@ struct DataManagementView: View {
     @State private var showingCleanupResult = false
     @State private var cleanupResultText = ""
     @State private var isCleaning = false
+    @State private var customImages: [String] = []
 
     private static let dateTimeFormatter: DateFormatter = {
         let formatter = DateFormatter()
@@ -33,6 +34,45 @@ struct DataManagementView: View {
                 statRow(title: "FlightGoal", value: "\(flightGoals.count)")
                 statRow(title: "RedeemedTicket", value: "\(redeemedTickets.count)")
                 statRow(title: "CreditCardRule (舊版殘留)", value: "\(legacyCreditCards.count)")
+            }
+
+            Section("自訂桌布圖片 (檔案系統)") {
+                HStack {
+                    Text("圖片總數")
+                    Spacer()
+                    Text("\(customImages.count)")
+                        .foregroundStyle(.secondary)
+                }
+
+                if !customImages.isEmpty {
+                    NavigationLink("檢視所有圖片檔案") {
+                        List {
+                            ForEach(customImages, id: \.self) { filename in
+                                HStack {
+                                    Text(filename)
+                                        .font(.caption)
+                                    Spacer()
+                                    if let url = BackgroundImageManager.shared.customImageURL(filename: filename),
+                                       let attrs = try? FileManager.default.attributesOfItem(atPath: url.path),
+                                       let size = attrs[.size] as? Int64 {
+                                        Text(ByteCountFormatter.string(fromByteCount: size, countStyle: .file))
+                                            .font(.caption2)
+                                            .foregroundStyle(.secondary)
+                                    }
+                                }
+                                .swipeActions(edge: .trailing) {
+                                    Button("刪除", role: .destructive) {
+                                        // 針對除錯用途，直接全刪 (含原圖與裁切)
+                                        let baseFilename = filename.replacingOccurrences(of: "original_", with: "")
+                                        BackgroundImageManager.shared.deleteCustomImage(filename: baseFilename)
+                                        refreshCustomImages()
+                                    }
+                                }
+                            }
+                        }
+                        .navigationTitle("圖片檔案列表")
+                    }
+                }
             }
 
             Section("CloudKit 參考資訊") {
@@ -234,6 +274,9 @@ struct DataManagementView: View {
         .task {
             await refreshCloudInfo()
         }
+        .onAppear {
+            refreshCustomImages()
+        }
         .alert("執行資料清理", isPresented: $showingCleanupConfirm) {
             Button("取消", role: .cancel) {}
             Button("執行", role: .destructive) {
@@ -277,6 +320,10 @@ struct DataManagementView: View {
     private func refreshCloudInfo() async {
         await backupService.checkiCloudStatus()
         await backupService.fetchBackupList()
+    }
+
+    private func refreshCustomImages() {
+        customImages = BackgroundImageManager.shared.listAllCustomImages()
     }
 
     private func deleteAccount(_ account: MileageAccount) {
