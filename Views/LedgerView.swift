@@ -173,6 +173,14 @@ struct LedgerView: View {
                                         .font(AviationTheme.Typography.subheadline)
                                         .foregroundColor(AviationTheme.Colors.secondaryText(colorScheme))
                                 }
+                                .padding(.horizontal, hasBackgroundImage ? 16 : 0)
+                                .padding(.vertical, hasBackgroundImage ? 10 : 0)
+                                .background {
+                                    if hasBackgroundImage {
+                                        RoundedRectangle(cornerRadius: AviationTheme.CornerRadius.md)
+                                            .fill(.ultraThinMaterial)
+                                    }
+                                }
                                 
                                 Button {
                                     showingAddTransaction = true
@@ -649,7 +657,12 @@ struct MonthSelectorSheet: View {
 // MARK: - 卡片
 struct DateHeaderCard: View {
     @Environment(\.colorScheme) var colorScheme
+    @AppStorage("backgroundSelection") private var backgroundSelection: BackgroundSelection = .none
     let date: Date
+    
+    private var hasBackgroundImage: Bool {
+        backgroundSelection != .none
+    }
     
     var body: some View {
         HStack(spacing: 6) {
@@ -660,6 +673,14 @@ struct DateHeaderCard: View {
                 .font(AviationTheme.Typography.caption)
                 .fontWeight(.medium)
                 .foregroundColor(AviationTheme.Colors.primaryText(colorScheme))
+        }
+        .padding(.horizontal, hasBackgroundImage ? 10 : 0)
+        .padding(.vertical, hasBackgroundImage ? 4 : 0)
+        .background {
+            if hasBackgroundImage {
+                Capsule()
+                    .fill(.ultraThinMaterial)
+            }
         }
     }
 }

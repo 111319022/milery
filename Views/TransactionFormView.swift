@@ -4,7 +4,12 @@ import SwiftData
 /// 共用交易表單 — 由 CalculatorLedgerView 和 EditTransactionView 共用
 struct TransactionFormView: View {
     @Environment(\.colorScheme) var colorScheme
+    @AppStorage("backgroundSelection") private var backgroundSelection: BackgroundSelection = .none
     @Bindable var viewModel: MileageViewModel
+    
+    private var hasBackgroundImage: Bool {
+        backgroundSelection != .none
+    }
     
     @Binding var selectedSource: MileageSource
     @Binding var selectedCard: CreditCardRule?
@@ -99,14 +104,27 @@ struct TransactionFormView: View {
         }
     }
     
+    // MARK: - Section 標題（自動加模糊底板）
+    private func formSectionHeader(_ title: String) -> some View {
+        Text(title)
+            .font(AviationTheme.Typography.subheadline)
+            .fontWeight(.semibold)
+            .foregroundColor(AviationTheme.Colors.secondaryText(colorScheme))
+            .padding(.horizontal, hasBackgroundImage ? 12 : 28)
+            .padding(.vertical, hasBackgroundImage ? 4 : 0)
+            .background {
+                if hasBackgroundImage {
+                    Capsule()
+                        .fill(.ultraThinMaterial)
+                }
+            }
+            .padding(.horizontal, hasBackgroundImage ? 16 : 0)
+    }
+    
     // MARK: - 頂層類別選擇器（信用卡消費 vs 其他）
     private var topCategorySelector: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("記帳類型")
-                .font(AviationTheme.Typography.subheadline)
-                .fontWeight(.semibold)
-                .foregroundColor(AviationTheme.Colors.secondaryText(colorScheme))
-                .padding(.horizontal, 28)
+            formSectionHeader("記帳類型")
             
             HStack(spacing: 12) {
                 topCategoryButton(
@@ -173,11 +191,7 @@ struct TransactionFormView: View {
     // MARK: - 信用卡選擇
     private var cardSelectionSection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("選擇信用卡")
-                .font(AviationTheme.Typography.subheadline)
-                .fontWeight(.semibold)
-                .foregroundColor(AviationTheme.Colors.secondaryText(colorScheme))
-                .padding(.horizontal, 28)
+            formSectionHeader("選擇信用卡")
             
             VStack(spacing: 0) {
                 ForEach(Array(activeCards.enumerated()), id: \.element.id) { index, card in
@@ -217,11 +231,7 @@ struct TransactionFormView: View {
     // MARK: - 信用卡消費來源選擇（帶費率顯示）
     private var cardSourceSelector: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("消費類型")
-                .font(AviationTheme.Typography.subheadline)
-                .fontWeight(.semibold)
-                .foregroundColor(AviationTheme.Colors.secondaryText(colorScheme))
-                .padding(.horizontal, 28)
+            formSectionHeader("消費類型")
             
             VStack(spacing: 0) {
                 ForEach(Array(cardSourceMappings.enumerated()), id: \.element.source) { index, mapping in
@@ -302,11 +312,7 @@ struct TransactionFormView: View {
     // MARK: - 非信用卡來源選擇
     private var nonCardSourceSelector: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("哩程來源")
-                .font(AviationTheme.Typography.subheadline)
-                .fontWeight(.semibold)
-                .foregroundColor(AviationTheme.Colors.secondaryText(colorScheme))
-                .padding(.horizontal, 28)
+            formSectionHeader("哩程來源")
             
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: AviationTheme.Spacing.sm) {
@@ -333,11 +339,7 @@ struct TransactionFormView: View {
     // MARK: - 通用子類別選擇
     private func subcategorySection(mapping: CardMileageSourceMapping) -> some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text(mapping.subcategorySectionTitle)
-                .font(AviationTheme.Typography.subheadline)
-                .fontWeight(.semibold)
-                .foregroundColor(AviationTheme.Colors.secondaryText(colorScheme))
-                .padding(.horizontal, 28)
+            formSectionHeader(mapping.subcategorySectionTitle)
             
             LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
                 ForEach(mapping.subcategories) { category in
@@ -359,11 +361,7 @@ struct TransactionFormView: View {
     // MARK: - 交易金額與哩程輸入
     private var transactionInputSection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("交易明細")
-                .font(AviationTheme.Typography.subheadline)
-                .fontWeight(.semibold)
-                .foregroundColor(AviationTheme.Colors.secondaryText(colorScheme))
-                .padding(.horizontal, 28)
+            formSectionHeader("交易明細")
             
             VStack(spacing: 0) {
                 if needsAmountInput {
@@ -472,16 +470,12 @@ struct TransactionFormView: View {
     // MARK: - 額外資訊
     private var extraInfoSection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text(
+            formSectionHeader(
                 selectedSource == .flight ? "航線資訊" :
                 selectedSource == .specialMerchant ? "商家資訊" :
                 selectedSource == .promotion ? "活動資訊" :
                 "來源資訊"
             )
-                .font(AviationTheme.Typography.subheadline)
-                .fontWeight(.semibold)
-                .foregroundColor(AviationTheme.Colors.secondaryText(colorScheme))
-                .padding(.horizontal, 28)
             
             VStack(spacing: 0) {
                 if selectedSource == .flight {
@@ -558,11 +552,7 @@ struct TransactionFormView: View {
     // MARK: - 日期與備註
     private var additionalInfoSection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("其他資訊")
-                .font(AviationTheme.Typography.subheadline)
-                .fontWeight(.semibold)
-                .foregroundColor(AviationTheme.Colors.secondaryText(colorScheme))
-                .padding(.horizontal, 28)
+            formSectionHeader("其他資訊")
             
             VStack(spacing: 0) {
                 HStack {

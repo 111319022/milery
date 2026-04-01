@@ -269,6 +269,7 @@ struct HalfCircleProgressView: View {
     let goal: FlightGoal
     let currentMiles: Int
     let colorScheme: ColorScheme
+    @AppStorage("backgroundSelection") private var backgroundSelection: BackgroundSelection = .none
     
     private let arcDiameter: CGFloat = 320
     private let strokeWidth: CGFloat = 14
@@ -277,8 +278,21 @@ struct HalfCircleProgressView: View {
     @State private var animatedProgress: Double = 0
     @State private var hasAppeared = false
     
+    private var hasBackgroundImage: Bool {
+        backgroundSelection != .none
+    }
+    
     private var targetProgress: Double {
         min(goal.progress(currentMiles: currentMiles), 1.0)
+    }
+    
+    /// 有背景圖片時使用更深的顏色以確保在毛玻璃上可讀
+    private var subtitleColor: Color {
+        hasBackgroundImage ? AviationTheme.Colors.primaryText(colorScheme) : AviationTheme.Colors.secondaryText(colorScheme)
+    }
+    
+    private var captionColor: Color {
+        hasBackgroundImage ? AviationTheme.Colors.secondaryText(colorScheme) : AviationTheme.Colors.tertiaryText(colorScheme)
     }
     
     var body: some View {
@@ -315,11 +329,11 @@ struct HalfCircleProgressView: View {
                 HStack(spacing: 4) {
                     Text("\(goal.originName) (\(goal.origin))")
                         .font(AviationTheme.Typography.subheadline)
-                        .foregroundColor(AviationTheme.Colors.secondaryText(colorScheme))
+                        .foregroundColor(subtitleColor)
                     
                     Image(systemName: goal.isRoundTrip ? "arrow.left.arrow.right" : "arrow.right")
                         .font(.caption2)
-                        .foregroundColor(AviationTheme.Colors.secondaryText(colorScheme))
+                        .foregroundColor(subtitleColor)
                     
                     Text("\(goal.destinationName) (\(goal.destination))")
                         .font(AviationTheme.Typography.title3)
@@ -333,18 +347,19 @@ struct HalfCircleProgressView: View {
                         .foregroundColor(AviationTheme.Colors.cathayJade)
                     Text("/")
                         .font(AviationTheme.Typography.title3)
-                        .foregroundColor(AviationTheme.Colors.secondaryText(colorScheme))
+                        .foregroundColor(subtitleColor)
                     Text("\(goal.requiredMiles)")
                         .font(AviationTheme.Typography.title2)
-                        .foregroundColor(AviationTheme.Colors.secondaryText(colorScheme))
+                        .foregroundColor(subtitleColor)
                     Text("哩")
                         .font(AviationTheme.Typography.subheadline)
-                        .foregroundColor(AviationTheme.Colors.tertiaryText(colorScheme))
+                        .foregroundColor(captionColor)
                 }
                 
                 Text("\(Int(targetProgress * 100))%")
                     .font(AviationTheme.Typography.caption)
-                    .foregroundColor(AviationTheme.Colors.tertiaryText(colorScheme))
+                    .fontWeight(.medium)
+                    .foregroundColor(AviationTheme.Colors.cathayJade)
                     .padding(.horizontal, 12)
                     .padding(.vertical, 4)
                     .background(
