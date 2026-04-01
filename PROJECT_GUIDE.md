@@ -7,6 +7,7 @@
 - [專案架構總覽](#專案架構總覽)
 - [核心入口](#核心入口)
 - [設計系統](#設計系統)
+- [背景系統](#背景系統)
 - [資料模型 (Models)](#資料模型-models)
 - [信用卡系統 (CardDefinitions)](#信用卡系統-carddefinitions)
 - [資料庫 (Database)](#資料庫-database)
@@ -34,6 +35,7 @@ milery/
 │   ├── CreditCardRule.swift            # 信用卡規則（記憶體中的計算模型）
 │   ├── CardPreference.swift            # 信用卡偏好設定（SwiftData 持久化）
 │   ├── MileageProgram.swift            # 里程計劃模型 + ActiveProgramManager
+│   ├── BackgroundImageManager.swift    # 自訂背景圖片管理（儲存/讀取/刪除）
 │   └── CardDefinitions/
 │       ├── CardBrandDefinition.swift   # 信用卡品牌 Protocol + 支援類型
 │       ├── CardBrandRegistry.swift     # 信用卡中央註冊表
@@ -63,6 +65,8 @@ milery/
     ├── AllGoalsView.swift              # 完整目標清單
     ├── CalculatorComponents.swift      # 可重用 UI 元件
     ├── CalculatorLedgerView.swift      # 計算器帳本
+    ├── AppBackgroundView.swift         # 統一背景元件（漸層 + 圖片 + 可讀性遮罩）
+    ├── BackgroundPickerView.swift      # 背景選擇器（預設桌布 + 自訂圖片裁切）
     └── DevViews/
         ├── DataManagementView.swift    # 資料檢視/清理
         ├── CloudKitAdvancedView.swift  # CloudKit 除錯
@@ -123,6 +127,79 @@ App 的啟動入口，負責：
 - `GlassmorphismStyle` — 毛玻璃效果
 - `MetalButtonStyle` — 漸層按鈕（含按壓回饋）
 - 快捷方法：`.metalCard()`、`.glassmorphism()`
+
+---
+
+## 背景系統
+
+### 架構概觀
+
+背景系統由三個核心元件組成，負責背景圖片的管理、顯示與可讀性保障。
+
+```
+BackgroundImageManager          # 圖片儲存/讀取/刪除（App Documents）
+    ↓
+BackgroundSelection (enum)      # .none / .preset(name:) / .custom(filename:)
+    ↓                             透過 @AppStorage("backgroundSelection") 全域共享
+AppBackgroundView               # 統一背景 View（漸層 + 圖片 + 遮罩）
+    ↓
+各畫面條件式可讀性增強            # 毛玻璃底板 / Toolbar 強制顯示 / 文字對比升級
+```
+
+### `BackgroundImageManager.swift`
+
+管理自訂背景圖片的存取。圖片以 JPEG 格式儲存於 App 的 Documents 目錄。
+
+**方法：**
+
+| 方法 | 用途 |
+|------|------|
+| `saveImage(_:filename:)` | 壓縮並儲存圖片至 Documents |
+| `loadImage(filename:)` | 從 Documents 讀取圖片 |
+| `deleteImage(filename:)` | 刪除指定背景圖片 |
+| `listCustomImages()` | 列出所有已儲存的自訂背景 |
+
+### `BackgroundSelection` (enum)
+
+`RawRepresentable` 列舉，可直接存入 `@AppStorage`。
+
+| Case | 說明 |
+|------|------|
+| `.none` | 不使用任何背景（預設漸層） |
+| `.preset(name: String)` | 使用預設桌布（bundled asset） |
+| `.custom(filename: String)` | 使用使用者自訂背景圖片 |
+
+### `AppBackgroundView.swift`
+
+統一背景元件，放置於各主畫面最底層。
+
+**渲染層級（由下至上）：**
+1. **預設** — `AviationTheme` 的 Light/Dark 背景漸層（fallback）
+2. **背景圖片** — 預設或自訂圖片（`scaledToFill`）
+3. **可讀性遮罩** — 半透明 overlay（Dark: 黑色 0.45 / Light: 白色 0.35）
+
+### `BackgroundPickerView.swift`
+
+背景選擇介面，提供：
+- 預設桌布選擇（bundled wallpapers）
+- 自訂圖片匯入（從相簿選取 + 全螢幕裁切）
+- 即時預覽與套用
+
+### 背景感知可讀性機制
+
+當 `backgroundSelection != .none` 時，各畫面透過 `@AppStorage("backgroundSelection")` 偵測背景狀態，條件式啟用以下增強：
+
+| 機制 | 適用元件 | 說明 |
+|------|----------|------|
+| **Toolbar 強制顯示** | NavigationBar / TabBar | `.toolbarBackgroundVisibility(.visible)` |
+| **毛玻璃底板** | 進度區塊、空狀態提示 | `RoundedRectangle.fill(.ultraThinMaterial)` |
+| **毛玻璃膠囊** | Section 標題、日期標頭 | `Capsule().fill(.ultraThinMaterial)` |
+| **文字對比升級** | 半圓進度指示器內的文字 | `tertiaryText → secondaryText`、`secondaryText → primaryText` |
+
+**已套用的畫面：**
+`DashboardView`、`ProgressView`（含 `HalfCircleProgressView`）、`LedgerView`（含 `DateHeaderCard`）、`SettingsView`（含 `SectionHeaderView`）、`MainTabView`、`TransactionFormView`、`CreditCardPageView`、`CalculatorLedgerView`、`EditTransactionView`
+
+> 所有可讀性增強皆為條件式，未設定背景時不會產生任何視覺影響。
 
 ---
 
@@ -398,7 +475,7 @@ CardBrandRegistry (中央註冊表，靜態查詢)
 
 ### `MainTabView.swift` — 根導覽
 
-5 個 Tab 頁籤（儀表板、進度、帳本、里程碑、設定），每個 Tab 的可見性由 `@AppStorage` 控制。支援外觀模式切換（系統/亮色/暗色）。
+5 個 Tab 頁籤（儀表板、進度、帳本、里程碑、設定），每個 Tab 的可見性由 `@AppStorage` 控制。支援外觀模式切換（系統/亮色/暗色）。背景圖片啟用時自動強制 TabBar 背景顯示。
 
 ### `DashboardView.swift` — 儀表板（Tab 1）
 
@@ -430,7 +507,7 @@ CardBrandRegistry (中央註冊表，靜態查詢)
 
 ### `SettingsView.swift` — 設定（Tab 5）
 
-- 外觀設定、信用卡管理、使用者偏好
+- 外觀設定、背景桌布選擇、信用卡管理、使用者偏好
 - 雲端備份、同步開關
 - 開發者存取、App 資訊與版本歷史
 
@@ -459,6 +536,8 @@ CardBrandRegistry (中央註冊表，靜態查詢)
 | `AllGoalsView.swift` | 完整目標清單 Modal |
 | `CalculatorComponents.swift` | 可重用元件（`SourceButton`、`CompactCardRow`） |
 | `CalculatorLedgerView.swift` | 計算器帳本 |
+| `AppBackgroundView.swift` | 統一背景元件（漸層 + 圖片 + 可讀性遮罩） |
+| `BackgroundPickerView.swift` | 背景選擇器（預設桌布 + 自訂圖片裁切） |
 
 ---
 
@@ -508,6 +587,7 @@ CardBrandRegistry (中央註冊表，靜態查詢)
 | `tabVisible_*` | Bool | 各 Tab 可見性 |
 | `lastBackupDate` | Date | 最後備份時間 |
 | `activeMileageProgramID` | UUID | 當前計劃 ID |
+| `backgroundSelection` | String (RawRepresentable) | 背景選擇（none / preset / custom） |
 
 ### 手動備份
 
@@ -626,6 +706,7 @@ Settings（開發者模式） → 重新觸發 Onboarding
 | **MapKit** | 里程碑地圖顯示 |
 | **CoreLocation** | 機場座標資料 |
 | **CryptoKit** | SHA256 雜湊（開發者驗證） |
+| **PhotosUI** | 自訂背景圖片選取（`PhotosPicker`） |
 
 ---
 
@@ -639,3 +720,4 @@ Settings（開發者模式） → 重新觸發 Onboarding
 | **Protocol** | `CardBrandDefinition` 可擴充的信用卡支援 |
 | **Computed Properties** | `Transaction.amount`、`MileageAccount.expiryDate()` |
 | **Relationship** | SwiftData `@Relationship` 帳戶 ↔ 交易關聯 |
+| **Conditional Modifier** | 背景感知可讀性增強（`hasBackgroundImage` 條件式 UI 調整） |
