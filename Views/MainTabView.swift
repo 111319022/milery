@@ -4,10 +4,15 @@ import SwiftData
 struct MainTabView: View {
     @Environment(\.modelContext) private var modelContext
     @AppStorage("userColorScheme") private var userColorScheme: String = "system"
+    @AppStorage("backgroundSelection") private var backgroundSelection: BackgroundSelection = .none
     @AppStorage("tabVisible_dashboard") private var dashboardVisible = true
     @AppStorage("tabVisible_progress") private var progressVisible = true
     @AppStorage("tabVisible_ledger") private var ledgerVisible = true
     @AppStorage("tabVisible_milestones") private var milestonesVisible = true
+    
+    private var hasBackgroundImage: Bool {
+        backgroundSelection != .none
+    }
     @State private var viewModel = MileageViewModel()
     @State private var selectedTab: Int = 0
     @State private var themeOverlayOpacity: Double = 0
@@ -78,6 +83,7 @@ struct MainTabView: View {
                 }
         }
         .tint(AviationTheme.Colors.cathayJade)
+        .toolbarBackgroundVisibility(hasBackgroundImage ? .visible : .automatic, for: .tabBar)
         .preferredColorScheme(preferredColorScheme)
         .animation(nil, value: preferredColorScheme)
         .overlay {

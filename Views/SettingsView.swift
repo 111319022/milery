@@ -35,6 +35,10 @@ struct SettingsView: View {
         return "尚未備份"
     }
     
+    private var hasBackgroundImage: Bool {
+        backgroundSelection != .none
+    }
+    
     var themeDisplayName: String {
         switch userColorScheme {
         case "light": return "淺色模式"
@@ -385,7 +389,7 @@ struct SettingsView: View {
             }
             .navigationTitle("設定")
             .navigationBarTitleDisplayMode(.large)
-            .toolbarBackgroundVisibility(.automatic, for: .navigationBar)
+            .toolbarBackgroundVisibility(hasBackgroundImage ? .visible : .automatic, for: .navigationBar)
             .sheet(isPresented: $showingAirportPicker) {
                 SettingsAirportPickerWrapper(selectedCode: $preferredOrigin)
             }
@@ -483,13 +487,25 @@ struct SettingsView: View {
 struct SectionHeaderView: View {
     let title: String
     let colorScheme: ColorScheme
+    @AppStorage("backgroundSelection") private var backgroundSelection: BackgroundSelection = .none
+    
+    private var hasBackgroundImage: Bool {
+        backgroundSelection != .none
+    }
     
     var body: some View {
         Text(title)
             .font(AviationTheme.Typography.subheadline)
             .fontWeight(.semibold)
             .foregroundColor(AviationTheme.Colors.secondaryText(colorScheme))
-            .padding(.leading, 12)
+            .padding(.horizontal, 12)
+            .padding(.vertical, hasBackgroundImage ? 4 : 0)
+            .background {
+                if hasBackgroundImage {
+                    Capsule()
+                        .fill(.ultraThinMaterial)
+                }
+            }
     }
 }
 

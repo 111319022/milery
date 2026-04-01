@@ -4,6 +4,11 @@ import SwiftData
 struct CreditCardPageView: View {
     @Environment(\.colorScheme) var colorScheme
     @Bindable var viewModel: MileageViewModel
+    @AppStorage("backgroundSelection") private var backgroundSelection: BackgroundSelection = .none
+    
+    private var hasBackgroundImage: Bool {
+        backgroundSelection != .none
+    }
     
     var body: some View {
         ZStack {
@@ -29,7 +34,7 @@ struct CreditCardPageView: View {
         }
         .navigationTitle("我的信用卡")
         .navigationBarTitleDisplayMode(.large)
-        .toolbarBackgroundVisibility(.automatic, for: .navigationBar)
+        .toolbarBackgroundVisibility(hasBackgroundImage ? .visible : .automatic, for: .navigationBar)
     }
 }
 

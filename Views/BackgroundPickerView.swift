@@ -21,7 +21,7 @@ struct BackgroundPickerView: View {
 
     // 預設桌布名單直接維護在此（填 backgroundpic 資料夾內的 imageset 名稱，不含副檔名）
     private let presetNames: [String] = [
-        "pikmin"
+        ""
     ]
 
     private let columns = [

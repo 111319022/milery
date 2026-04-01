@@ -5,7 +5,12 @@ struct EditTransactionView: View {
     @Environment(\.colorScheme) var colorScheme
     @Environment(\.dismiss) private var dismiss
     @Bindable var viewModel: MileageViewModel
+    @AppStorage("backgroundSelection") private var backgroundSelection: BackgroundSelection = .none
     let transaction: Transaction
+    
+    private var hasBackgroundImage: Bool {
+        backgroundSelection != .none
+    }
     
     @State private var selectedSource: MileageSource
     @State private var selectedCard: CreditCardRule?
@@ -68,7 +73,7 @@ struct EditTransactionView: View {
             .onTapGesture { focusedField = nil }
             .navigationTitle("編輯記帳")
             .navigationBarTitleDisplayMode(.inline)
-            .toolbarBackgroundVisibility(.automatic, for: .navigationBar)
+            .toolbarBackgroundVisibility(hasBackgroundImage ? .visible : .automatic, for: .navigationBar)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("取消") { dismiss() }

@@ -4,12 +4,17 @@ import SwiftData
 struct ProgressView: View {
     @Environment(\.colorScheme) var colorScheme
     @Bindable var viewModel: MileageViewModel
+    @AppStorage("backgroundSelection") private var backgroundSelection: BackgroundSelection = .none
     @State private var showingAddGoal = false
     @State private var selectedGoalIndex = 0
     @State private var isEditingOrder = false
     @State private var editingGoal: FlightGoal? = nil
     @State private var editingPinnedGoals: [FlightGoal] = []
     @State private var editingUnpinnedGoals: [FlightGoal] = []
+    
+    private var hasBackgroundImage: Bool {
+        backgroundSelection != .none
+    }
     
     var currentMiles: Int {
         viewModel.mileageAccount?.totalMiles ?? 0
@@ -57,7 +62,7 @@ struct ProgressView: View {
             }
             .navigationTitle("進度")
             .navigationBarTitleDisplayMode(.large)
-            .toolbarBackgroundVisibility(.automatic, for: .navigationBar)
+            .toolbarBackgroundVisibility(hasBackgroundImage ? .visible : .automatic, for: .navigationBar)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
@@ -140,6 +145,13 @@ struct ProgressView: View {
                 .padding(.bottom, 10)
         }
         .padding(.horizontal, AviationTheme.Spacing.md)
+        .background {
+            if hasBackgroundImage {
+                RoundedRectangle(cornerRadius: AviationTheme.CornerRadius.xl)
+                    .fill(.ultraThinMaterial)
+                    .padding(.horizontal, AviationTheme.Spacing.sm)
+            }
+        }
     }
     
     private var emptyProgressView: some View {
@@ -176,6 +188,14 @@ struct ProgressView: View {
                 Text("所有目標")
                     .font(AviationTheme.Typography.headline)
                     .foregroundColor(AviationTheme.Colors.secondaryText(colorScheme))
+                    .padding(.horizontal, hasBackgroundImage ? 12 : 0)
+                    .padding(.vertical, hasBackgroundImage ? 4 : 0)
+                    .background {
+                        if hasBackgroundImage {
+                            Capsule()
+                                .fill(.ultraThinMaterial)
+                        }
+                    }
                 
                 Spacer()
                 

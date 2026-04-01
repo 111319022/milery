@@ -5,6 +5,11 @@ struct CalculatorLedgerView: View {
     @Environment(\.colorScheme) var colorScheme
     @Environment(\.dismiss) private var dismiss
     @Bindable var viewModel: MileageViewModel
+    @AppStorage("backgroundSelection") private var backgroundSelection: BackgroundSelection = .none
+    
+    private var hasBackgroundImage: Bool {
+        backgroundSelection != .none
+    }
     
     @State private var selectedSource: MileageSource = .cardGeneral
     @State private var selectedCard: CreditCardRule?
@@ -46,7 +51,7 @@ struct CalculatorLedgerView: View {
             .onTapGesture { focusedField = nil }
             .navigationTitle("新增記帳")
             .navigationBarTitleDisplayMode(.inline)
-            .toolbarBackgroundVisibility(.automatic, for: .navigationBar)
+            .toolbarBackgroundVisibility(hasBackgroundImage ? .visible : .automatic, for: .navigationBar)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("取消") { dismiss() }

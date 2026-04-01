@@ -5,9 +5,14 @@ import Combine
 struct DashboardView: View {
     @Environment(\.colorScheme) var colorScheme
     @Bindable var viewModel: MileageViewModel
+    @AppStorage("backgroundSelection") private var backgroundSelection: BackgroundSelection = .none
     private let syncCheckTimer = Timer.publish(every: 20, on: .main, in: .common).autoconnect()
     var switchToProgress: (() -> Void)? = nil
     var switchToLedger: (() -> Void)? = nil
+    
+    private var hasBackgroundImage: Bool {
+        backgroundSelection != .none
+    }
     
     var body: some View {
         NavigationStack {
@@ -80,7 +85,7 @@ struct DashboardView: View {
             }
             .navigationTitle("儀表板")
             .navigationBarTitleDisplayMode(.large)
-            .toolbarBackgroundVisibility(.automatic, for: .navigationBar)
+            .toolbarBackgroundVisibility(hasBackgroundImage ? .visible : .automatic, for: .navigationBar)
             .onAppear {
                 viewModel.checkForRemoteChanges()
             }

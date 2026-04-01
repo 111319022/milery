@@ -4,10 +4,15 @@ import SwiftData
 struct LedgerView: View {
     @Environment(\.colorScheme) var colorScheme
     @Bindable var viewModel: MileageViewModel
+    @AppStorage("backgroundSelection") private var backgroundSelection: BackgroundSelection = .none
     @State private var showingAddTransaction = false
     @State private var selectedMonth = Date()
     @State private var editingTransaction: Transaction?
     @State private var isStatsExpanded = false
+    
+    private var hasBackgroundImage: Bool {
+        backgroundSelection != .none
+    }
     
     var filteredTransactions: [Transaction] {
         viewModel.transactions.filter { transaction in
@@ -233,7 +238,7 @@ struct LedgerView: View {
             }
             .navigationTitle("哩程記帳本")
             .navigationBarTitleDisplayMode(.large) // 使用 large 模式，滾動時會自動縮小
-            .toolbarBackgroundVisibility(.automatic, for: .navigationBar)
+            .toolbarBackgroundVisibility(hasBackgroundImage ? .visible : .automatic, for: .navigationBar)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
