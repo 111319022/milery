@@ -241,6 +241,18 @@ struct LedgerView: View {
                             }
                             .listStyle(.plain)
                             .scrollContentBackground(.hidden)
+                            .mask(
+                                VStack(spacing: 0) {
+                                    LinearGradient(
+                                        colors: [.clear, .black],
+                                        startPoint: .top,
+                                        endPoint: .bottom
+                                    )
+                                    .frame(height: 12)
+                                    
+                                    Color.black
+                                }
+                            )
                         }
                 }
             }
