@@ -1615,13 +1615,11 @@ struct OnboardingView: View {
             )
         }
         
-        // 寫入生日月份
+        // 寫入生日月份（持久化到 UserDefaults）
         if enableBirthday {
-            var components = Calendar.current.dateComponents([.year, .month, .day], from: viewModel.userBirthday)
-            components.month = selectedBirthdayMonth
-            if let newDate = Calendar.current.date(from: components) {
-                viewModel.userBirthday = newDate
-            }
+            viewModel.userBirthdayMonth = selectedBirthdayMonth
+        } else {
+            viewModel.userBirthdayMonth = 0
         }
 
         if selectedCardBanks.isEmpty {

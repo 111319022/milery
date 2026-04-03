@@ -124,9 +124,12 @@ final class CreditCardRule {
         
         var miles = amount / rate
         
-        // 生日當月加碼
-        if isBirthdayMonth {
-            miles *= birthdayMultiplier
+        // 生日當月加碼（僅限標記 supportsBirthdayBonus 的消費類型）
+        if isBirthdayMonth, birthdayMultiplier > 1 {
+            let sourceSupports = CardBrandRegistry.sourceSupportsBirthdayBonus(source, brand: cardBrand)
+            if sourceSupports {
+                miles *= birthdayMultiplier
+            }
         }
         
         // 根據進位方式處理

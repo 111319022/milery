@@ -132,7 +132,7 @@ struct CathayUnitedBankCard: CardBrandDefinition {
                 infoPopoverTitle: "",
                 infoPopoverSubtitle: ""
             ),
-            // 哩程加速器：自動選國泰卡，需要選擇子類別
+            // 哩程加速器：自動選國泰卡，需要選擇子類別，支援生日月雙倍
             CardMileageSourceMapping(
                 source: .cardAccelerator,
                 autoSelectBrand: true,
@@ -141,7 +141,8 @@ struct CathayUnitedBankCard: CardBrandDefinition {
                 subcategories: Self.acceleratorCategories,
                 subcategorySectionTitle: "加速器類別",
                 infoPopoverTitle: "四大哩程加速器",
-                infoPopoverSubtitle: "以下類別消費可享加速哩程回饋"
+                infoPopoverSubtitle: "以下類別消費可享加速哩程回饋",
+                supportsBirthdayBonus: true
             ),
         ]
     }

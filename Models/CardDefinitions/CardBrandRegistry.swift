@@ -85,6 +85,15 @@ enum CardBrandRegistry {
         sourceNeedsCard(source)
     }
     
+    /// 判斷某個 MileageSource 是否支援生日月加碼（依品牌的 sourceMapping 定義）
+    static func sourceSupportsBirthdayBonus(_ source: MileageSource, brand: CardBrand) -> Bool {
+        guard let def = definition(for: brand) else { return false }
+        if let mapping = def.sourceMappings.first(where: { $0.source == source }) {
+            return mapping.supportsBirthdayBonus
+        }
+        return false
+    }
+    
     /// 根據 MileageSource 和 CreditCardRule 取得對應的費率
     static func rate(for source: MileageSource, card: CreditCardRule) -> Decimal {
         guard let def = definition(for: card.cardBrand) else { return card.baseRate }

@@ -96,11 +96,32 @@ struct CardMileageSourceMapping {
     let subcategorySectionTitle: String // 子類別區塊標題（例如「加速器類別」）
     let infoPopoverTitle: String       // Info Popover 標題
     let infoPopoverSubtitle: String    // Info Popover 副標題
+    let supportsBirthdayBonus: Bool    // 生日月是否適用加碼
     
     enum RateKeyPath {
         case base
         case secondary
         case tertiary
+    }
+    
+    init(source: MileageSource,
+         autoSelectBrand: Bool,
+         rateKeyPath: RateKeyPath,
+         requiresSubcategory: Bool,
+         subcategories: [CardSpendingCategory],
+         subcategorySectionTitle: String,
+         infoPopoverTitle: String,
+         infoPopoverSubtitle: String,
+         supportsBirthdayBonus: Bool = false) {
+        self.source = source
+        self.autoSelectBrand = autoSelectBrand
+        self.rateKeyPath = rateKeyPath
+        self.requiresSubcategory = requiresSubcategory
+        self.subcategories = subcategories
+        self.subcategorySectionTitle = subcategorySectionTitle
+        self.infoPopoverTitle = infoPopoverTitle
+        self.infoPopoverSubtitle = infoPopoverSubtitle
+        self.supportsBirthdayBonus = supportsBirthdayBonus
     }
 }
 

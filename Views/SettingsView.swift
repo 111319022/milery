@@ -24,6 +24,7 @@ struct SettingsView: View {
     @State private var toastMessage: String?
     @State private var showToast = false
     @State private var showingEasterEgg = false
+    @State private var showBirthdayPicker = false
     
     private var lastBackupText: String {
         if lastBackupDateTimestamp > 0 {
@@ -138,15 +139,26 @@ struct SettingsView: View {
                                 CustomDivider(colorScheme: colorScheme)
                                 
                                 // 2. 生日月份設定
-                                SettingRow(
-                                    icon: "gift.fill",
-                                    title: "生日月份設定（開發中）",
-                                    subtitle: "用於計算生日當月哩程雙倍加碼"
-                                ) {
-                                    DatePicker("", selection: $viewModel.userBirthday, displayedComponents: .date)
-                                        .labelsHidden()
-                                        .tint(AviationTheme.Colors.cathayJade)
+                                Button {
+                                    showBirthdayPicker = true
+                                } label: {
+                                    SettingRow(
+                                        icon: "gift.fill",
+                                        title: "生日月份",
+                                        subtitle: "生日月部分卡片可享哩程雙倍加碼"
+                                    ) {
+                                        HStack(spacing: 4) {
+                                            Text(viewModel.userBirthdayMonth >= 1 && viewModel.userBirthdayMonth <= 12 ? "\(viewModel.userBirthdayMonth) 月" : "未設定")
+                                                .font(AviationTheme.Typography.subheadline)
+                                                .foregroundColor(AviationTheme.Colors.secondaryText(colorScheme))
+                                            Image(systemName: "chevron.right")
+                                                .font(.caption)
+                                                .fontWeight(.semibold)
+                                                .foregroundColor(AviationTheme.Colors.tertiaryText(colorScheme))
+                                        }
+                                    }
                                 }
+                                .buttonStyle(.plain)
                                 
                             }
                             .background(AviationTheme.Colors.cardBackground(colorScheme))
@@ -392,6 +404,14 @@ struct SettingsView: View {
             .toolbarBackgroundVisibility(hasBackgroundImage ? .visible : .automatic, for: .navigationBar)
             .sheet(isPresented: $showingAirportPicker) {
                 SettingsAirportPickerWrapper(selectedCode: $preferredOrigin)
+            }
+            .sheet(isPresented: $showBirthdayPicker) {
+                BirthdayMonthPickerSheet(selectedMonth: Binding(
+                    get: { viewModel.userBirthdayMonth },
+                    set: { viewModel.userBirthdayMonth = $0 }
+                ))
+                .presentationDetents([.height(320)])
+                .presentationDragIndicator(.visible)
             }
             .alert("開發者權限驗證", isPresented: $showingDeveloperAccessAlert) {
                 Button("確定", role: .cancel) { }
@@ -668,6 +688,52 @@ struct DevToastView: View {
                 .fill(Color.black.opacity(colorScheme == .dark ? 0.85 : 0.75))
                 .shadow(color: .black.opacity(0.2), radius: 10, x: 0, y: 4)
         )
+    }
+}
+
+// MARK: - 生日月份滾輪彈窗
+struct BirthdayMonthPickerSheet: View {
+    @Environment(\.colorScheme) var colorScheme
+    @Environment(\.dismiss) private var dismiss
+    @Binding var selectedMonth: Int
+    
+    var body: some View {
+        VStack(spacing: 0) {
+            // 標題列
+            HStack {
+                Button("取消") {
+                    dismiss()
+                }
+                .foregroundColor(AviationTheme.Colors.secondaryText(colorScheme))
+                
+                Spacer()
+                
+                Text("選擇生日月份")
+                    .font(AviationTheme.Typography.headline)
+                    .foregroundColor(AviationTheme.Colors.primaryText(colorScheme))
+                
+                Spacer()
+                
+                Button("完成") {
+                    dismiss()
+                }
+                .fontWeight(.semibold)
+                .foregroundColor(AviationTheme.Colors.cathayJade)
+            }
+            .padding(.horizontal, 20)
+            .padding(.top, 16)
+            .padding(.bottom, 8)
+            
+            // 滾輪
+            Picker("月份", selection: $selectedMonth) {
+                Text("未設定").tag(0)
+                ForEach(1...12, id: \.self) { month in
+                    Text("\(month) 月").tag(month)
+                }
+            }
+            .pickerStyle(.wheel)
+            .frame(maxWidth: .infinity)
+        }
     }
 }
 

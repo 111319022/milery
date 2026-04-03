@@ -398,6 +398,23 @@ struct TransactionFormView: View {
                     
                     if let info = calculatedMilesDisplay {
                         Divider().padding(.leading, 60)
+                        
+                        // 生日月雙倍提示橫幅
+                        if info.isBirthdayMonth {
+                            HStack(spacing: 8) {
+                                Image(systemName: "gift.fill")
+                                    .foregroundColor(.pink)
+                                    .font(.subheadline)
+                                Text("本月壽星哩程雙倍加碼！")
+                                    .font(AviationTheme.Typography.caption)
+                                    .fontWeight(.semibold)
+                                    .foregroundColor(.pink)
+                            }
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 8)
+                            .background(Color.pink.opacity(colorScheme == .dark ? 0.15 : 0.08))
+                        }
+                        
                         HStack {
                             Image(systemName: "sparkles")
                                 .font(.title3)
@@ -603,15 +620,18 @@ struct TransactionFormView: View {
     var calculatedMilesDisplay: CalculatedMilesInfo? {
         guard canCalculateMiles, let card = selectedCard else { return nil }
         
-        let isBirthdayMonth = Calendar.current.isDate(date, equalTo: viewModel.userBirthday, toGranularity: .month)
+        let isBirthday = viewModel.isBirthdayMonth(for: date)
+        let sourceSupports = CardBrandRegistry.sourceSupportsBirthdayBonus(selectedSource, brand: card.cardBrand)
+        let effectiveBirthday = isBirthday && sourceSupports
+        
         let miles = card.calculateMiles(
             amount: Decimal(string: amount) ?? 0,
             source: selectedSource,
             subcategoryID: selectedSubcategoryID,
-            isBirthdayMonth: isBirthdayMonth
+            isBirthdayMonth: isBirthday
         )
         
-        return CalculatedMilesInfo(miles: miles, isBirthdayMonth: isBirthdayMonth)
+        return CalculatedMilesInfo(miles: miles, isBirthdayMonth: effectiveBirthday)
     }
     
     var canSave: Bool {

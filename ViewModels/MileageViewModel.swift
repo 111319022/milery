@@ -21,8 +21,17 @@ class MileageViewModel {
         activeProgram?.programType.supportsCathayAwardChart ?? true
     }
     
-    // 使用者生日（用於計算生日當月加碼）
-    var userBirthday: Date = Calendar.current.date(from: DateComponents(month: 1, day: 1)) ?? Date()
+    // 使用者生日月份（1~12，0 表示未設定；透過 UserDefaults 持久化）
+    var userBirthdayMonth: Int = UserDefaults.standard.integer(forKey: "userBirthdayMonth") {
+        didSet { UserDefaults.standard.set(userBirthdayMonth, forKey: "userBirthdayMonth") }
+    }
+    
+    /// 判斷指定日期是否為用戶生日當月
+    func isBirthdayMonth(for date: Date) -> Bool {
+        let month = userBirthdayMonth
+        guard month >= 1, month <= 12 else { return false }
+        return Calendar.current.component(.month, from: date) == month
+    }
     
     // 儲存錯誤訊息，供 UI 顯示 Alert
     var saveError: String?
@@ -556,12 +565,11 @@ class MileageViewModel {
                      subcategoryID: String? = nil,
                      cardRule: CreditCardRule,
                      date: Date = Date()) -> Int {
-        let isBirthdayMonth = Calendar.current.isDate(date, equalTo: userBirthday, toGranularity: .month)
         return cardRule.calculateMiles(
             amount: amount,
             source: source,
             subcategoryID: subcategoryID,
-            isBirthdayMonth: isBirthdayMonth
+            isBirthdayMonth: isBirthdayMonth(for: date)
         )
     }
     

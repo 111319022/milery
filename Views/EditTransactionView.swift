@@ -158,12 +158,11 @@ struct EditTransactionView: View {
             guard let amountValue = Decimal(string: amount), let card = selectedCard else { return }
             finalAmount = amountValue
             
-            let isBirthdayMonth = Calendar.current.isDate(date, equalTo: viewModel.userBirthday, toGranularity: .month)
             miles = card.calculateMiles(
                 amount: amountValue,
                 source: selectedSource,
                 subcategoryID: selectedSubcategoryID,
-                isBirthdayMonth: isBirthdayMonth
+                isBirthdayMonth: viewModel.isBirthdayMonth(for: date)
             )
         } else {
             guard let milesValue = Int(earnedMiles) else { return }
