@@ -24,6 +24,7 @@
 		FBC0CC212F78596500EEADFE /* PROJECT_GUIDE.md in Resources */ = {isa = PBXBuildFile; fileRef = FBC0CC202F78596500EEADFE /* PROJECT_GUIDE.md */; };
 		FBCA10212F70000100A1B2C3 /* RedeemedTicket.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBCA10202F70000100A1B2C3 /* RedeemedTicket.swift */; };
 		FBCA10232F70000200A1B2C3 /* MilestonesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBCA10222F70000200A1B2C3 /* MilestonesView.swift */; };
+		FBCAC2C32F7F68B7001ABE1E /* NotificationSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBCAC2C22F7F68B7001ABE1E /* NotificationSettingsView.swift */; };
 		FBF23D242F7AA04000F6C330 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBF23D232F7AA04000F6C330 /* OnboardingView.swift */; };
 		FBF23D442F7BD68D00F6C330 /* BackgroundImageManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBF23D432F7BD68D00F6C330 /* BackgroundImageManager.swift */; };
 		FBF23D462F7BD69B00F6C330 /* AppBackgroundView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBF23D452F7BD69B00F6C330 /* AppBackgroundView.swift */; };
@@ -69,6 +70,7 @@
 		FBC0CC202F78596500EEADFE /* PROJECT_GUIDE.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = PROJECT_GUIDE.md; sourceTree = "<group>"; };
 		FBCA10202F70000100A1B2C3 /* RedeemedTicket.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RedeemedTicket.swift; sourceTree = "<group>"; };
 		FBCA10222F70000200A1B2C3 /* MilestonesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MilestonesView.swift; sourceTree = "<group>"; };
+		FBCAC2C22F7F68B7001ABE1E /* NotificationSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationSettingsView.swift; sourceTree = "<group>"; };
 		FBF23D232F7AA04000F6C330 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
 		FBF23D432F7BD68D00F6C330 /* BackgroundImageManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackgroundImageManager.swift; sourceTree = "<group>"; };
 		FBF23D452F7BD69B00F6C330 /* AppBackgroundView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppBackgroundView.swift; sourceTree = "<group>"; };
@@ -205,6 +207,7 @@
 				FBC0CBEF2F78018300EEADFE /* TransactionFormView.swift */,
 				FBF23D452F7BD69B00F6C330 /* AppBackgroundView.swift */,
 				FBF23D472F7BD6FB00F6C330 /* BackgroundPickerView.swift */,
+				FBCAC2C22F7F68B7001ABE1E /* NotificationSettingsView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -301,6 +304,7 @@
 				FBF23D242F7AA04000F6C330 /* OnboardingView.swift in Sources */,
 				FB6BC0C02F70F45E0011877D /* CloudBackupView.swift in Sources */,
 				FB297D832F762AF6004A9DAC /* MileageProgram.swift in Sources */,
+				FBCAC2C32F7F68B7001ABE1E /* NotificationSettingsView.swift in Sources */,
 				FBF89DB32F6AC2EE003DB1EB /* MainTabView.swift in Sources */,
 				FBF89DB42F6AC2EE003DB1EB /* MileageAccount.swift in Sources */,
 				FBF23D442F7BD68D00F6C330 /* BackgroundImageManager.swift in Sources */,
@@ -456,12 +460,12 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = milery.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 32;
+				CURRENT_PROJECT_VERSION = 33;
 				DEVELOPMENT_TEAM = 45SQT63B67;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "milery-Info.plist";
-				INFOPLIST_KEY_CFBundleDisplayName = Milery;
+				INFOPLIST_KEY_CFBundleDisplayName = milery;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.travel";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -473,7 +477,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 0.0.10;
+				MARKETING_VERSION = 0.0.11;
 				PRODUCT_BUNDLE_IDENTIFIER = com.73app.milery;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -495,12 +499,12 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = milery.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 32;
+				CURRENT_PROJECT_VERSION = 33;
 				DEVELOPMENT_TEAM = 45SQT63B67;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "milery-Info.plist";
-				INFOPLIST_KEY_CFBundleDisplayName = Milery;
+				INFOPLIST_KEY_CFBundleDisplayName = milery;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.travel";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -512,7 +516,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 0.0.10;
+				MARKETING_VERSION = 0.0.11;
 				PRODUCT_BUNDLE_IDENTIFIER = com.73app.milery;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;

@@ -190,12 +190,19 @@ struct SettingsView: View {
                                 
                                 CustomDivider(colorScheme: colorScheme)
                                 
-                                SettingToggleRow(
-                                    icon: "bell.fill",
-                                    title: "通知提醒（開發中）",
-                                    subtitle: "接收哩程到期與目標提醒",
-                                    isOn: $enableNotifications
-                                )
+                                NavigationLink(destination: NotificationSettingsView()) {
+                                    SettingRow(
+                                        icon: "bell.fill",
+                                        title: "通知設定",
+                                        subtitle: enableNotifications ? "已開啟" : "已關閉"
+                                    ) {
+                                        Image(systemName: "chevron.right")
+                                            .foregroundColor(AviationTheme.Colors.tertiaryText(colorScheme))
+                                            .font(.subheadline)
+                                            .fontWeight(.semibold)
+                                    }
+                                }
+                                .buttonStyle(.plain)
                             }
                             .background(AviationTheme.Colors.cardBackground(colorScheme))
                             .clipShape(RoundedRectangle(cornerRadius: AviationTheme.CornerRadius.lg))
