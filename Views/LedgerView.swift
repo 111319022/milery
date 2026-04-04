@@ -34,7 +34,13 @@ struct LedgerView: View {
             let amount = transactions.reduce(Decimal(0)) { $0 + $1.amount }
             let miles = transactions.reduce(0) { $0 + $1.earnedMiles }
             return (key.source, key.subcategoryID, amount, miles)
-        }.sorted { abs($0.miles) > abs($1.miles) }
+        }.sorted {
+            // 負值（如機票兌換）永遠排在前面
+            if ($0.miles < 0) != ($1.miles < 0) {
+                return $0.miles < 0
+            }
+            return abs($0.miles) > abs($1.miles)
+        }
     }
     
     var monthlyTotal: (amount: Decimal, miles: Int) {
