@@ -109,6 +109,26 @@ struct SettingsView: View {
                                     }
                                 }
                                 .buttonStyle(.plain)
+                                
+                                CustomDivider(colorScheme: colorScheme)
+                                
+                                NavigationLink {
+                                    AppIconPickerView()
+                                } label: {
+                                    SettingRow(
+                                        icon: "app.badge.fill",
+                                        title: "App icon更換",
+                                        subtitle: nil
+                                    ) {
+                                        HStack(spacing: 4) {
+                                            Image(systemName: "chevron.right")
+                                                .font(.caption)
+                                                .fontWeight(.semibold)
+                                        }
+                                        .foregroundColor(AviationTheme.Colors.tertiaryText(colorScheme))
+                                    }
+                                }
+                                .buttonStyle(.plain)
                             }
                             .background(AviationTheme.Colors.cardBackground(colorScheme))
                             .clipShape(RoundedRectangle(cornerRadius: AviationTheme.CornerRadius.lg))
