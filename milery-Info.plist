@@ -13,11 +13,11 @@
 		</dict>
 		<key>CFBundleAlternateIcons</key>
 		<dict>
-			<key>AppIcon-Gold-1</key>
+			<key>AppIcon-Blue-1</key>
 			<dict>
 				<key>CFBundleIconFiles</key>
 				<array>
-					<string>AppIcon-Gold-1</string>
+					<string>AppIcon-Blue-1</string>
 				</array>
 			</dict>
 			<key>AppIcon-Dark-1</key>

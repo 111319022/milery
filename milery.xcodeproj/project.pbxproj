@@ -58,7 +58,7 @@
 		FB6BC0BF2F70F45E0011877D /* CloudBackupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudBackupView.swift; sourceTree = "<group>"; };
 		FB6BC0C12F70F4DC0011877D /* CloudBackupService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudBackupService.swift; sourceTree = "<group>"; };
 		FB6BC0C42F70FCF20011877D /* milery.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = milery.entitlements; sourceTree = "<group>"; };
-		FB802BD12F71B109008F0C83 /* milery.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = milery.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		FB802BD12F71B109008F0C83 /* milery.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; name = milery.app; path = "/Users/rayhsu/Documents/milery/build/Debug-iphoneos/milery.app"; sourceTree = "<absolute>"; };
 		FB802BD62F71B84A008F0C83 /* airports.csv */ = {isa = PBXFileReference; lastKnownFileType = text; path = airports.csv; sourceTree = "<group>"; };
 		FB802BE02F727BB2008F0C83 /* milery-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "milery-Info.plist"; sourceTree = "<group>"; };
 		FB8546E72F80BD6A007E3EC2 /* AppIconPickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppIconPickerView.swift; sourceTree = "<group>"; };
@@ -103,6 +103,11 @@
 			path = DevViews;
 			sourceTree = "<group>";
 		};
+		FB8546F12F812E67007E3EC2 /* Alternate​Icons */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = "Alternate​Icons";
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -129,6 +134,7 @@
 			isa = PBXGroup;
 			children = (
 				FB802BE02F727BB2008F0C83 /* milery-Info.plist */,
+				FB8546F12F812E67007E3EC2 /* Alternate​Icons */,
 				FB6BC0C42F70FCF20011877D /* milery.entitlements */,
 				FBF89D942F6AC2EE003DB1EB /* MileryApp.swift */,
 				FBF89D962F6AC2EE003DB1EB /* Assets.xcassets */,
@@ -140,7 +146,6 @@
 				FBF89DA22F6AC2EE003DB1EB /* ViewModels */,
 				FBF89DAB2F6AC2EE003DB1EB /* Views */,
 				FB6BC0C32F70F5550011877D /* Service */,
-				FB802BD12F71B109008F0C83 /* milery.app */,
 			);
 			sourceTree = "<group>";
 		};
@@ -232,6 +237,7 @@
 			);
 			fileSystemSynchronizedGroups = (
 				FB40838B2F6F03DD00993DF0 /* DevViews */,
+				FB8546F12F812E67007E3EC2 /* Alternate​Icons */,
 			);
 			name = milery;
 			packageProductDependencies = (
