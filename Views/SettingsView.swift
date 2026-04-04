@@ -218,7 +218,7 @@ struct SettingsView: View {
                                 NavigationLink(destination: NotificationSettingsView()) {
                                     SettingRow(
                                         icon: "bell.fill",
-                                        title: "通知設定",
+                                        title: "通知設定（開發中）",
                                         subtitle: enableNotifications ? "已開啟" : "已關閉"
                                     ) {
                                         Image(systemName: "chevron.right")
