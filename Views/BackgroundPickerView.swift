@@ -24,6 +24,11 @@ struct BackgroundPickerView: View {
         ""
     ]
 
+    // 純色背景選項：(hex, 顯示名稱)
+    private let solidColorOptions: [(hex: String, name: String)] = [
+        ("F2F2F7", "淺灰色"),
+    ]
+
     private let columns = [
         GridItem(.flexible(), spacing: 12),
         GridItem(.flexible(), spacing: 12)
@@ -48,6 +53,26 @@ struct BackgroundPickerView: View {
                             defaultGradientCard
                         }
                         .buttonStyle(.plain)
+                    }
+
+                    // MARK: - 純色背景
+                    if !solidColorOptions.isEmpty {
+                        VStack(alignment: .leading, spacing: 8) {
+                            SectionHeaderView(title: "純色背景", colorScheme: colorScheme)
+
+                            LazyVGrid(columns: columns, spacing: 12) {
+                                ForEach(solidColorOptions, id: \.hex) { option in
+                                    Button {
+                                        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                                            backgroundSelection = .solidColor(hex: option.hex)
+                                        }
+                                    } label: {
+                                        solidColorThumbnail(hex: option.hex, name: option.name)
+                                    }
+                                    .buttonStyle(.plain)
+                                }
+                            }
+                        }
                     }
 
                     // MARK: - 預設圖片
@@ -186,6 +211,34 @@ struct BackgroundPickerView: View {
                             .foregroundColor(AviationTheme.Colors.secondaryText(colorScheme))
                     }
             }
+
+            if isSelected {
+                selectionBadge
+            }
+        }
+        .clipShape(RoundedRectangle(cornerRadius: AviationTheme.CornerRadius.lg))
+        .contentShape(RoundedRectangle(cornerRadius: AviationTheme.CornerRadius.lg))
+        .overlay(
+            RoundedRectangle(cornerRadius: AviationTheme.CornerRadius.lg)
+                .stroke(isSelected ? AviationTheme.Colors.cathayJade : Color.clear, lineWidth: 2.5)
+        )
+        .shadow(color: AviationTheme.Shadows.cardShadow(colorScheme).opacity(0.3), radius: 6, x: 0, y: 2)
+    }
+
+    // MARK: - 純色背景縮圖
+
+    private func solidColorThumbnail(hex: String, name: String) -> some View {
+        let isSelected = backgroundSelection == .solidColor(hex: hex)
+        return ZStack {
+            RoundedRectangle(cornerRadius: AviationTheme.CornerRadius.lg)
+                .fill(Color(hex: hex))
+                .frame(maxWidth: .infinity)
+                .frame(height: 120)
+                .overlay {
+                    Text(name)
+                        .font(AviationTheme.Typography.caption)
+                        .foregroundColor(.gray)
+                }
 
             if isSelected {
                 selectionBadge

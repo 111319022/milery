@@ -7,6 +7,7 @@ enum BackgroundSelection: Equatable, RawRepresentable {
     case none                       // 預設漸層
     case preset(name: String)       // Asset Catalog 預設圖片
     case custom(filename: String)   // 使用者上傳圖片
+    case solidColor(hex: String)    // 純色背景
 
     // MARK: - RawRepresentable（手動序列化，避免與 Codable 衝突造成遞迴）
 
@@ -19,6 +20,9 @@ enum BackgroundSelection: Equatable, RawRepresentable {
         } else if rawValue.hasPrefix("custom:") {
             let filename = String(rawValue.dropFirst(7))
             self = .custom(filename: filename)
+        } else if rawValue.hasPrefix("solidColor:") {
+            let hex = String(rawValue.dropFirst(11))
+            self = .solidColor(hex: hex)
         } else {
             self = .none
         }
@@ -32,6 +36,8 @@ enum BackgroundSelection: Equatable, RawRepresentable {
             return "preset:\(name)"
         case .custom(let filename):
             return "custom:\(filename)"
+        case .solidColor(let hex):
+            return "solidColor:\(hex)"
         }
     }
 }
@@ -335,6 +341,7 @@ final class BackgroundImageManager {
         case .none: return "預設漸層"
         case .preset(let name): return name
         case .custom: return "自訂圖片"
+        case .solidColor: return "純色背景"
         }
     }
 }

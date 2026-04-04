@@ -8,7 +8,10 @@ struct NotificationSettingsView: View {
     @AppStorage("notifyRedemptionReady") private var notifyRedemptionReady: Bool = true
     
     private var hasBackgroundImage: Bool {
-        backgroundSelection != .none
+        switch backgroundSelection {
+        case .preset, .custom: return true
+        case .none, .solidColor: return false
+        }
     }
     
     var body: some View {

@@ -8,7 +8,10 @@ struct TransactionFormView: View {
     @Bindable var viewModel: MileageViewModel
     
     private var hasBackgroundImage: Bool {
-        backgroundSelection != .none
+        switch backgroundSelection {
+        case .preset, .custom: return true
+        case .none, .solidColor: return false
+        }
     }
     
     @Binding var selectedSource: MileageSource

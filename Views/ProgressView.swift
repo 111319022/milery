@@ -13,7 +13,10 @@ struct ProgressView: View {
     @State private var editingUnpinnedGoals: [FlightGoal] = []
     
     private var hasBackgroundImage: Bool {
-        backgroundSelection != .none
+        switch backgroundSelection {
+        case .preset, .custom: return true
+        case .none, .solidColor: return false
+        }
     }
     
     var currentMiles: Int {
@@ -279,7 +282,10 @@ struct HalfCircleProgressView: View {
     @State private var hasAppeared = false
     
     private var hasBackgroundImage: Bool {
-        backgroundSelection != .none
+        switch backgroundSelection {
+        case .preset, .custom: return true
+        case .none, .solidColor: return false
+        }
     }
     
     private var targetProgress: Double {

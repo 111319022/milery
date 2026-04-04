@@ -11,7 +11,10 @@ struct MainTabView: View {
     @AppStorage("tabVisible_milestones") private var milestonesVisible = true
     
     private var hasBackgroundImage: Bool {
-        backgroundSelection != .none
+        switch backgroundSelection {
+        case .preset, .custom: return true
+        case .none, .solidColor: return false
+        }
     }
     @State private var viewModel = MileageViewModel()
     @State private var selectedTab: Int = 0

@@ -19,9 +19,9 @@ struct AppIconPickerView: View {
     // 在此維護所有可切換的 icon 清單
     // previewAsset 需要在 Assets.xcassets/appicon 資料夾放入對應的圖片
     private let icons: [AppIconOption] = [
-        AppIconOption(id: "AppIcon", displayName: "預設", previewAsset: "appicon_1_preview"),
-        AppIconOption(id: "AppIcon-Gold-1", displayName: "亮色1", previewAsset: "appicon_2_preview"),
-        AppIconOption(id: "AppIcon-Dark-1", displayName: "深色1", previewAsset: "appicon_dark_1_preview"),
+        AppIconOption(id: "AppIcon", displayName: "預設", previewAsset: "appicon_default_preview"),
+        AppIconOption(id: "AppIcon-Blue-1", displayName: "藍色", previewAsset: "appicon_blue_1_preview"),
+        AppIconOption(id: "AppIcon-Dark-1", displayName: "深色", previewAsset: "appicon_dark_1_preview"),
         // 之後新增的 icon 在這裡加入
         // AppIconOption(id: "AppIcon-Dark", displayName: "深色", previewAsset: "appicon/AppIcon-Dark-preview"),
         // AppIconOption(id: "AppIcon-Gold", displayName: "金色", previewAsset: "appicon/AppIcon-Gold-preview"),

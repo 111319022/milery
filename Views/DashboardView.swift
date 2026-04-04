@@ -11,7 +11,10 @@ struct DashboardView: View {
     var switchToLedger: (() -> Void)? = nil
     
     private var hasBackgroundImage: Bool {
-        backgroundSelection != .none
+        switch backgroundSelection {
+        case .preset, .custom: return true
+        case .none, .solidColor: return false
+        }
     }
     
     var body: some View {

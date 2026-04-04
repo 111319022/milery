@@ -37,7 +37,12 @@ struct SettingsView: View {
     }
     
     private var hasBackgroundImage: Bool {
-        backgroundSelection != .none
+        switch backgroundSelection {
+        case .preset, .custom:
+            return true
+        case .none, .solidColor:
+            return false
+        }
     }
     
     var themeDisplayName: String {
@@ -536,8 +541,13 @@ struct SectionHeaderView: View {
     let colorScheme: ColorScheme
     @AppStorage("backgroundSelection") private var backgroundSelection: BackgroundSelection = .none
     
-    private var hasBackgroundImage: Bool {
-        backgroundSelection != .none
+    private var needsCapsuleBackground: Bool {
+        switch backgroundSelection {
+        case .preset, .custom:
+            return true
+        case .none, .solidColor:
+            return false
+        }
     }
     
     var body: some View {
@@ -546,9 +556,9 @@ struct SectionHeaderView: View {
             .fontWeight(.semibold)
             .foregroundColor(AviationTheme.Colors.secondaryText(colorScheme))
             .padding(.horizontal, 12)
-            .padding(.vertical, hasBackgroundImage ? 4 : 0)
+            .padding(.vertical, needsCapsuleBackground ? 4 : 0)
             .background {
-                if hasBackgroundImage {
+                if needsCapsuleBackground {
                     Capsule()
                         .fill(.ultraThinMaterial)
                 }

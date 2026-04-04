@@ -8,7 +8,10 @@ struct CalculatorLedgerView: View {
     @AppStorage("backgroundSelection") private var backgroundSelection: BackgroundSelection = .none
     
     private var hasBackgroundImage: Bool {
-        backgroundSelection != .none
+        switch backgroundSelection {
+        case .preset, .custom: return true
+        case .none, .solidColor: return false
+        }
     }
     
     @State private var selectedSource: MileageSource = .cardGeneral

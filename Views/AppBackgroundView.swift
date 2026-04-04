@@ -12,6 +12,11 @@ struct AppBackgroundView: View {
                 // 底層：始終渲染漸層（作為 fallback 與載入時的底色）
                 AviationTheme.Gradients.dashboardBackground(colorScheme)
 
+                // 純色背景
+                if case .solidColor(let hex) = backgroundSelection {
+                    Color(hex: hex)
+                }
+
                 // 若有選擇背景圖片
                 if let image = resolvedImage {
                     Image(uiImage: image)
@@ -36,12 +41,29 @@ struct AppBackgroundView: View {
 
     private var resolvedImage: UIImage? {
         switch backgroundSelection {
-        case .none:
+        case .none, .solidColor:
             return nil
         case .preset(let name):
             return BackgroundImageManager.shared.loadPresetImage(name: name)
         case .custom(let filename):
             return BackgroundImageManager.shared.loadCustomImage(filename: filename)
         }
+    }
+}
+
+// MARK: - Color Hex 初始化
+
+extension Color {
+    init(hex: String) {
+        let hex = hex.trimmingCharacters(in: CharacterSet(charactersIn: "#"))
+        let scanner = Scanner(string: hex)
+        var rgbValue: UInt64 = 0
+        scanner.scanHexInt64(&rgbValue)
+
+        let r = Double((rgbValue & 0xFF0000) >> 16) / 255.0
+        let g = Double((rgbValue & 0x00FF00) >> 8) / 255.0
+        let b = Double(rgbValue & 0x0000FF) / 255.0
+
+        self.init(red: r, green: g, blue: b)
     }
 }
