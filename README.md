@@ -4,14 +4,14 @@
 ![Swift](https://img.shields.io/badge/Swift-Native-FA7343?style=for-the-badge&logo=swift)
 ![SwiftUI](https://img.shields.io/badge/SwiftUI-Blue?style=for-the-badge&logo=swift)
 
-Milery 是一款 iOS 原生哩程管理 App，聚焦在「里程累積管理」、「航線目標追蹤」、「機票兌換紀錄」與「CloudKit 同步/備份」。
+Milery是一款專為航空常客與哩程使用者開發之 iOS 原生應用程式，旨在透過視覺化介面與本地/雲端資料庫，協助使用者系統化地管理哩程資產、設定機票兌換目標，並將抽象的點數轉換為具體的飛行進度與 3D 航線空間視覺回饋。
 
 ## 下載
 
 - App Store 正式版: https://apps.apple.com/tw/app/milery-%E5%B0%88%E7%82%BA%E5%93%A9%E7%A8%8B%E7%8E%A9%E5%AE%B6%E6%89%93%E9%80%A0/id6760928932
 - TestFlight 公測版: https://testflight.apple.com/join/gWaMP1w2
 
-## 目前架構（2026）
+## 目前架構
 
 ### 技術堆疊
 
