@@ -1,781 +1,410 @@
 # Milery 專案指南
 
----
+本文件聚焦「目前程式碼實際架構」與「後續維護方式」，適用於新進開發者與既有維護者快速理解系統。
 
 ## 目錄
 
-- [專案架構總覽](#專案架構總覽)
-- [核心入口](#核心入口)
-- [設計系統](#設計系統)
-- [背景系統](#背景系統)
-- [資料模型 (Models)](#資料模型-models)
-- [信用卡系統 (CardDefinitions)](#信用卡系統-carddefinitions)
-- [資料庫 (Database)](#資料庫-database)
-- [ViewModel](#viewmodel)
-- [服務層 (Service)](#服務層-service)
-- [App 圖示系統](#app-圖示系統)
-- [畫面 (Views)](#畫面-views)
-- [開發者工具 (DevViews)](#開發者工具-devviews)
-- [資料儲存與同步](#資料儲存與同步)
-- [常見操作流程](#常見操作流程)
-- [新增 / 更新指南](#新增--更新指南)
+- 架構總覽
+- 專案目錄與責任分工
+- App 啟動與資料容器
+- 資料模型（SwiftData）
+- 信用卡規則系統
+- Database 層
+- ViewModel 層（extension 分割）
+- Service 層
+- View 層
+- 背景與主題系統
+- 同步與備份流程
+- 測試策略與現況
+- 已知風險與技術債
+- 日常維護清單
+
+## 架構總覽
+
+Milery 採用 SwiftUI + SwiftData + CloudKit 的 iOS 原生架構，應用層邏輯主要由 `MileageViewModel` 管理，但已透過 extension 按職責切分，降低單一檔案複雜度。
+
+### 層級
+
+- Presentation
+  - `Views/`：所有 UI 頁面與可重用元件
+- Application
+  - `ViewModels/`：狀態、資料載入、業務流程
+- Domain
+  - `Models/`、`Models/CardDefinitions/`、`Database/`
+- Infrastructure
+  - `Service/`、CloudKit、SwiftData、UserDefaults
 
 ---
 
-## 專案架構總覽
+## 專案目錄與責任分工
 
-```
+```text
 milery/
-├── MileryApp.swift                     # App 入口、日誌系統、CloudKit 同步設定
-├── AviationTheme.swift                 # 設計系統（顏色、字型、間距、陰影）
+├── MileryApp.swift
+├── AviationTheme.swift
 ├── Models/
-│   ├── Transaction.swift               # 交易模型 + MileageSource 列舉
-│   ├── MileageAccount.swift            # 里程帳戶模型（含過期計算）
-│   ├── FlightGoal.swift                # 飛行目標模型 + CabinClass 列舉
-│   ├── RedeemedTicket.swift            # 已兌換機票模型
-│   ├── CreditCardRule.swift            # 信用卡規則（記憶體中的計算模型）
-│   ├── CardPreference.swift            # 信用卡偏好設定（SwiftData 持久化）
-│   ├── MileageProgram.swift            # 里程計劃模型 + ActiveProgramManager
-│   ├── BackgroundImageManager.swift    # 自訂背景圖片管理（儲存/讀取/刪除）
+│   ├── Transaction.swift
+│   ├── MileageAccount.swift
+│   ├── FlightGoal.swift
+│   ├── RedeemedTicket.swift
+│   ├── CreditCardRule.swift
+│   ├── CardPreference.swift
+│   ├── MileageProgram.swift
+│   ├── BackgroundImageManager.swift
 │   └── CardDefinitions/
-│       ├── CardBrandDefinition.swift   # 信用卡品牌 Protocol + 支援類型
-│       ├── CardBrandRegistry.swift     # 信用卡中央註冊表
-│       ├── CathayUnitedBankCard.swift  # 國泰世華聯名卡定義
-│       └── TaishinCathayCard.swift     # 台新國泰聯名卡定義
+│       ├── CardBrandDefinition.swift
+│       ├── CardBrandRegistry.swift
+│       ├── CathayUnitedBankCard.swift
+│       └── TaishinCathayCard.swift
 ├── Database/
-│   ├── CathayAwardChart.swift          # 國泰獎勵機票兌換計算
-│   ├── AirportDatabase.swift           # 機場資料庫
-│   └── airports.csv                    # 機場原始資料
+│   ├── CathayAwardChart.swift
+│   ├── AirportDatabase.swift
+│   └── airports.csv
 ├── ViewModels/
-│   └── MileageViewModel.swift          # 主要狀態管理器
-├── AlternateIcons/                     # 替代 App 圖示 PNG（bundle 資源）
+│   ├── MileageViewModel.swift
+│   ├── MileageViewModel+Program.swift
+│   ├── MileageViewModel+Transaction.swift
+│   ├── MileageViewModel+Card.swift
+│   └── MileageViewModel+Sync.swift
 ├── Service/
-│   ├── CloudBackupService.swift        # 手動雲端備份/還原
-│   └── DeveloperAccessService.swift    # 開發者存取控制
+│   ├── CloudBackupService.swift
+│   └── DeveloperAccessService.swift
 └── Views/
-    ├── MainTabView.swift               # 根層 Tab 導覽
-    ├── OnboardingView.swift            # 首次啟動引導（正式上線，9 頁）
-    ├── DashboardView.swift             # 儀表板
-    ├── ProgressView.swift              # 進度/目標
-    ├── LedgerView.swift                # 帳本/交易紀錄
-    ├── MilestonesView.swift            # 里程碑（地圖）
-    ├── SettingsView.swift              # 設定頁面
-    ├── TransactionFormView.swift       # 通用記帳表單
-    ├── CreditCardPageView.swift        # 信用卡管理頁面
-    ├── EditTransactionView.swift       # 編輯交易
-    ├── CloudBackupView.swift           # 雲端備份 UI
-    ├── AllGoalsView.swift              # 完整目標清單
-    ├── CalculatorComponents.swift      # 可重用 UI 元件
-    ├── CalculatorLedgerView.swift      # 計算器帳本
-    ├── AppBackgroundView.swift         # 統一背景元件（漸層 + 圖片 + 純色 + 可讀性遮罩）
-    ├── BackgroundPickerView.swift      # 背景選擇器（預設桌布 + 純色 + 自訂圖片裁切）
-    ├── NotificationSettingsView.swift  # 通知設定頁面
-    ├── AppIconPickerView.swift         # App 圖示切換選擇器
+    ├── MainTabView.swift
+    ├── DashboardView.swift
+    ├── ProgressView.swift
+    ├── LedgerView.swift
+    ├── MilestonesView.swift
+    ├── SettingsView.swift
+    ├── TransactionFormView.swift
+    ├── CreditCardPageView.swift
+    ├── CloudBackupView.swift
+    ├── BackgroundPickerView.swift
+    ├── AppIconPickerView.swift
+    ├── NotificationSettingsView.swift
+    ├── OnboardingView.swift
     └── DevViews/
-        ├── DataManagementView.swift    # 資料檢視/清理
-        ├── CloudKitAdvancedView.swift  # CloudKit 除錯
-        ├── ConsoleLogView.swift        # 日誌檢視器
-        ├── AirportListView.swift       # 機場瀏覽
-        ├── ProgramSwitcherView.swift   # [⚠️開發中]里程計劃切換
-        └── TabVisibilitySettingsView.swift # Tab 可見性設定
 ```
 
 ---
 
-## 核心入口
+## App 啟動與資料容器
 
 ### `MileryApp.swift`
 
-App 的啟動入口，負責：
+主要責任：
 
-| 功能 | 說明 |
-|------|------|
-| **SwiftData 容器初始化** | 設定 `ModelContainer`，包含所有 Model Schema |
-| **CloudKit 同步** | 若 `cloudKitSyncEnabled` 開啟，則使用 `iCloud.com.73app.milery` 容器 |
-| **降級處理** | CloudKit 不可用時自動退回本地儲存 |
-| **日誌系統** | `AppConsoleStore` 單例，最多 800 筆、保留 7 天 |
-| **同步診斷** | `SyncDiagnosticsObserver` 監控 CloudKit import/export 事件 |
+- 建立 SwiftData Schema
+- 根據 `cloudKitSyncEnabled` 決定使用 CloudKit 或 Local store
+- CloudKit 失敗時 fallback 到本地
+- 啟用同步診斷與 console log
+- 依 `hasCompletedOnboarding` 決定進入 Onboarding 或 MainTab
 
-**全域函式：**
-- `appLog(_ message: String)` — 記錄帶時間戳的日誌
+Schema 目前包含：
 
-**Schema 包含的模型：**
-`MileageAccount`, `Transaction`, `FlightGoal`, `CreditCardRule`, `RedeemedTicket`, `CardPreference`, `MileageProgram`
+- `MileageAccount`
+- `Transaction`
+- `FlightGoal`
+- `CreditCardRule`
+- `RedeemedTicket`
+- `CardPreference`
+- `MileageProgram`
 
 ---
 
-## 設計系統
+## 資料模型（SwiftData）
+
+### `Transaction`
+
+- 每筆里程來源紀錄
+- 關鍵欄位
+  - `date`
+  - `amountValue`（`Double`，舊欄位名稱 `amount`）
+  - `earnedMiles`
+  - `sourceRaw`
+  - `cardSubcategoryID`
+  - `programID`
+- `amount` 以 computed property 提供 `Decimal` 存取
+- 內含舊欄位遷移邏輯（accelerator / taishin 指定類別）
+
+### `MileageAccount`
+
+- 聚合某個計畫的里程總額與活動資訊
+- 關鍵方法
+  - `updateMiles(amount:date:)`
+  - `expiryDate()`
+  - `daysUntilExpiry()`
+
+### `FlightGoal`
+
+- 航線兌換目標（起訖、艙等、所需里程、排序）
+- 目標進度計算與剩餘里程評估
+
+### `RedeemedTicket`
+
+- 已兌換機票紀錄
+- 與扣點交易透過 ID 關聯
+
+### `CreditCardRule`
+
+- 信用卡計算模型
+- 費率欄位存於 `Double`，對外以 `Decimal` 計算
+- 核心方法 `calculateMiles(...)`
+
+### `CardPreference`
+
+- 持久化「品牌是否啟用 / 選擇等級」
+- 作為跨裝置同步偏好來源
+
+### `MileageProgram`
+
+- 支援多里程計畫
+- `ActiveProgramManager` 透過 UserDefaults 保存當前 program
+
+---
+
+## 信用卡規則系統
+
+系統採用 Protocol + Registry：
+
+- `CardBrandDefinition`：定義品牌能力（tiers、sourceMappings、rateSlots）
+- `CardBrandRegistry`：集中查表與解析費率
+- `CathayUnitedBankCard`、`TaishinCathayCard`：目前品牌實作
+
+### 設計重點
+
+- 規則定義與 UI 顯示解耦
+- 新增卡片主要在 Definition 層完成
+- Runtime 由 Registry 合成最終費率
+
+---
+
+## Database 層
+
+### `CathayAwardChart.swift` / `FlightCalculator`
+
+- 依距離與目的地代碼判斷區間（特別是短程 1 / 短程 2）
+- 依艙等回傳所需里程
+- 提供常用航點判斷與便利方法
+
+### `AirportDatabase.swift`
+
+- 載入機場基本資料（IATA、座標、名稱）
+- 提供距離計算與查詢
+
+---
+
+## ViewModel 層（extension 分割）
+
+`MileageViewModel` 目前採「主檔 + extension」方式切分責任，減少 God Object 的閱讀成本。
+
+### 主檔 `MileageViewModel.swift`
+
+- 共享狀態宣告
+- `saveContext()`
+- `loadData()`
+- `isBirthdayMonth(for:)`
+
+### `MileageViewModel+Program.swift`
+
+- `loadPrograms()`
+- `switchProgram(to:)`
+- `addProgram(...)`
+- `deleteProgram(...)`
+- 預設計畫去重與孤兒資料遷移
+
+### `MileageViewModel+Transaction.swift`
+
+- 交易 CRUD
+- 目標 CRUD
+- 兌換流程（goal -> ticket + 扣點交易）
+- 月統計與可兌換目標
+
+### `MileageViewModel+Card.swift`
+
+- 由 Registry + CardPreference 重建卡片列表
+- 卡片啟用/停用
+- 等級切換與偏好儲存
+
+### `MileageViewModel+Sync.swift`
+
+- 初始化遠端監聽
+- Remote change debounce
+- 資料指紋比對
+- 手動同步刷新
+
+---
+
+## Service 層
+
+### `CloudBackupService.swift`
+
+- 手動備份與還原
+- 備份格式為 JSON（`MileryBackup`）
+- 儲存在 CloudKit 自訂 Zone
+- 支援舊版欄位相容
+
+### `DeveloperAccessService.swift`
+
+- 開發者模式存取控制
+- 透過 CloudKit 公開記錄 + 雜湊驗證
+
+---
+
+## View 層
+
+### 主流程
+
+- `MainTabView`：5 Tab 容器
+- `DashboardView`：總覽、即時狀態、近期交易
+- `ProgressView`：目標進度與管理
+- `LedgerView`：交易列表與月份統計
+- `MilestonesView`：里程碑與航線展示
+- `SettingsView`：設定入口總表
+
+### 交易與卡片相關
+
+- `TransactionFormView`
+- `EditTransactionView`
+- `CreditCardPageView`
+
+### 同步與工具
+
+- `CloudBackupView`
+- `DevViews/*`
+
+---
+
+## 背景與主題系統
 
 ### `AviationTheme.swift`
 
-集中管理整個 App 的視覺設計語彙，支援 Light/Dark 模式。
-
-**顏色系統：**
-- 品牌色：Cathay Jade、Starlux Gold、大地色系
-- 自適應色：背景色、文字色根據外觀模式自動切換
-
-**漸層：**
-- Dark 金屬藍、Light 大地色、金屬金/銀、Cathay Jade 漸層
-
-**排版：**
-- 10 種文字樣式（`largeTitle` ~ `caption`）
-- 專用等寬里程數字顯示
-
-**間距 & 圓角 & 陰影：**
-- 6 級間距（xs: 4pt ~ xxl: 48pt）
-- 4 級圓角（sm: 8pt ~ xl: 20pt）
-- 卡片陰影、深層陰影、金色光暈
-
-**ViewModifier：**
-- `MetalCardStyle` — 3D 金屬質感卡片
-- `GlassmorphismStyle` — 毛玻璃效果
-- `MetalButtonStyle` — 漸層按鈕（含按壓回饋）
-- 快捷方法：`.metalCard()`、`.glassmorphism()`
-
----
-
-## 背景系統
-
-### 架構概觀
-
-背景系統由三個核心元件組成，負責背景圖片的管理、顯示與可讀性保障。
-
-```
-BackgroundImageManager          # 圖片儲存/讀取/刪除（App Documents）
-    ↓
-BackgroundSelection (enum)      # .none / .preset(name:) / .custom(filename:) / .solidColor(hex:)
-    ↓                             透過 @AppStorage("backgroundSelection") 全域共享
-AppBackgroundView               # 統一背景 View（漸層 + 圖片 + 遮罩）
-    ↓
-各畫面條件式可讀性增強            # 毛玻璃底板 / Toolbar 強制顯示 / 文字對比升級
-```
+- 統一色彩、字級、間距、陰影
+- 包含 adaptive color 與 gradient
 
 ### `BackgroundImageManager.swift`
 
-管理自訂背景圖片的存取。圖片以 JPEG 格式儲存於 App 的 Documents 目錄。
+- 自訂背景儲存/讀取/刪除
+- 以檔案形式存在 App Documents
 
-**方法：**
+### `AppBackgroundView.swift` + `BackgroundPickerView.swift`
 
-| 方法 | 用途 |
-|------|------|
-| `saveImage(_:filename:)` | 壓縮並儲存圖片至 Documents |
-| `loadImage(filename:)` | 從 Documents 讀取圖片 |
-| `deleteImage(filename:)` | 刪除指定背景圖片 |
-| `listCustomImages()` | 列出所有已儲存的自訂背景 |
-
-### `BackgroundSelection` (enum)
-
-`RawRepresentable` 列舉，可直接存入 `@AppStorage`。
-
-| Case | 說明 |
-|------|------|
-| `.none` | 不使用任何背景（預設漸層） |
-| `.preset(name: String)` | 使用預設桌布（bundled asset） |
-| `.custom(filename: String)` | 使用使用者自訂背景圖片 |
-| `.solidColor(hex: String)` | 使用純色背景（hex 色碼） |
-
-### `AppBackgroundView.swift`
-
-統一背景元件，放置於各主畫面最底層。
-
-**渲染層級（由下至上）：**
-1. **預設** — `AviationTheme` 的 Light/Dark 背景漸層（fallback）
-2. **純色背景** — `Color(hex:)` 純色填充（僅 `.solidColor` 選項）
-3. **背景圖片** — 預設或自訂圖片（`scaledToFill`）
-4. **可讀性遮罩** — 半透明 overlay（Dark: 黑色 0.45 / Light: 白色 0.35）
-
-### `BackgroundPickerView.swift`
-
-背景選擇介面，提供：
-- 預設漸層（系統預設）
-- 純色背景選項（如淺灰色 `#F2F2F7`）
-- 預設桌布選擇（bundled wallpapers）
-- 自訂圖片匯入（從相簿選取 + 全螢幕裁切）
-- 即時預覽與套用
-
-### 背景感知可讀性機制
-
-當背景為圖片類型（`.preset` 或 `.custom`）時，各畫面透過 `hasBackgroundImage` 偵測背景狀態，條件式啟用以下增強。純色背景（`.solidColor`）不會啟用這些增強，因為文字在純色上已有足夠可讀性：
-
-| 機制 | 適用元件 | 說明 |
-|------|----------|------|
-| **Toolbar 強制顯示** | NavigationBar / TabBar | `.toolbarBackgroundVisibility(.visible)` |
-| **毛玻璃底板** | 進度區塊、空狀態提示 | `RoundedRectangle.fill(.ultraThinMaterial)` |
-| **毛玻璃膠囊** | Section 標題、日期標頭 | `Capsule().fill(.ultraThinMaterial)` |
-| **文字對比升級** | 半圓進度指示器內的文字 | `tertiaryText → secondaryText`、`secondaryText → primaryText` |
-
-**已套用的畫面：**
-`DashboardView`、`ProgressView`（含 `HalfCircleProgressView`）、`LedgerView`（含 `DateHeaderCard`）、`SettingsView`（含 `SectionHeaderView`）、`MainTabView`、`TransactionFormView`、`CreditCardPageView`、`CalculatorLedgerView`、`EditTransactionView`、`NotificationSettingsView`
-
-> 所有可讀性增強皆為條件式，未設定背景時不會產生任何視覺影響。
+- 統一背景渲染（漸層 / 純色 / 圖片）
+- 圖片背景時啟用可讀性加強（material + overlay）
 
 ---
 
-## 資料模型 (Models)
+## 同步與備份流程
 
-### `Transaction.swift` — 交易記錄
+### 自動同步（SwiftData + CloudKit）
 
-每筆里程累積的交易紀錄。
-
-**主要欄位：**
-- `id`, `date`, `amount` (Decimal), `earnedMiles` (Int)
-- `source` — `MileageSource` 列舉（10 種來源）
-- `cardSubcategoryID` — 統一子類別 ID（取代舊版欄位）
-- `cardBrand` — 使用的信用卡品牌
-- `costPerMile` — 每哩成本（效率指標）
-- `programID` — 所屬里程計劃
-- `account` — 關聯到 `MileageAccount`
-
-**MileageSource 列舉：**
-
-| 值 | 說明 |
-|----|------|
-| `cardGeneral` | 一般刷卡 |
-| `cardAccelerator` | 加速類別 |
-| `taishinOverseas` | 台新海外 |
-| `taishinDesignated` | 台新指定 |
-| `flight` | 飛行累積 |
-| `promotion` | 促銷活動 |
-| `pointsConversion` | 點數轉換 |
-| `pointsTransfer` | 點數移轉 |
-| `specialMerchant` | 特約商店 |
-| `ticketRedemption` | 機票兌換（負值） |
-
----
-
-### `MileageAccount.swift` — 里程帳戶
-
-代表一個里程帳戶，追蹤目前里程數與活動狀態。
-
-**關鍵方法：**
-- `updateMiles(amount:date:)` — 增減里程並更新活動日期
-- `expiryDate()` — 計算過期日（最後交易後 18 個月）
-- `daysUntilExpiry()` — 距離過期剩餘天數
-- `latestActivityMonthText()` — 最後交易月份文字
-
-**關聯：** 包含 `transactions` 與 `flightGoals`
-
----
-
-### `FlightGoal.swift` — 飛行目標
-
-使用者期望兌換的航線/艙等。
-
-**主要欄位：** 出發/目的地 IATA 碼、艙等、所需里程、優先標記、排序順序
-
-**關鍵方法：**
-- `progress(currentMiles:)` — 回傳 0~1 進度比例
-- `milesNeeded(currentMiles:)` — 還差多少里程
-
-**CabinClass 列舉：** Economy / PremiumEconomy / Business / First
-
----
-
-### `RedeemedTicket.swift` — 已兌換機票
-
-記錄已成功兌換的飛行紀錄。
-
-**主要欄位：** 花費里程、稅金、航線資訊、PNR 編號、兌換日期、關聯交易 ID
-
----
-
-### `CreditCardRule.swift` — 信用卡規則（記憶體模型）
-
-**用途：** 在記憶體中表示信用卡的累哩規則，用於即時計算。
-
-**關鍵方法：**
-- `calculateMiles()` — 根據金額/來源/等級計算里程
-- `updateTier()` — 切換卡片等級並透過 Registry 更新費率
-
-**費率欄位：** `baseRate`、`acceleratorRate`、`specialMerchantRate`（元/哩）
-
----
-
-### `CardPreference.swift` — 信用卡偏好（持久化）
-
-輕量級 SwiftData 模型，用於 CloudKit 同步。
-
-**儲存內容：** 卡片啟用狀態、選擇的等級 ID
-
-> 注意：不儲存費率，費率由 `CardBrandRegistry` 的程式碼定義。
-
----
-
-### `MileageProgram.swift` — 里程計劃
-
-**用途：** 代表不同的里程計劃（Asia Miles、自訂）
-
-**MilageProgramType 列舉：** 包含圖示與是否支援國泰獎勵表
-
-**ActiveProgramManager：** 透過 UserDefaults 追蹤當前選擇的計劃
-
----
-
-## 信用卡系統
-
-### 架構說明
-
-信用卡系統採用 **Protocol + Registry** 模式，方便擴充新卡片品牌。
-
-```
-CardBrandDefinition (Protocol)
-    ├── CathayUnitedBankCard (實作)
-    └── TaishinCathayCard (實作)
-
-CardBrandRegistry (中央註冊表，靜態查詢)
-```
-
-### `CardBrandDefinition.swift` — Protocol
-
-定義信用卡品牌必須提供的介面：
-
-- `brandID`, `displayName`, `bankName`, `defaultTierID`
-- `tiers` — 各等級定義（費率、漸層、卡片圖片、福利）
-- `sourceMappings` — MileageSource 到卡片福利的對應
-- `rateSlots` — UI 顯示的費率欄位配置
-
-**支援類型：**
-- `CardTierDefinition` — 等級費率與視覺設定
-- `ResolvedCardRates` — 解析後的完整費率
-- `CardSpendingCategory` — 消費子類別
-- `CardMileageSourceMapping` — 來源對應規則
-- `CardRateSlot` — 費率顯示設定
-
-### `CathayUnitedBankCard.swift` — 國泰世華亞洲萬里通聯名卡
-
-| 等級 | 一般消費 | 加速類別 |
-|------|---------|---------|
-| 世界卡 | 22 元/哩 | 10 元/哩 |
-| 鈦商卡 | 25 元/哩 | 10 元/哩 |
-| 白金卡 | 30 元/哩 | 15 元/哩 |
-| 里享卡 | 30 元/哩 | 30 元/哩 |
-
-- 加速類別：海外、旅遊交通、日常消費、休閒娛樂
-- 生日月加倍：2.0x [⚠️尚未實作完成]
-
-### `TaishinCathayCard.swift` — 台新國泰航空聯名卡
-
-| 等級 | 一般消費 | 海外消費 | 指定消費 |
-|------|---------|---------|---------|
-| 世界卡 | 22 元/哩 | 15 元/哩 | 5 元/哩 |
-| 翱翔鈦金卡 | 25 元/哩 | 20 元/哩 | 5 元/哩 |
-| 鈦金卡 | 30 元/哩 | 25 元/哩 | 5 元/哩 |
-
-- 指定類別：4 種消費子分類
-
-### `CardBrandRegistry.swift` — 註冊表
-
-**關鍵靜態方法：**
-
-| 方法 | 用途 |
-|------|------|
-| `definition(for:)` | 查詢品牌定義 |
-| `brandForSource()` | 依來源自動選取品牌 |
-| `sourceMapping()` | 取得來源的費率對應 |
-| `spendingCategory()` | 查詢消費子類別 |
-| `rate()` | 計算實際費率（來源 + 卡片 + 等級） |
-
-### 如何新增一張信用卡
-
-1. 在 `Models/CardDefinitions/` 新增檔案（如 `NewBankCard.swift`）
-2. 建立 struct 實作 `CardBrandDefinition` protocol
-3. 定義 `brandID`、`tiers`、`sourceMappings`、`rateSlots`
-4. 在 `CardBrandRegistry.swift` 的 `allDefinitions` 陣列中加入新實例
-5. 若有新的 `MileageSource`，需在 `Transaction.swift` 的列舉中新增
-6. 在 `TransactionFormView.swift` 中確認新來源能被正確選取
-
----
-
-## 資料庫 (Database)
-
-### `CathayAwardChart.swift` — 國泰獎勵表計算
-
-**FlightCalculator：**
-
-| 方法 | 用途 |
-|------|------|
-| `determineZone(distance:destinationCode:)` | 判斷航線區域（6 種距離） |
-| `requiredMiles(zone:cabinClass:)` | 查詢所需里程 |
-| `isOneworld(route:)` | 判斷是否為寰宇一家夥伴航線 |
-| `popularRoutes()` | 取得常見航線目標 |
-
-**AwardZone：** ultraShortHaul / shortHaul1 / shortHaul2 / mediumHaul / longHaul / ultraLongHaul
-
-> 短程航線依目的地城市（日本/泰國等）分為兩個層級，寰宇一家夥伴航線多 20-30% 里程。
-
-### `AirportDatabase.swift` — 機場資料庫
-
-- `Airport` 結構：IATA 代碼、城市（中英文）、機場名稱、座標
-- `AirportDatabase.shared` 單例，預載約 100 個主要機場
-- 40+ 個熱門機場碼（TPE、HND、LAX、LHR 等）
-
----
-
-## ViewModel
-
-### `MileageViewModel.swift` — 主要狀態管理器
-
-使用 `@Observable` 宏，是整個 App 的核心狀態管理器。
-
-**主要狀態：**
-- `mileageAccount` — 目前帳戶
-- `programs` — 所有里程計劃
-- `activeProgram` — 當前選擇的計劃
-- `creditCards` — 記憶體中的信用卡定義（由 Registry + 偏好重建）
-- `transactions`, `flightGoals`, `redeemedTickets` — 當前計劃的資料
-- `hasRemoteChanges` — CloudKit 同步通知旗標
-
-**關鍵方法：**
-
-| 方法 | 用途 |
-|------|------|
-| `initialize(context:)` | 載入計劃、設定同步觀察者 |
-| `loadPrograms()` | 讀取計劃、處理重複、遷移未綁定資料 |
-| `switchProgram(to:)` | 切換計劃並重新載入資料 |
-| `addProgram(name:type:)` | 建立新里程計劃 |
-| `deleteProgram()` | 刪除計劃及所有關聯資料 |
-| `loadData()` | 依 programID 讀取帳戶/交易/目標 |
-| `rebuildCreditCards()` | 從 Registry + SwiftData 偏好重建信用卡列表 |
-| `addTransaction()` | 建立交易並更新帳戶里程 |
-| `addFlightGoal()` | 新增飛行目標（自動排序） |
-| `redeemGoal()` | 將目標轉為已兌換機票 |
-| `previewMiles()` | 預覽里程（不儲存，供 UI 即時顯示） |
-
-**CloudKit 同步邏輯：**
-- 監聽 `NSPersistentStoreRemoteChange` 通知
-- 1 秒防抖延遲避免頻繁重載
-- 資料指紋比對以偵測實際變更
-
----
-
-## 服務層 (Service)
-
-### `CloudBackupService.swift` — 雲端備份服務
-
-使用 `@Observable` 宏，提供手動備份/還原功能。
-
-**備份結構：** `MileryBackup`（Codable），包含帳戶、交易、目標、機票、信用卡偏好、計劃資訊。
-
-**關鍵方法：**
-
-| 方法 | 用途 |
-|------|------|
-| `checkiCloudStatus()` | 檢查 iCloud 帳號可用性 |
-| `createBackup()` | 序列化當前計劃為 JSON → 上傳 CloudKit |
-| `fetchBackupList()` | 使用 recordZoneChanges API 列出所有備份 |
-| `restoreFromBackup()` | 下載解碼 → 清空本地 → 重建資料 |
-
-**技術細節：**
-- 使用自訂 CloudKit Zone `MileryBackupZone`
-- JSON 格式：ISO8601 日期、Pretty Printed
-- 自動去重 `CardPreference` 記錄
-- 向後相容舊版 `CreditCardRule` 備份
-
-### `DeveloperAccessService.swift` — 開發者存取控制
-
-- 以 iCloud record name 的 SHA256 雜湊做身分驗證
-- 白名單存在 CloudKit 公開記錄：`DevAccessPolicy/main-dev-access-policy`
-- `verifyCurrentUserAccess()` 回傳 `.allowed` 或 `.denied`
-
----
-
-## App 圖示系統
-
-### 架構概觀
-
-App 圖示切換使用 iOS 的 `CFBundleAlternateIcons` 機制，由兩部分組成：
-
-1. **Bundle 內建 PNG**：放在 `AlternateIcons/` 資料夾，命名格式為 `{IconName}-60@2x.png`（120x120）和 `{IconName}-60@3x.png`（180x180）。iOS 會依 `CFBundleIconFiles` 中的 base name 自動匹配對應尺寸。
-2. **Asset Catalog 預覽圖**：放在 `Assets.xcassets/appicon/` 的 `.imageset` 中，供 `AppIconPickerView` 以 `UIImage(named:)` 載入作為 UI 預覽。
-
-> **注意**：`CFBundleAlternateIcons` 不支援從 Asset Catalog 的 `.appiconset` 讀取，必須使用獨立的 PNG 檔案。預設的 `AppIcon` 由 Asset Catalog 的 `.appiconset` 管理，不需要獨立 PNG。
-
-### `AppIconPickerView.swift`
-
-App 圖示選擇介面，提供：
-- 圖示預覽網格（3 欄）
-- 選中狀態勾選指示
-- 透過 `UIApplication.shared.setAlternateIconName()` 切換圖示
-
-**新增圖示步驟：**
-1. 準備 1024x1024 原圖
-2. 產生 120x120（`@2x`）和 180x180（`@3x`）PNG，放入 `AlternateIcons/`
-3. 在 `Assets.xcassets/appicon/` 建立對應的 `.imageset` 作為預覽圖
-4. 在 `Info.plist` 的 `CFBundleAlternateIcons` 加入新條目
-5. 在 `AppIconPickerView.swift` 的 `icons` 陣列加入新 `AppIconOption`
-
-### 目前可用圖示
-
-| ID | 顯示名稱 | Bundle 檔案 |
-|----|----------|-------------|
-| `AppIcon` | 預設 | Asset Catalog `.appiconset`（自動處理） |
-| `AppIcon-Blue-1` | 藍色 | `AppIcon-Blue-1-60@2x.png` / `@3x.png` |
-| `AppIcon-Dark-1` | 深色 | `AppIcon-Dark-1-60@2x.png` / `@3x.png` |
-
----
-
-## 畫面 (Views)
-
-### `MainTabView.swift` — 根導覽
-
-5 個 Tab 頁籤（儀表板、進度、帳本、里程碑、設定），每個 Tab 的可見性由 `@AppStorage` 控制。支援外觀模式切換（系統/亮色/暗色）。背景圖片啟用時自動強制 TabBar 背景顯示。
-
-### `DashboardView.swift` — 儀表板（Tab 1）
-
-- **英雄區塊：** 總里程顯示、到期日警告
-- **可兌換雷達：** 顯示哪些目標已有足夠里程
-- **夢想雷達：** 最接近目標的進度
-- **每月駕駛艙：** 本月累積里程
-- **近期動態：** 最新 3~5 筆交易
-- 20 秒自動檢查遠端變更
-
-### `ProgressView.swift` — 進度（Tab 2）
-
-- 半圓形進度指示器（釘選目標）
-- 所有目標列表（釘選優先）
-- 拖拉排序、新增/編輯目標
-
-### `LedgerView.swift` — 帳本（Tab 3）
-
-- 月份選擇器與導覽
-- 統計：月度總計、分類統計
-- 交易列表（含排序）
-- 新增/編輯交易
-
-### `MilestonesView.swift` — 里程碑（Tab 4）
-
-- 地圖顯示：已兌換（藍色）、可兌換（橘色）、未完成（橘色虛線）航線
-- 航線統計
-- 記錄機票互動
-
-### `SettingsView.swift` — 設定（Tab 5）
-
-- 外觀設定、背景桌布選擇、App 圖示切換、信用卡管理、使用者偏好
-- 通知設定、雲端備份、同步開關
-- 開發者存取、App 資訊與版本歷史
-
-### `TransactionFormView.swift` — 記帳表單
-
-共用的交易輸入表單，流程如下：
-
-1. 選擇交易類型（信用卡 vs 非信用卡）
-2. 選擇信用卡（若為信用卡模式）
-3. 選擇來源（依品牌顯示可用選項）
-4. 選擇子類別（若該來源需要）
-5. 輸入金額或里程
-6. 即時預覽計算結果（透過 `previewMiles()`）
-
-### `CreditCardPageView.swift` — 信用卡管理
-
-列出所有已註冊的信用卡品牌，可切換等級、啟用/停用、查看費率。儲存偏好至 `CardPreference`。
-
-### 其他畫面
-
-| 檔案 | 用途 |
-|------|------|
-| `EditTransactionView.swift` | 編輯/刪除交易 |
-| `CloudBackupView.swift` | 備份狀態、備份/還原操作 |
-| `OnboardingView.swift` | 首次啟動 9 頁引導（含卡片、主題、通知與同步設定） |
-| `AllGoalsView.swift` | 完整目標清單 Modal |
-| `CalculatorComponents.swift` | 可重用元件（`SourceButton`、`CompactCardRow`） |
-| `CalculatorLedgerView.swift` | 計算器帳本 |
-| `AppBackgroundView.swift` | 統一背景元件（漸層 + 純色 + 圖片 + 可讀性遮罩） |
-| `BackgroundPickerView.swift` | 背景選擇器（預設漸層 + 純色 + 預設桌布 + 自訂圖片裁切） |
-| `NotificationSettingsView.swift` | 通知設定（主開關 + 各項通知開關） |
-| `AppIconPickerView.swift` | App 圖示切換選擇器 |
-
----
-
-## 開發者工具 (DevViews)
-
-需通過 `DeveloperAccessService` 驗證才能存取。
-
-| 檔案 | 用途 |
-|------|------|
-| `DataManagementView.swift` | 各模型數量統計、CloudKit 狀態、安全清理（重複帳戶、孤立資料、舊版 CreditCardRule） |
-| `CloudKitAdvancedView.swift` | CloudKit 記錄檢視 |
-| `ConsoleLogView.swift` | 查看 App 日誌（來自 `AppConsoleStore`） |
-| `AirportListView.swift` | 瀏覽/搜尋機場資料庫 |
-| `ProgramSwitcherView.swift` | 管理多個里程計劃 |
-| `TabVisibilitySettingsView.swift` | 切換 MainTab 的可見性 |
-
-### Onboarding 測試重置按鈕
-
-為了方便測試首次引導流程，開發者模式提供「重置已讀 Onboarding」入口：
-
-1. 進入 `SettingsView`。
-2. 在「開發中頁面」點選「重新觸發 Onboarding」。
-3. 系統會將 `hasCompletedOnboarding` 設為 `false`。
-4. 並馬上顯示頁面，若未完成所有流程下次重啟後一樣進入Onboarding。
----
-
-## 資料儲存與同步
-
-### SwiftData + CloudKit
-
-- 本地 SQLite 資料庫（App Documents 資料夾）
-- CloudKit 私人資料庫（`iCloud.com.73app.milery`）
-- 自動同步由 `NSPersistentCloudKitContainer` 處理
-
-## Onboarding 開發者跳過
-- 開發者可於Onboarding第一頁長按下一步，做驗證跳過Guide。
-
-### UserDefaults 儲存項目
-
-| Key | 類型 | 說明 |
-|-----|------|------|
-| `cloudKitSyncEnabled` | Bool | 同步主開關 |
-| `userColorScheme` | String | 外觀偏好 |
-| `userName` | String | 使用者名稱 |
-| `preferredOrigin` | String | 偏好出發機場 |
-| `hasCompletedOnboarding` | Bool | 首次引導是否完成 |
-| `tabVisible_*` | Bool | 各 Tab 可見性 |
-| `lastBackupDate` | Date | 最後備份時間 |
-| `activeMileageProgramID` | UUID | 當前計劃 ID |
-| `backgroundSelection` | String (RawRepresentable) | 背景選擇（none / preset / custom / solidColor） |
-| `enableNotifications` | Bool | 通知主開關 |
-| `notifyMilesExpiry` | Bool | 里程到期提醒 |
-| `notifyRedemptionReady` | Bool | 可兌換通知 |
+1. App 啟動建立 CloudKit-backed ModelContainer
+2. 監聽 `NSPersistentStoreRemoteChange`
+3. 防抖後重新載入並比對指紋
+4. 有變更才刷新 UI
 
 ### 手動備份
 
-- CloudKit 自訂 Zone：`MileryBackupZone`
-- 備份格式：JSON（CKAsset 附件）
-- 每個備份以 programID 過濾，僅包含該計劃的資料
+1. 取出當前 program 的帳戶/交易/目標/機票/偏好
+2. 序列化為 `MileryBackup`
+3. 上傳 CloudKit 私有資料庫
+
+### 手動還原
+
+1. 下載備份 JSON
+2. 解碼並清除當前計畫資料
+3. 重建 SwiftData 模型並存檔
 
 ---
 
-## 常見操作流程
+## 測試策略與現況
 
-### 新增一筆信用卡交易
+### 目前現況
 
-```
-使用者 → Ledger → 新增按鈕
-    → TransactionFormView
-    → 選擇「信用卡消費」
-    → 選擇信用卡
-    → TransactionFormView 查詢 CardBrandRegistry 取得可用 sourceMappings
-    → 選擇來源（如 cardAccelerator）
-    → 選擇子類別（如「海外」）
-    → 輸入金額
-    → previewMiles() 即時計算：金額 / 費率 = 里程
-    → 確認 → viewModel.addTransaction()
-    → 建立 Transaction + 更新 MileageAccount
-    → CloudKit 自動同步
-```
+- 已有 `mileryTests/` 目標與測試檔
+- 現有檔案多為 placeholder
 
-### 切換里程計劃
+### 優先補齊清單
 
-```
-Settings → 里程計劃 → 選擇計劃
-    → viewModel.switchProgram(to:)
-    → 更新 ActiveProgramManager（UserDefaults）
-    → loadData() 依 programID 過濾
-    → 重設資料指紋
-    → 所有畫面重新渲染
-```
+- `CreditCardRule.calculateMiles()`
+  - 不同費率來源、生日月加碼、進位模式
+- `FlightCalculator.determineZone()`
+  - 短程 1 / 2 關鍵分流
+- `MileageAccount.expiryDate()`
+  - 無交易與有交易兩種基準日期
+- `CloudBackupService` 序列化往返
+  - encode -> decode -> rebuild 資料一致性
 
-### 重新測試 Onboarding
+### 建議執行方式
 
-```
-Settings（開發者模式） → 重新觸發 Onboarding
-    → hasCompletedOnboarding = false
-    → 重新啟動 App
-    → 顯示 OnboardingView（完整首次引導流程）
-```
+- Xcode Test Navigator 跑 `mileryTests`
+- CI 或本地 CLI：
 
-### 雲端備份與還原
-
-```
-備份：
-    Settings → 雲端備份 → 備份到 iCloud
-    → CloudBackupService.createBackup()
-    → 依 activeProgram.id 過濾資料
-    → 序列化為 JSON → CKRecord + CKAsset
-    → 上傳至 MileryBackupZone
-
-還原：
-    選擇備份 → 確認還原
-    → 下載 CKAsset → 解碼 JSON
-    → 清空當前計劃所有資料
-    → 從備份重建所有模型
-    → CloudKit 傳播至其他裝置
+```bash
+xcodebuild test -project milery.xcodeproj -scheme milery -destination 'platform=iOS Simulator,name=iPhone 16'
 ```
 
 ---
 
-## 新增 / 更新指南
+## 已知風險與技術債
+
+### 1. 金額精度風險
+
+目前金額欄位為 `Double` 存儲、`Decimal` 對外運算，存在轉換誤差風險。後續可評估：
+
+- 方案 A：改為 `Int`（分）
+- 方案 B：保留 SwiftData 欄位但增加精度保護策略（輸入正規化 + 四捨五入規則）
+
+### 2. ViewModel 規模仍偏大
+
+雖已 extension 拆分，但仍屬單一核心物件。後續可再拆：
+
+- `ProgramManager`
+- `TransactionService`
+- `GoalService`
+- `CardPreferenceManager`
+- `SyncCoordinator`
+
+### 3. 錯誤處理一致性
+
+目前已從關鍵存檔路徑回報錯誤，但仍需持續減少 `try?` 在核心流程的使用，避免靜默失敗。
+
+---
+
+## 日常維護清單
 
 ### 新增信用卡品牌
 
-1. 建立新檔案 `Models/CardDefinitions/XXXCard.swift`
-2. 實作 `CardBrandDefinition` protocol
-3. 在 `CardBrandRegistry.allDefinitions` 加入新實例
-4. 若需新的 `MileageSource`，更新 `Transaction.swift` 列舉
-5. 更新 `TransactionFormView` 確保新來源可被選取
-6. 若需卡片圖片，加入 `Assets.xcassets`
+1. 在 `Models/CardDefinitions/` 新增 definition
+2. 註冊至 `CardBrandRegistry`
+3. 補齊來源映射與等級費率
+4. 驗證 `TransactionFormView` 可選取
+
+### 新增里程計畫
+
+1. 擴充 `MilageProgramType`
+2. 於設定頁面新增建立/切換流程
+3. 確認 `loadData()` 的 `programID` 過濾邏輯
 
 ### 新增資料模型
 
-1. 在 `Models/` 建立新 SwiftData `@Model` class
-2. 在 `MileryApp.swift` 的 Schema 陣列加入新類型
-3. 在 `MileageViewModel` 加入對應的 CRUD 方法
-4. 在 `CloudBackupService.MileryBackup` 加入新欄位以支援備份
-5. 更新備份版本號（如有破壞性變更）
+1. 新增 `@Model`
+2. 更新 `MileryApp.swift` Schema
+3. 更新備份結構 `MileryBackup`
+4. 補齊遷移與測試
 
-### 新增畫面 (View)
+### 新增主頁功能
 
-1. 在 `Views/` 建立新的 SwiftUI View
-2. 遵循 `AviationTheme` 設計系統
-3. 透過 `@Environment(MileageViewModel.self)` 取得 ViewModel
-4. 若為主頁面，在 `MainTabView` 加入新 Tab 並設定 `@AppStorage` 控制
-5. 若為子頁面，在對應的父 View 加入導覽
-6. 若需背景感知，加入 `hasBackgroundImage` 計算屬性（僅 `.preset`/`.custom` 回傳 `true`）
-
-### 新增替代 App 圖示
-
-1. 準備 1024x1024 原圖
-2. 使用 `sips -z 120 120` 和 `sips -z 180 180` 產生 `@2x` 和 `@3x` PNG
-3. 將 PNG 放入 `AlternateIcons/` 並加入 Xcode 專案的 Copy Bundle Resources
-4. 在 `Assets.xcassets/appicon/` 建立 `.imageset` 作為預覽圖
-5. 在 `Info.plist` 的 `CFBundleAlternateIcons` 加入新圖示條目
-6. 在 `AppIconPickerView.swift` 的 `icons` 陣列加入新 `AppIconOption`
-
-### 更新獎勵表
-
-1. 修改 `Database/CathayAwardChart.swift` 中的 `requiredMiles()` 查表
-2. 必要時更新 `AwardZone` 列舉
-3. 更新 `popularRoutes()` 熱門航線
-
-### 更新機場資料
-
-1. 修改 `Database/airports.csv` 或直接編輯 `AirportDatabase.swift`
-2. 更新 `popularAirportCodes` 陣列
+1. 在 `Views/` 實作畫面
+2. 若需全域狀態，擴充 ViewModel extension（依責任）
+3. 走一輪 CloudKit + 備份還原驗證
 
 ---
 
-## 使用的框架與依賴
+如需了解上線流程、版本紀錄、或資料遷移實作細節，建議先從：
 
-| 框架 | 用途 |
-|------|------|
-| **SwiftUI** | UI 框架 |
-| **SwiftData** | 資料持久化 + CloudKit 同步 |
-| **CloudKit** | iCloud 同步與備份儲存 |
-| **MapKit** | 里程碑地圖顯示 |
-| **CoreLocation** | 機場座標資料 |
-| **CryptoKit** | SHA256 雜湊（開發者驗證） |
-| **PhotosUI** | 自訂背景圖片選取（`PhotosPicker`） |
+- `MileryApp.swift`
+- `ViewModels/MileageViewModel+Program.swift`
+- `Service/CloudBackupService.swift`
 
----
-
-## 設計模式
-
-| 模式 | 應用 |
-|------|------|
-| **MVVM** | `MileageViewModel` (@Observable) + Views |
-| **Singleton** | `AppConsoleStore`, `AirportDatabase`, `DeveloperAccessService`, `ActiveProgramManager` |
-| **Registry** | `CardBrandRegistry` 動態信用卡配置 |
-| **Protocol** | `CardBrandDefinition` 可擴充的信用卡支援 |
-| **Computed Properties** | `Transaction.amount`、`MileageAccount.expiryDate()` |
-| **Relationship** | SwiftData `@Relationship` 帳戶 ↔ 交易關聯 |
-| **Conditional Modifier** | 背景感知可讀性增強（`hasBackgroundImage` 條件式 UI 調整，僅圖片背景觸發） |
+三個檔案開始閱讀。
