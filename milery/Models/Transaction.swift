@@ -33,8 +33,8 @@ final class Transaction {
     var account: MileageAccount?
 
     var amount: Decimal {
-        get { NSDecimalNumber(value: amountValue).decimalValue }
-        set { amountValue = NSDecimalNumber(decimal: newValue).doubleValue }
+        get { Decimal(string: String(amountValue)) ?? Decimal(amountValue) }
+        set { amountValue = (newValue as NSDecimalNumber).doubleValue }
     }
 
     var source: MileageSource {
@@ -99,7 +99,7 @@ final class Transaction {
          linkedTicketID: UUID? = nil) {
         self.id = UUID()
         self.date = date
-        self.amountValue = NSDecimalNumber(decimal: amount).doubleValue
+        self.amountValue = (amount as NSDecimalNumber).doubleValue
         self.earnedMiles = earnedMiles
         self.sourceRaw = source.rawValue
         self.cardSubcategoryID = subcategoryID

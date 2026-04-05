@@ -48,23 +48,23 @@ final class CreditCardRule {
     var annualFee: Int = 0
 
     var baseRate: Decimal {
-        get { NSDecimalNumber(value: baseRateValue).decimalValue }
-        set { baseRateValue = NSDecimalNumber(decimal: newValue).doubleValue }
+        get { Decimal(string: String(baseRateValue)) ?? Decimal(baseRateValue) }
+        set { baseRateValue = (newValue as NSDecimalNumber).doubleValue }
     }
 
     var acceleratorRate: Decimal {
-        get { NSDecimalNumber(value: acceleratorRateValue).decimalValue }
-        set { acceleratorRateValue = NSDecimalNumber(decimal: newValue).doubleValue }
+        get { Decimal(string: String(acceleratorRateValue)) ?? Decimal(acceleratorRateValue) }
+        set { acceleratorRateValue = (newValue as NSDecimalNumber).doubleValue }
     }
 
     var specialMerchantRate: Decimal {
-        get { NSDecimalNumber(value: specialMerchantRateValue).decimalValue }
-        set { specialMerchantRateValue = NSDecimalNumber(decimal: newValue).doubleValue }
+        get { Decimal(string: String(specialMerchantRateValue)) ?? Decimal(specialMerchantRateValue) }
+        set { specialMerchantRateValue = (newValue as NSDecimalNumber).doubleValue }
     }
 
     var birthdayMultiplier: Decimal {
-        get { NSDecimalNumber(value: birthdayMultiplierValue).decimalValue }
-        set { birthdayMultiplierValue = NSDecimalNumber(decimal: newValue).doubleValue }
+        get { Decimal(string: String(birthdayMultiplierValue)) ?? Decimal(birthdayMultiplierValue) }
+        set { birthdayMultiplierValue = (newValue as NSDecimalNumber).doubleValue }
     }
 
     var roundingMode: RoundingMode {
@@ -92,10 +92,10 @@ final class CreditCardRule {
         self.id = UUID()
         self.cardName = cardName
         self.bankName = bankName
-        self.baseRateValue = NSDecimalNumber(decimal: baseRate).doubleValue
-        self.acceleratorRateValue = NSDecimalNumber(decimal: acceleratorRate).doubleValue
-        self.specialMerchantRateValue = NSDecimalNumber(decimal: specialMerchantRate).doubleValue
-        self.birthdayMultiplierValue = NSDecimalNumber(decimal: birthdayMultiplier).doubleValue
+        self.baseRateValue = (baseRate as NSDecimalNumber).doubleValue
+        self.acceleratorRateValue = (acceleratorRate as NSDecimalNumber).doubleValue
+        self.specialMerchantRateValue = (specialMerchantRate as NSDecimalNumber).doubleValue
+        self.birthdayMultiplierValue = (birthdayMultiplier as NSDecimalNumber).doubleValue
         self.roundingModeRaw = roundingMode.rawValue
         self.billingDay = billingDay
         self.annualFee = annualFee

@@ -4,4 +4,23 @@
    <FileRef
       location = "self:">
    </FileRef>
+   <Group
+      location = "group:mileryTests"
+      name = "mileryTests">
+      <FileRef
+         location = "group:FlightCalculatorTests.swift">
+      </FileRef>
+      <FileRef
+         location = "group:CreditCardRuleTests.swift">
+      </FileRef>
+      <FileRef
+         location = "group:FlightGoalTests.swift">
+      </FileRef>
+      <FileRef
+         location = "group:MileageAccountTests.swift">
+      </FileRef>
+      <FileRef
+         location = "group:AirportDatabaseTests.swift">
+      </FileRef>
+   </Group>
 </Workspace>

@@ -23,6 +23,11 @@ struct LedgerView: View {
         }
     }
     
+    /// 預先排序的交易列表（避免在 ForEach 內重複排序）
+    var sortedTransactions: [Transaction] {
+        filteredTransactions.sorted { $0.date > $1.date }
+    }
+    
     // 按類別統計（子類別再細分）
     var categoryStats: [(source: MileageSource, subcategoryID: String?, amount: Decimal, miles: Int)] {
         struct GroupKey: Hashable {
@@ -213,10 +218,10 @@ struct LedgerView: View {
                             }
                         } else {
                             List {
-                                ForEach(Array(filteredTransactions.sorted(by: { $0.date > $1.date }).enumerated()), id: \.element.id) { index, transaction in
+                                ForEach(Array(sortedTransactions.enumerated()), id: \.element.id) { index, transaction in
                                     let showDate = index == 0 || !Calendar.current.isDate(
                                         transaction.date,
-                                        inSameDayAs: filteredTransactions.sorted(by: { $0.date > $1.date })[index - 1].date
+                                        inSameDayAs: sortedTransactions[index - 1].date
                                     )
                                     
                                     // 日期卡片（獨立顯示，不支援滑動刪除）
@@ -290,21 +295,6 @@ struct LedgerView: View {
         }
     }
     
-    // 將交易按日期分組
-    func groupedTransactions() -> [(Date, [Transaction])] {
-        let grouped = Dictionary(grouping: filteredTransactions) { transaction in
-            Calendar.current.startOfDay(for: transaction.date)
-        }
-        return grouped.sorted { $0.key > $1.key }
-    }
-    
-    // 刪除交易
-    func deleteTransactions(at offsets: IndexSet, from transactions: [Transaction]) {
-        for index in offsets {
-            let transaction = transactions[index]
-            viewModel.deleteTransaction(transaction)
-        }
-    }
 }
 
 // MARK: - 精簡版類別統計列（用於統計卡片右側）
