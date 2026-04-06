@@ -3,29 +3,133 @@ import SwiftData
 import UserNotifications
 import UIKit
 
-// MARK: - 浮動粒子視圖（幾何圓點，非 emoji）
-struct FloatingParticlesView: View {
-    let colorScheme: ColorScheme
+// MARK: - Onboarding 專屬配色（淡金色 + 大地棕色）
+private enum OnboardingPalette {
+    // App 主色：淡金黃 #F4EFE5 + 大地棕 / 咖啡色，並支援深色模式
+    private static func dynamic(light: UIColor, dark: UIColor) -> Color {
+        Color(
+            UIColor { trait in
+                trait.userInterfaceStyle == .dark ? dark : light
+            }
+        )
+    }
+
+    static let earthBrown = dynamic(
+        light: UIColor(red: 0.36, green: 0.27, blue: 0.20, alpha: 1),
+        dark: UIColor(red: 0.86, green: 0.77, blue: 0.65, alpha: 1)
+    )
+    static let warmBrown = dynamic(
+        light: UIColor(red: 0.50, green: 0.38, blue: 0.28, alpha: 1),
+        dark: UIColor(red: 0.78, green: 0.67, blue: 0.54, alpha: 1)
+    )
+    static let darkBrown = dynamic(
+        light: UIColor(red: 0.27, green: 0.20, blue: 0.15, alpha: 1),
+        dark: UIColor(red: 0.18, green: 0.14, blue: 0.11, alpha: 1)
+    )
+
+    // 淡金強調
+    static let accent = dynamic(
+        light: UIColor(red: 0.79, green: 0.64, blue: 0.42, alpha: 1),
+        dark: UIColor(red: 0.88, green: 0.73, blue: 0.49, alpha: 1)
+    )
+    static let accentBright = dynamic(
+        light: UIColor(red: 0.85, green: 0.70, blue: 0.48, alpha: 1),
+        dark: UIColor(red: 0.94, green: 0.81, blue: 0.60, alpha: 1)
+    )
+
+    // 背景漸層：淺色以 #F4EFE5 為核心；深色改為暖咖啡夜景
+    static let bgTop = dynamic(
+        light: UIColor(red: 0.96, green: 0.94, blue: 0.90, alpha: 1),
+        dark: UIColor(red: 0.20, green: 0.16, blue: 0.12, alpha: 1)
+    )
+    static let bgBottom = dynamic(
+        light: UIColor(red: 0.91, green: 0.86, blue: 0.78, alpha: 1),
+        dark: UIColor(red: 0.14, green: 0.11, blue: 0.08, alpha: 1)
+    )
+
+    // 文字：淺色改深咖啡，提升 liquid glass 上可讀性
+    static let titleText = dynamic(
+        light: UIColor(red: 0.27, green: 0.20, blue: 0.15, alpha: 1),
+        dark: UIColor(red: 0.96, green: 0.93, blue: 0.88, alpha: 1)
+    )
+    static let bodyText = dynamic(
+        light: UIColor(red: 0.36, green: 0.28, blue: 0.21, alpha: 1),
+        dark: UIColor(red: 0.90, green: 0.84, blue: 0.76, alpha: 1)
+    )
+    static let captionText = dynamic(
+        light: UIColor(red: 0.45, green: 0.36, blue: 0.28, alpha: 1),
+        dark: UIColor(red: 0.76, green: 0.68, blue: 0.59, alpha: 1)
+    )
+
+    // glass 按鈕文字顏色：淺色用深棕，深色用暖白
+    static let glassButtonText = dynamic(
+        light: UIColor(red: 0.23, green: 0.17, blue: 0.12, alpha: 1),
+        dark: UIColor(red: 0.98, green: 0.95, blue: 0.90, alpha: 1)
+    )
+
+    static let pageIndicatorInactive = dynamic(
+        light: UIColor(red: 0.50, green: 0.39, blue: 0.29, alpha: 0.35),
+        dark: UIColor(red: 0.93, green: 0.86, blue: 0.74, alpha: 0.30)
+    )
+}
+
+// MARK: - iOS 風格大圓漸層背景
+struct OnboardingBlobBackground: View {
     @State private var phase = false
 
     var body: some View {
-        Canvas { context, size in
-            let t = phase ? 1.0 : 0.0
-            for i in 0..<15 {
-                let seed = Double(i)
-                let baseX = size.width * ((seed * 0.618).truncatingRemainder(dividingBy: 1.0))
-                let baseY = size.height * ((seed * 0.381).truncatingRemainder(dividingBy: 1.0))
-                let dx = sin(seed * 1.3 + t * .pi * 2) * 12
-                let dy = cos(seed * 0.9 + t * .pi * 2) * 18
-                let r = 2.5 + (seed.truncatingRemainder(dividingBy: 3)) * 1.5
-                let alpha = 0.12 + (seed.truncatingRemainder(dividingBy: 4)) * 0.06
-                let rect = CGRect(x: baseX + dx - r, y: baseY + dy - r, width: r * 2, height: r * 2)
-                context.fill(Circle().path(in: rect),
-                             with: .color(AviationTheme.Colors.cathayJade.opacity(alpha)))
+        GeometryReader { geo in
+            let w = geo.size.width
+            let h = geo.size.height
+
+            ZStack {
+                // 底色漸層
+                LinearGradient(
+                    colors: [OnboardingPalette.bgTop, OnboardingPalette.bgBottom],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+
+                // 大圓 1：左上方，較亮的暖光
+                Circle()
+                    .fill(
+                        RadialGradient(
+                            colors: [
+                                OnboardingPalette.accent.opacity(0.38),
+                                Color.clear
+                            ],
+                            center: .center,
+                            startRadius: 40,
+                            endRadius: w * 0.55
+                        )
+                    )
+                    .frame(width: w * 1.2, height: w * 1.2)
+                    .offset(x: -w * 0.30, y: -h * 0.18)
+                    .scaleEffect(phase ? 1.03 : 0.97)
+
+                // 大圓 2：右下方，深棕色沉穩
+                Circle()
+                    .fill(
+                        RadialGradient(
+                            colors: [
+                                OnboardingPalette.darkBrown.opacity(0.40),
+                                Color.clear
+                            ],
+                            center: .center,
+                            startRadius: 30,
+                            endRadius: w * 0.50
+                        )
+                    )
+                    .frame(width: w * 1.1, height: w * 1.1)
+                    .offset(x: w * 0.25, y: h * 0.25)
+                    .scaleEffect(phase ? 0.97 : 1.03)
             }
         }
+        .ignoresSafeArea()
         .onAppear {
-            withAnimation(.linear(duration: 6).repeatForever(autoreverses: true)) { phase = true }
+            withAnimation(.easeInOut(duration: 10).repeatForever(autoreverses: true)) {
+                phase = true
+            }
         }
         .allowsHitTesting(false)
     }
@@ -52,84 +156,20 @@ struct PulseRingView: View {
     }
 }
 
-// MARK: - 歡迎頁英雄動畫視圖
+// MARK: - 歡迎頁 Logo 視圖
 struct WelcomeHeroAnimationView: View {
     @State private var isAnimating = false
-    
+
     var body: some View {
-        ZStack {
-            // 中心擴散的漸層光暈
-            Circle()
-                .fill(
-                    RadialGradient(
-                        gradient: Gradient(colors: [
-                            AviationTheme.Colors.cathayJade.opacity(0.4),
-                            Color.clear
-                        ]),
-                        center: .center,
-                        startRadius: 20,
-                        endRadius: 90
-                    )
-                )
-                .frame(width: 180, height: 180)
-                .scaleEffect(isAnimating ? 1.15 : 0.85)
-                .opacity(isAnimating ? 1 : 0.6)
-                .animation(.easeInOut(duration: 3).repeatForever(autoreverses: true), value: isAnimating)
-
-            // 外圍點狀飛行軌道
-            Circle()
-                .stroke(
-                    LinearGradient(
-                        colors: [AviationTheme.Colors.cathayJade, AviationTheme.Colors.cathayJade.opacity(0.1)],
-                        startPoint: .top,
-                        endPoint: .bottom
-                    ),
-                    style: StrokeStyle(lineWidth: 2, lineCap: .round, lineJoin: .round, dash: [6, 12])
-                )
-                .frame(width: 130, height: 130)
-                .rotationEffect(.degrees(isAnimating ? 360 : 0))
-                .animation(.linear(duration: 12).repeatForever(autoreverses: false), value: isAnimating)
-
-            // 中心實線裝飾軌道
-            Circle()
-                .stroke(AviationTheme.Colors.cathayJade.opacity(0.2), lineWidth: 1)
-                .frame(width: 75, height: 75)
-                .scaleEffect(isAnimating ? 1.05 : 0.95)
-                .animation(.easeInOut(duration: 4).repeatForever(autoreverses: true), value: isAnimating)
-
-            // 轉圈圈的飛機群組
-            ZStack {
-                // 飛機拖尾粒子
-                Circle()
-                    .fill(AviationTheme.Colors.cathayJade.opacity(0.8))
-                    .frame(width: 4, height: 4)
-                    .offset(x: -8, y: 15)
-                    .blur(radius: 2)
-
-                Image("73") 
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: 70, height: 70) // 放大一倍
-                    .rotationEffect(.degrees(10)) 
+        Image("milery_logo_no_bg")
+            .resizable()
+            .scaledToFit()
+            .frame(width: 150, height: 150)
+            .scaleEffect(isAnimating ? 1.03 : 0.97)
+            .animation(.easeInOut(duration: 3).repeatForever(autoreverses: true), value: isAnimating)
+            .onAppear {
+                isAnimating = true
             }
-            .offset(y: -65) // 在軌道上 半徑是 65
-            .rotationEffect(.degrees(isAnimating ? 360 : 0))
-            .animation(.linear(duration: 6).repeatForever(autoreverses: false), value: isAnimating)
-
-            // 中央主要 Icon
-            Image(systemName: "globe.asia.australia.fill")
-                .resizable()
-                .scaledToFit()
-                .frame(width: 52, height: 52)
-                .foregroundColor(AviationTheme.Colors.cathayJade)
-                .shadow(color: AviationTheme.Colors.cathayJade.opacity(0.5), radius: 8, x: 0, y: 4)
-                .scaleEffect(isAnimating ? 1.05 : 0.95)
-                .animation(.easeInOut(duration: 3).repeatForever(autoreverses: true), value: isAnimating)
-        }
-        .frame(width: 180, height: 180)
-        .onAppear {
-            isAnimating = true
-        }
     }
 }
 
@@ -253,15 +293,8 @@ struct OnboardingView: View {
     
     var body: some View {
         ZStack {
-            AviationTheme.Gradients.dashboardBackground(colorScheme)
-                .ignoresSafeArea()
-            
-            // 歡迎頁浮動粒子（只在第 0 頁顯示）
-            if currentPage == 0 {
-                FloatingParticlesView(colorScheme: colorScheme)
-                    .ignoresSafeArea()
-                    .transition(.opacity)
-            }
+            // 所有 Onboarding 頁面統一使用大地色圓形漸層背景
+            OnboardingBlobBackground()
             
             VStack(spacing: 0) {
                 // Page indicator（動態膠囊，帶彈性動畫）
@@ -269,10 +302,10 @@ struct OnboardingView: View {
                     ForEach(0..<totalPages, id: \.self) { index in
                         Capsule()
                             .fill(index == currentPage
-                                  ? AviationTheme.Colors.cathayJade
-                                  : AviationTheme.Colors.tertiaryText(colorScheme).opacity(0.3))
+                                  ? OnboardingPalette.accentBright
+                                  : OnboardingPalette.pageIndicatorInactive)
                             .frame(width: index == currentPage ? 24 : 6, height: 6)
-                            .shadow(color: index == currentPage ? AviationTheme.Colors.cathayJade.opacity(0.4) : .clear, radius: 4)
+                            .shadow(color: index == currentPage ? OnboardingPalette.accent.opacity(0.5) : .clear, radius: 4)
                             .animation(.spring(response: 0.4, dampingFraction: 0.7), value: currentPage)
                     }
                 }
@@ -369,48 +402,35 @@ struct OnboardingView: View {
     
     // MARK: - Page 1: WELCOME
     private var welcomePage: some View {
-        VStack(spacing: AviationTheme.Spacing.xl) {
+        VStack(spacing: 0) {
             Spacer()
-            
+
+            // Logo
             WelcomeHeroAnimationView()
-            
-            VStack(spacing: AviationTheme.Spacing.md) {
+
+            Spacer()
+                .frame(height: AviationTheme.Spacing.lg)
+
+            // 標題區域
+            VStack(spacing: AviationTheme.Spacing.sm) {
                 Text("歡迎使用 Milery")
-                    .font(AviationTheme.Typography.largeTitle)
-                    .foregroundColor(AviationTheme.Colors.primaryText(colorScheme))
-                
+                    .font(.system(size: 30, weight: .bold, design: .rounded))
+                    .foregroundColor(OnboardingPalette.titleText)
+
                 Text("您的里程管理助手")
                     .font(AviationTheme.Typography.title3)
-                    .foregroundColor(AviationTheme.Colors.secondaryText(colorScheme))
+                    .foregroundColor(OnboardingPalette.bodyText)
+
+                Text("簡單 · 直覺 · 掌握每一哩")
+                    .font(AviationTheme.Typography.subheadline)
+                    .foregroundColor(OnboardingPalette.bodyText.opacity(0.8))
+                    .padding(.top, 2)
             }
-            
-            VStack(spacing: AviationTheme.Spacing.md) {
-                featureRow(icon: "chart.line.uptrend.xyaxis", title: "追蹤里程累積進度")
-                featureRow(icon: "creditcard.fill", title: "信用卡哩程計算")
-                featureRow(icon: "ticket.fill", title: "兌換機票目標規劃")
-                featureRow(icon: "icloud.fill", title: "iCloud 跨裝置同步")
-            }
-            .padding(.horizontal, AviationTheme.Spacing.xl)
-            
+
             Spacer()
             Spacer()
         }
         .padding(.horizontal, AviationTheme.Spacing.md)
-    }
-    
-    private func featureRow(icon: String, title: String) -> some View {
-        HStack(spacing: 16) {
-            Image(systemName: icon)
-                .font(.title3)
-                .foregroundColor(AviationTheme.Colors.cathayJade)
-                .frame(width: 32)
-            
-            Text(title)
-                .font(AviationTheme.Typography.body)
-                .foregroundColor(AviationTheme.Colors.primaryText(colorScheme))
-            
-            Spacer()
-        }
     }
     
     // MARK: - Page 2: 里程計劃選擇
@@ -421,15 +441,15 @@ struct OnboardingView: View {
             VStack(spacing: AviationTheme.Spacing.sm) {
                 Image(systemName: "airplane.departure")
                     .font(.system(size: 48))
-                    .foregroundColor(AviationTheme.Colors.cathayJade)
+                    .foregroundColor(OnboardingPalette.accent)
                 
                 Text("選擇里程計劃")
                     .font(AviationTheme.Typography.title2)
-                    .foregroundColor(AviationTheme.Colors.primaryText(colorScheme))
+                    .foregroundColor(OnboardingPalette.titleText)
                 
                 Text("您主要累積哪個航空里程計劃？")
                     .font(AviationTheme.Typography.subheadline)
-                    .foregroundColor(AviationTheme.Colors.secondaryText(colorScheme))
+                    .foregroundColor(OnboardingPalette.bodyText)
             }
             
             VStack(spacing: AviationTheme.Spacing.md) {
@@ -455,20 +475,20 @@ struct OnboardingView: View {
                 Image(systemName: programType.icon)
                     .font(.title2)
                     .foregroundColor(selectedProgramType == programType
-                                    ? AviationTheme.Colors.cathayJade
-                                    : AviationTheme.Colors.secondaryText(colorScheme))
+                                    ? OnboardingPalette.accent
+                                    : OnboardingPalette.bodyText)
                     .frame(width: 36)
                 
                 VStack(alignment: .leading, spacing: 4) {
                     Text(programType.rawValue)
                         .font(AviationTheme.Typography.headline)
-                        .foregroundColor(AviationTheme.Colors.primaryText(colorScheme))
+                        .foregroundColor(OnboardingPalette.titleText)
                     
                     Text(programType == .asiaMiles
                          ? "國泰航空/寰宇一家"
                          : "加入其他哩程計劃（開發中）")
                         .font(AviationTheme.Typography.caption)
-                        .foregroundColor(AviationTheme.Colors.secondaryText(colorScheme))
+                        .foregroundColor(OnboardingPalette.bodyText)
                 }
                 
                 Spacer()
@@ -478,20 +498,20 @@ struct OnboardingView: View {
                       : "circle")
                     .font(.title3)
                     .foregroundColor(selectedProgramType == programType
-                                    ? AviationTheme.Colors.cathayJade
-                                    : AviationTheme.Colors.tertiaryText(colorScheme))
+                                    ? OnboardingPalette.accent
+                                    : OnboardingPalette.bodyText.opacity(0.7))
             }
             .padding(AviationTheme.Spacing.md)
-            .background(AviationTheme.Colors.cardBackground(colorScheme))
+            .background(.ultraThinMaterial)
             .clipShape(RoundedRectangle(cornerRadius: AviationTheme.CornerRadius.lg))
             .overlay(
                 RoundedRectangle(cornerRadius: AviationTheme.CornerRadius.lg)
                     .stroke(selectedProgramType == programType
-                            ? AviationTheme.Colors.cathayJade
+                            ? OnboardingPalette.accent
                             : Color.clear,
                             lineWidth: 2)
             )
-            .shadow(color: AviationTheme.Shadows.cardShadow(colorScheme).opacity(0.5), radius: 8, x: 0, y: 2)
+            .shadow(color: Color.black.opacity(0.08), radius: 8, x: 0, y: 2)
         }
         .buttonStyle(.plain)
     }
@@ -505,15 +525,15 @@ struct OnboardingView: View {
                 VStack(spacing: AviationTheme.Spacing.sm) {
                     Image(systemName: "creditcard.fill")
                         .font(.system(size: 48))
-                        .foregroundColor(AviationTheme.Colors.cathayJade)
+                        .foregroundColor(OnboardingPalette.accent)
                     
                     Text("選擇信用卡")
                         .font(AviationTheme.Typography.title2)
-                        .foregroundColor(AviationTheme.Colors.primaryText(colorScheme))
+                        .foregroundColor(OnboardingPalette.titleText)
                     
                     Text("選擇您持有的哩程信用卡，稍後也可以在設定中更改")
                         .font(AviationTheme.Typography.subheadline)
-                        .foregroundColor(AviationTheme.Colors.secondaryText(colorScheme))
+                        .foregroundColor(OnboardingPalette.bodyText)
                         .multilineTextAlignment(.center)
                 }
                 
@@ -525,7 +545,7 @@ struct OnboardingView: View {
                         VStack(alignment: .leading, spacing: AviationTheme.Spacing.sm) {
                             Text("國泰世華亞萬聯名卡等級")
                                 .font(AviationTheme.Typography.headline)
-                                .foregroundColor(AviationTheme.Colors.primaryText(colorScheme))
+                                .foregroundColor(OnboardingPalette.titleText)
                                 .padding(.leading, 4)
 
                             VStack(spacing: AviationTheme.Spacing.sm) {
@@ -541,7 +561,7 @@ struct OnboardingView: View {
                         VStack(alignment: .leading, spacing: AviationTheme.Spacing.sm) {
                             Text("台新國泰航空聯名卡等級")
                                 .font(AviationTheme.Typography.headline)
-                                .foregroundColor(AviationTheme.Colors.primaryText(colorScheme))
+                                .foregroundColor(OnboardingPalette.titleText)
                                 .padding(.leading, 4)
 
                             VStack(spacing: AviationTheme.Spacing.sm) {
@@ -556,7 +576,7 @@ struct OnboardingView: View {
                     if selectedCardBanks.isEmpty {
                         Text("先選擇您持有的銀行卡別，再選擇卡片等級")
                             .font(AviationTheme.Typography.caption)
-                            .foregroundColor(AviationTheme.Colors.secondaryText(colorScheme))
+                            .foregroundColor(OnboardingPalette.bodyText)
                             .padding(.top, AviationTheme.Spacing.xs)
                     }
                 
@@ -570,7 +590,7 @@ struct OnboardingView: View {
         VStack(alignment: .leading, spacing: AviationTheme.Spacing.sm) {
             Text("先選擇銀行卡別（可複選）")
                 .font(AviationTheme.Typography.headline)
-                .foregroundColor(AviationTheme.Colors.primaryText(colorScheme))
+                .foregroundColor(OnboardingPalette.titleText)
                 .padding(.leading, 4)
 
             VStack(spacing: AviationTheme.Spacing.sm) {
@@ -609,19 +629,19 @@ struct OnboardingView: View {
                     Image(systemName: bank.icon)
                         .font(.title2)
                         .foregroundColor(isSelected
-                                        ? AviationTheme.Colors.cathayJade
-                                        : AviationTheme.Colors.secondaryText(colorScheme))
+                                        ? OnboardingPalette.accent
+                                        : OnboardingPalette.bodyText)
                         .frame(width: 36)
                 }
 
                 VStack(alignment: .leading, spacing: 4) {
                     Text(bank.title)
                         .font(AviationTheme.Typography.headline)
-                        .foregroundColor(AviationTheme.Colors.primaryText(colorScheme))
+                        .foregroundColor(OnboardingPalette.titleText)
                     
                     Text(bank == .cathay ? "國泰世華銀行" : "台新銀行")
                         .font(AviationTheme.Typography.caption)
-                        .foregroundColor(AviationTheme.Colors.secondaryText(colorScheme))
+                        .foregroundColor(OnboardingPalette.bodyText)
                 }
 
                 Spacer()
@@ -631,20 +651,20 @@ struct OnboardingView: View {
                       : "circle")
                     .font(.title3)
                     .foregroundColor(isSelected
-                                    ? AviationTheme.Colors.cathayJade
-                                    : AviationTheme.Colors.tertiaryText(colorScheme))
+                                    ? OnboardingPalette.accent
+                                    : OnboardingPalette.bodyText.opacity(0.7))
             }
             .padding(AviationTheme.Spacing.md)
-            .background(AviationTheme.Colors.cardBackground(colorScheme))
+            .background(.ultraThinMaterial)
             .clipShape(RoundedRectangle(cornerRadius: AviationTheme.CornerRadius.lg))
             .overlay(
                 RoundedRectangle(cornerRadius: AviationTheme.CornerRadius.lg)
                     .stroke(isSelected
-                            ? AviationTheme.Colors.cathayJade
+                            ? OnboardingPalette.accent
                             : Color.clear,
                             lineWidth: 2)
             )
-            .shadow(color: AviationTheme.Shadows.cardShadow(colorScheme).opacity(0.5), radius: 6, x: 0, y: 2)
+            .shadow(color: Color.black.opacity(0.08), radius: 6, x: 0, y: 2)
         }
         .buttonStyle(.plain)
     }
@@ -692,11 +712,11 @@ struct OnboardingView: View {
                 VStack(alignment: .leading, spacing: 4) {
                     Text(tier.id)
                         .font(AviationTheme.Typography.headline)
-                        .foregroundColor(AviationTheme.Colors.primaryText(colorScheme))
+                        .foregroundColor(OnboardingPalette.titleText)
                     
                     Text("一般 \(tier.rates.baseRate.formatted()) 元/哩 ・ 加速 \(tier.rates.secondaryRate.formatted()) 元/哩")
                         .font(AviationTheme.Typography.caption)
-                        .foregroundColor(AviationTheme.Colors.secondaryText(colorScheme))
+                        .foregroundColor(OnboardingPalette.bodyText)
                 }
                 
                 Spacer()
@@ -706,20 +726,20 @@ struct OnboardingView: View {
                       : "circle")
                     .font(.title3)
                     .foregroundColor(isSelected
-                                    ? AviationTheme.Colors.cathayJade
-                                    : AviationTheme.Colors.tertiaryText(colorScheme))
+                                    ? OnboardingPalette.accent
+                                    : OnboardingPalette.bodyText.opacity(0.7))
             }
             .padding(AviationTheme.Spacing.md)
-            .background(AviationTheme.Colors.cardBackground(colorScheme))
+            .background(.ultraThinMaterial)
             .clipShape(RoundedRectangle(cornerRadius: AviationTheme.CornerRadius.lg))
             .overlay(
                 RoundedRectangle(cornerRadius: AviationTheme.CornerRadius.lg)
                     .stroke(isSelected
-                            ? AviationTheme.Colors.cathayJade
+                            ? OnboardingPalette.accent
                             : Color.clear,
                             lineWidth: 2)
             )
-            .shadow(color: AviationTheme.Shadows.cardShadow(colorScheme).opacity(0.5), radius: 6, x: 0, y: 2)
+            .shadow(color: Color.black.opacity(0.08), radius: 6, x: 0, y: 2)
         }
         .buttonStyle(.plain)
     }
@@ -758,11 +778,11 @@ struct OnboardingView: View {
                 VStack(alignment: .leading, spacing: 4) {
                     Text(tier.id)
                         .font(AviationTheme.Typography.headline)
-                        .foregroundColor(AviationTheme.Colors.primaryText(colorScheme))
+                        .foregroundColor(OnboardingPalette.titleText)
 
                     Text("國內 \(tier.rates.baseRate.formatted()) 元/哩 ・ 國外 \(tier.rates.secondaryRate.formatted()) 元/哩 ・ 指定 \(tier.rates.tertiaryRate.formatted()) 元/哩")
                         .font(AviationTheme.Typography.caption)
-                        .foregroundColor(AviationTheme.Colors.secondaryText(colorScheme))
+                        .foregroundColor(OnboardingPalette.bodyText)
                 }
 
                 Spacer()
@@ -772,20 +792,20 @@ struct OnboardingView: View {
                       : "circle")
                     .font(.title3)
                     .foregroundColor(isSelected
-                                    ? AviationTheme.Colors.cathayJade
-                                    : AviationTheme.Colors.tertiaryText(colorScheme))
+                                    ? OnboardingPalette.accent
+                                    : OnboardingPalette.bodyText.opacity(0.7))
             }
             .padding(AviationTheme.Spacing.md)
-            .background(AviationTheme.Colors.cardBackground(colorScheme))
+            .background(.ultraThinMaterial)
             .clipShape(RoundedRectangle(cornerRadius: AviationTheme.CornerRadius.lg))
             .overlay(
                 RoundedRectangle(cornerRadius: AviationTheme.CornerRadius.lg)
                     .stroke(isSelected
-                            ? AviationTheme.Colors.cathayJade
+                            ? OnboardingPalette.accent
                             : Color.clear,
                             lineWidth: 2)
             )
-            .shadow(color: AviationTheme.Shadows.cardShadow(colorScheme).opacity(0.5), radius: 6, x: 0, y: 2)
+            .shadow(color: Color.black.opacity(0.08), radius: 6, x: 0, y: 2)
         }
         .buttonStyle(.plain)
     }
@@ -797,20 +817,20 @@ struct OnboardingView: View {
             
             VStack(spacing: AviationTheme.Spacing.sm) {
                 ZStack {
-                    PulseRingView(color: AviationTheme.Colors.cathayJade.opacity(0.3))
+                    PulseRingView(color: OnboardingPalette.accent.opacity(0.3))
                     
                     Image(systemName: "mappin.and.ellipse")
                         .font(.system(size: 48))
-                        .foregroundColor(AviationTheme.Colors.cathayJade)
+                        .foregroundColor(OnboardingPalette.accent)
                 }
                 
                 Text("常用出發地")
                     .font(AviationTheme.Typography.title2)
-                    .foregroundColor(AviationTheme.Colors.primaryText(colorScheme))
+                    .foregroundColor(OnboardingPalette.titleText)
                 
                 Text("設定您最常出發的機場，方便快速建立飛行目標")
                     .font(AviationTheme.Typography.subheadline)
-                    .foregroundColor(AviationTheme.Colors.secondaryText(colorScheme))
+                    .foregroundColor(OnboardingPalette.bodyText)
                     .multilineTextAlignment(.center)
             }
             
@@ -820,24 +840,24 @@ struct OnboardingView: View {
                 HStack(spacing: 16) {
                     Image(systemName: "airplane.departure")
                         .font(.title2)
-                        .foregroundColor(AviationTheme.Colors.cathayJade)
+                        .foregroundColor(OnboardingPalette.accent)
                         .frame(width: 36)
                     
                     if preferredOrigin.isEmpty {
                         Text("點擊選擇出發機場")
                             .font(AviationTheme.Typography.headline)
-                            .foregroundColor(AviationTheme.Colors.secondaryText(colorScheme))
+                            .foregroundColor(OnboardingPalette.bodyText)
                     } else {
                         VStack(alignment: .leading, spacing: 4) {
                             Text(preferredOrigin)
                                 .font(AviationTheme.Typography.title3)
                                 .fontWeight(.bold)
-                                .foregroundColor(AviationTheme.Colors.cathayJade)
+                                .foregroundColor(OnboardingPalette.accent)
                             
                             if let airport = AirportDatabase.shared.getAirport(iataCode: preferredOrigin) {
                                 Text(airport.cityName)
                                     .font(AviationTheme.Typography.subheadline)
-                                    .foregroundColor(AviationTheme.Colors.secondaryText(colorScheme))
+                                    .foregroundColor(OnboardingPalette.bodyText)
                             }
                         }
                     }
@@ -846,26 +866,26 @@ struct OnboardingView: View {
                     
                     Image(systemName: "chevron.right")
                         .font(.subheadline)
-                        .foregroundColor(AviationTheme.Colors.tertiaryText(colorScheme))
+                        .foregroundColor(OnboardingPalette.bodyText.opacity(0.7))
                 }
                 .padding(AviationTheme.Spacing.md)
-                .background(AviationTheme.Colors.cardBackground(colorScheme))
+                .background(.ultraThinMaterial)
                 .clipShape(RoundedRectangle(cornerRadius: AviationTheme.CornerRadius.lg))
                 .overlay(
                     RoundedRectangle(cornerRadius: AviationTheme.CornerRadius.lg)
                         .stroke(!preferredOrigin.isEmpty
-                                ? AviationTheme.Colors.cathayJade
+                                ? OnboardingPalette.accent
                                 : Color.clear,
                                 lineWidth: 2)
                 )
-                .shadow(color: AviationTheme.Shadows.cardShadow(colorScheme).opacity(0.5), radius: 8, x: 0, y: 2)
+                .shadow(color: Color.black.opacity(0.08), radius: 8, x: 0, y: 2)
             }
             .buttonStyle(.plain)
             .padding(.horizontal, AviationTheme.Spacing.md)
             
             Text("此設定之後可在「設定 > 常用出發地」中更改")
                 .font(AviationTheme.Typography.caption)
-                .foregroundColor(AviationTheme.Colors.tertiaryText(colorScheme))
+                .foregroundColor(OnboardingPalette.bodyText.opacity(0.7))
             
             Spacer()
             Spacer()
@@ -882,15 +902,15 @@ struct OnboardingView: View {
             VStack(spacing: AviationTheme.Spacing.sm) {
                 Image(systemName: "tray.and.arrow.down.fill")
                     .font(.system(size: 48))
-                    .foregroundColor(AviationTheme.Colors.cathayJade)
+                    .foregroundColor(OnboardingPalette.accent)
                 
                 Text("現有里程")
                     .font(AviationTheme.Typography.title2)
-                    .foregroundColor(AviationTheme.Colors.primaryText(colorScheme))
+                    .foregroundColor(OnboardingPalette.titleText)
                 
                 Text("如果您已有里程餘額，可以在這裡輸入，\n系統會自動記錄為「初次輸入」")
                     .font(AviationTheme.Typography.subheadline)
-                    .foregroundColor(AviationTheme.Colors.secondaryText(colorScheme))
+                    .foregroundColor(OnboardingPalette.bodyText)
                     .multilineTextAlignment(.center)
             }
             
@@ -898,28 +918,28 @@ struct OnboardingView: View {
                 VStack(alignment: .leading, spacing: 8) {
                     Text("目前里程餘額")
                         .font(AviationTheme.Typography.caption)
-                        .foregroundColor(AviationTheme.Colors.secondaryText(colorScheme))
+                        .foregroundColor(OnboardingPalette.bodyText)
                     
                     HStack(spacing: 8) {
                         Text(existingMilesText.isEmpty ? "0" : existingMilesText)
                             .font(.system(size: 48, weight: .bold, design: .rounded))
-                            .foregroundColor(existingMilesText.isEmpty ? AviationTheme.Colors.tertiaryText(colorScheme) : AviationTheme.Colors.primaryText(colorScheme))
+                            .foregroundColor(existingMilesText.isEmpty ? OnboardingPalette.bodyText.opacity(0.7) : OnboardingPalette.titleText)
                             .lineLimit(1)
                             .minimumScaleFactor(0.5)
                             .frame(maxWidth: .infinity, alignment: .center)
                         
                         Text("哩")
                             .font(AviationTheme.Typography.title3)
-                            .foregroundColor(AviationTheme.Colors.secondaryText(colorScheme))
+                            .foregroundColor(OnboardingPalette.bodyText)
                             .padding(.top, 10) 
                     }
                     .padding(.vertical, AviationTheme.Spacing.md)
                     .padding(.horizontal, AviationTheme.Spacing.md)
-                    .background(AviationTheme.Colors.cardBackground(colorScheme))
+                    .background(.ultraThinMaterial)
                     .clipShape(RoundedRectangle(cornerRadius: AviationTheme.CornerRadius.lg))
                     .overlay(
                         RoundedRectangle(cornerRadius: AviationTheme.CornerRadius.lg)
-                            .stroke(AviationTheme.Colors.tertiaryText(colorScheme).opacity(0.3), lineWidth: 1)
+                            .stroke(Color.white.opacity(0.18), lineWidth: 1)
                     )
                 }
                 .padding(.horizontal, AviationTheme.Spacing.md)
@@ -974,12 +994,12 @@ struct OnboardingView: View {
                         .font(.system(size: 24, weight: .medium, design: .rounded))
                 }
             }
-            .foregroundColor(AviationTheme.Colors.primaryText(colorScheme))
+            .foregroundColor(OnboardingPalette.titleText)
             .frame(maxWidth: .infinity)
             .frame(height: 52)
-            .background(AviationTheme.Colors.cardBackground(colorScheme))
+            .background(.ultraThinMaterial)
             .clipShape(RoundedRectangle(cornerRadius: 12))
-            .shadow(color: AviationTheme.Shadows.cardShadow(colorScheme).opacity(0.3), radius: 4, x: 0, y: 1)
+            .shadow(color: Color.black.opacity(0.06), radius: 4, x: 0, y: 1)
         }
         .buttonStyle(.plain)
     }
@@ -1016,15 +1036,15 @@ struct OnboardingView: View {
             VStack(spacing: AviationTheme.Spacing.sm) {
                 Image(systemName: "gift.fill")
                     .font(.system(size: 48))
-                    .foregroundColor(AviationTheme.Colors.cathayJade)
+                    .foregroundColor(OnboardingPalette.accent)
                 
                 Text("生日月份")
                     .font(AviationTheme.Typography.title2)
-                    .foregroundColor(AviationTheme.Colors.primaryText(colorScheme))
+                    .foregroundColor(OnboardingPalette.titleText)
                 
                 Text("部分信用卡在生日當月消費可享哩程加倍，\n設定後系統會自動計算加碼")
                     .font(AviationTheme.Typography.subheadline)
-                    .foregroundColor(AviationTheme.Colors.secondaryText(colorScheme))
+                    .foregroundColor(OnboardingPalette.bodyText)
                     .multilineTextAlignment(.center)
             }
             
@@ -1039,13 +1059,13 @@ struct OnboardingView: View {
                         Image(systemName: "calendar.badge.checkmark")
                             .font(.title2)
                             .foregroundColor(enableBirthday
-                                            ? AviationTheme.Colors.cathayJade
-                                            : AviationTheme.Colors.secondaryText(colorScheme))
+                                            ? OnboardingPalette.accent
+                                            : OnboardingPalette.bodyText)
                             .frame(width: 36)
                         
                         Text("設定生日月份")
                             .font(AviationTheme.Typography.headline)
-                            .foregroundColor(AviationTheme.Colors.primaryText(colorScheme))
+                            .foregroundColor(OnboardingPalette.titleText)
                         
                         Spacer()
                         
@@ -1054,20 +1074,20 @@ struct OnboardingView: View {
                               : "circle")
                             .font(.title3)
                             .foregroundColor(enableBirthday
-                                            ? AviationTheme.Colors.cathayJade
-                                            : AviationTheme.Colors.tertiaryText(colorScheme))
+                                            ? OnboardingPalette.accent
+                                            : OnboardingPalette.bodyText.opacity(0.7))
                     }
                     .padding(AviationTheme.Spacing.md)
-                    .background(AviationTheme.Colors.cardBackground(colorScheme))
+                    .background(.ultraThinMaterial)
                     .clipShape(RoundedRectangle(cornerRadius: AviationTheme.CornerRadius.lg))
                     .overlay(
                         RoundedRectangle(cornerRadius: AviationTheme.CornerRadius.lg)
                             .stroke(enableBirthday
-                                    ? AviationTheme.Colors.cathayJade
+                                    ? OnboardingPalette.accent
                                     : Color.clear,
                                     lineWidth: 2)
                     )
-                    .shadow(color: AviationTheme.Shadows.cardShadow(colorScheme).opacity(0.5), radius: 8, x: 0, y: 2)
+                    .shadow(color: Color.black.opacity(0.08), radius: 8, x: 0, y: 2)
                 }
                 .buttonStyle(.plain)
                 
@@ -1096,13 +1116,13 @@ struct OnboardingView: View {
                                     .background(
                                         RoundedRectangle(cornerRadius: AviationTheme.CornerRadius.md)
                                             .fill(isSelected
-                                                  ? AviationTheme.Colors.cathayJade
-                                                  : AviationTheme.Colors.cardBackground(colorScheme))
+                                                  ? OnboardingPalette.accent
+                                                  : Color.white.opacity(0.25))
                                     )
-                                    .foregroundColor(isSelected ? .white : AviationTheme.Colors.primaryText(colorScheme))
+                                    .foregroundColor(isSelected ? .white : OnboardingPalette.titleText)
                                     .overlay(
                                         RoundedRectangle(cornerRadius: AviationTheme.CornerRadius.md)
-                                            .stroke(isSelected ? AviationTheme.Colors.cathayJade : Color.clear, lineWidth: 2)
+                                            .stroke(isSelected ? OnboardingPalette.accent : Color.clear, lineWidth: 2)
                                     )
                             }
                             .buttonStyle(.plain)
@@ -1121,18 +1141,18 @@ struct OnboardingView: View {
                         Image(systemName: "forward.fill")
                             .font(.title2)
                             .foregroundColor(!enableBirthday
-                                            ? AviationTheme.Colors.cathayJade
-                                            : AviationTheme.Colors.secondaryText(colorScheme))
+                                            ? OnboardingPalette.accent
+                                            : OnboardingPalette.bodyText)
                             .frame(width: 36)
                         
                         VStack(alignment: .leading, spacing: 4) {
                             Text("暫時不設定")
                                 .font(AviationTheme.Typography.headline)
-                                .foregroundColor(AviationTheme.Colors.primaryText(colorScheme))
+                                .foregroundColor(OnboardingPalette.titleText)
                             
                             Text("不會觸發生日加倍計算")
                                 .font(AviationTheme.Typography.caption)
-                                .foregroundColor(AviationTheme.Colors.secondaryText(colorScheme))
+                                .foregroundColor(OnboardingPalette.bodyText)
                         }
                         
                         Spacer()
@@ -1142,20 +1162,20 @@ struct OnboardingView: View {
                               : "circle")
                             .font(.title3)
                             .foregroundColor(!enableBirthday
-                                            ? AviationTheme.Colors.cathayJade
-                                            : AviationTheme.Colors.tertiaryText(colorScheme))
+                                            ? OnboardingPalette.accent
+                                            : OnboardingPalette.bodyText.opacity(0.7))
                     }
                     .padding(AviationTheme.Spacing.md)
-                    .background(AviationTheme.Colors.cardBackground(colorScheme))
+                    .background(.ultraThinMaterial)
                     .clipShape(RoundedRectangle(cornerRadius: AviationTheme.CornerRadius.lg))
                     .overlay(
                         RoundedRectangle(cornerRadius: AviationTheme.CornerRadius.lg)
                             .stroke(!enableBirthday
-                                    ? AviationTheme.Colors.cathayJade
+                                    ? OnboardingPalette.accent
                                     : Color.clear,
                                     lineWidth: 2)
                     )
-                    .shadow(color: AviationTheme.Shadows.cardShadow(colorScheme).opacity(0.5), radius: 8, x: 0, y: 2)
+                    .shadow(color: Color.black.opacity(0.08), radius: 8, x: 0, y: 2)
                 }
                 .buttonStyle(.plain)
             }
@@ -1174,15 +1194,15 @@ struct OnboardingView: View {
             VStack(spacing: AviationTheme.Spacing.sm) {
                 Image(systemName: "paintbrush.fill")
                     .font(.system(size: 48))
-                    .foregroundColor(AviationTheme.Colors.cathayJade)
+                    .foregroundColor(OnboardingPalette.accent)
                 
                 Text("外觀主題")
                     .font(AviationTheme.Typography.title2)
-                    .foregroundColor(AviationTheme.Colors.primaryText(colorScheme))
+                    .foregroundColor(OnboardingPalette.titleText)
                 
                 Text("選擇您偏好的顯示模式")
                     .font(AviationTheme.Typography.subheadline)
-                    .foregroundColor(AviationTheme.Colors.secondaryText(colorScheme))
+                    .foregroundColor(OnboardingPalette.bodyText)
             }
             
             VStack(spacing: AviationTheme.Spacing.md) {
@@ -1211,7 +1231,7 @@ struct OnboardingView: View {
             
             Text("此設定之後可在「設定 > 外觀」中更改")
                 .font(AviationTheme.Typography.caption)
-                .foregroundColor(AviationTheme.Colors.tertiaryText(colorScheme))
+                .foregroundColor(OnboardingPalette.bodyText.opacity(0.7))
             
             Spacer()
             Spacer()
@@ -1230,18 +1250,18 @@ struct OnboardingView: View {
                 Image(systemName: icon)
                     .font(.title2)
                     .foregroundColor(isSelected
-                                    ? AviationTheme.Colors.cathayJade
-                                    : AviationTheme.Colors.secondaryText(colorScheme))
+                                    ? OnboardingPalette.accent
+                                    : OnboardingPalette.bodyText)
                     .frame(width: 36)
                 
                 VStack(alignment: .leading, spacing: 4) {
                     Text(title)
                         .font(AviationTheme.Typography.headline)
-                        .foregroundColor(AviationTheme.Colors.primaryText(colorScheme))
+                        .foregroundColor(OnboardingPalette.titleText)
                     
                     Text(subtitle)
                         .font(AviationTheme.Typography.caption)
-                        .foregroundColor(AviationTheme.Colors.secondaryText(colorScheme))
+                        .foregroundColor(OnboardingPalette.bodyText)
                 }
                 
                 Spacer()
@@ -1251,20 +1271,20 @@ struct OnboardingView: View {
                       : "circle")
                     .font(.title3)
                     .foregroundColor(isSelected
-                                    ? AviationTheme.Colors.cathayJade
-                                    : AviationTheme.Colors.tertiaryText(colorScheme))
+                                    ? OnboardingPalette.accent
+                                    : OnboardingPalette.bodyText.opacity(0.7))
             }
             .padding(AviationTheme.Spacing.md)
-            .background(AviationTheme.Colors.cardBackground(colorScheme))
+            .background(.ultraThinMaterial)
             .clipShape(RoundedRectangle(cornerRadius: AviationTheme.CornerRadius.lg))
             .overlay(
                 RoundedRectangle(cornerRadius: AviationTheme.CornerRadius.lg)
                     .stroke(isSelected
-                            ? AviationTheme.Colors.cathayJade
+                            ? OnboardingPalette.accent
                             : Color.clear,
                             lineWidth: 2)
             )
-            .shadow(color: AviationTheme.Shadows.cardShadow(colorScheme).opacity(0.5), radius: 8, x: 0, y: 2)
+            .shadow(color: Color.black.opacity(0.08), radius: 8, x: 0, y: 2)
         }
         .buttonStyle(.plain)
     }
@@ -1277,15 +1297,15 @@ struct OnboardingView: View {
             VStack(spacing: AviationTheme.Spacing.sm) {
                 Image(systemName: "bell.badge.fill")
                     .font(.system(size: 48))
-                    .foregroundColor(AviationTheme.Colors.cathayJade)
+                    .foregroundColor(OnboardingPalette.accent)
 
                 Text("通知提醒")
                     .font(AviationTheme.Typography.title2)
-                    .foregroundColor(AviationTheme.Colors.primaryText(colorScheme))
+                    .foregroundColor(OnboardingPalette.titleText)
 
                 Text("開啟通知後，可收到哩程到期與目標進度提醒")
                     .font(AviationTheme.Typography.subheadline)
-                    .foregroundColor(AviationTheme.Colors.secondaryText(colorScheme))
+                    .foregroundColor(OnboardingPalette.bodyText)
                     .multilineTextAlignment(.center)
             }
 
@@ -1295,11 +1315,11 @@ struct OnboardingView: View {
                 notificationInfoRow(icon: "gift", text: "生日月加碼與活動提醒")
             }
             .padding(AviationTheme.Spacing.md)
-            .background(AviationTheme.Colors.cardBackground(colorScheme).opacity(0.9))
+            .background(.ultraThinMaterial)
             .clipShape(RoundedRectangle(cornerRadius: AviationTheme.CornerRadius.lg))
             .overlay(
                 RoundedRectangle(cornerRadius: AviationTheme.CornerRadius.lg)
-                    .stroke(AviationTheme.Colors.cathayJade.opacity(0.2), lineWidth: 1)
+                    .stroke(OnboardingPalette.accent.opacity(0.2), lineWidth: 1)
             )
             .padding(.horizontal, AviationTheme.Spacing.md)
 
@@ -1312,17 +1332,17 @@ struct OnboardingView: View {
                             .font(.title2)
                             .foregroundColor(notificationPermissionStatus == .authorized
                                             ? AviationTheme.Colors.success
-                                            : AviationTheme.Colors.cathayJade)
+                                            : OnboardingPalette.accent)
                             .frame(width: 36)
 
                         VStack(alignment: .leading, spacing: 4) {
                             Text(notificationPermissionStatus == .authorized ? "通知已開啟" : "開啟通知權限")
                                 .font(AviationTheme.Typography.headline)
-                                .foregroundColor(AviationTheme.Colors.primaryText(colorScheme))
+                                .foregroundColor(OnboardingPalette.titleText)
 
                             Text(notificationStatusSubtitle)
                                 .font(AviationTheme.Typography.caption)
-                                .foregroundColor(AviationTheme.Colors.secondaryText(colorScheme))
+                                .foregroundColor(OnboardingPalette.bodyText)
                         }
 
                         Spacer()
@@ -1331,19 +1351,19 @@ struct OnboardingView: View {
                             .font(.title3)
                             .foregroundColor(notificationPermissionStatus == .authorized
                                             ? AviationTheme.Colors.success
-                                            : AviationTheme.Colors.tertiaryText(colorScheme))
+                                            : OnboardingPalette.bodyText.opacity(0.7))
                     }
                     .padding(AviationTheme.Spacing.md)
-                    .background(AviationTheme.Colors.cardBackground(colorScheme))
+                    .background(.ultraThinMaterial)
                     .clipShape(RoundedRectangle(cornerRadius: AviationTheme.CornerRadius.lg))
                     .overlay(
                         RoundedRectangle(cornerRadius: AviationTheme.CornerRadius.lg)
                             .stroke(notificationPermissionStatus == .authorized
                                     ? AviationTheme.Colors.success
-                                    : AviationTheme.Colors.cathayJade.opacity(0.4),
+                                    : OnboardingPalette.accent.opacity(0.4),
                                     lineWidth: 1.5)
                     )
-                    .shadow(color: AviationTheme.Shadows.cardShadow(colorScheme).opacity(0.5), radius: 8, x: 0, y: 2)
+                    .shadow(color: Color.black.opacity(0.08), radius: 8, x: 0, y: 2)
                 }
                 .buttonStyle(.plain)
 
@@ -1357,7 +1377,7 @@ struct OnboardingView: View {
                     } label: {
                         Text("前往系統設定開啟通知")
                             .font(AviationTheme.Typography.subheadline)
-                            .foregroundColor(AviationTheme.Colors.cathayJade)
+                            .foregroundColor(OnboardingPalette.accent)
                     }
                 }
             }
@@ -1365,7 +1385,7 @@ struct OnboardingView: View {
 
             Text("點選「下一步」也會直接觸發系統權限詢問，\n您可以稍後在「設定 > 通知提醒」調整。")
                 .font(AviationTheme.Typography.caption)
-                .foregroundColor(AviationTheme.Colors.tertiaryText(colorScheme))
+                .foregroundColor(OnboardingPalette.bodyText.opacity(0.7))
 
             Spacer()
             Spacer()
@@ -1387,13 +1407,13 @@ struct OnboardingView: View {
     private func notificationInfoRow(icon: String, text: String) -> some View {
         HStack(spacing: 10) {
             Image(systemName: icon)
-                .foregroundColor(AviationTheme.Colors.cathayJade)
+                .foregroundColor(OnboardingPalette.accent)
                 .font(.subheadline)
                 .frame(width: 16)
 
             Text(text)
                 .font(AviationTheme.Typography.caption)
-                .foregroundColor(AviationTheme.Colors.primaryText(colorScheme))
+                .foregroundColor(OnboardingPalette.titleText)
 
             Spacer()
         }
@@ -1407,15 +1427,15 @@ struct OnboardingView: View {
             VStack(spacing: AviationTheme.Spacing.sm) {
                 Image(systemName: "icloud.fill")
                     .font(.system(size: 48))
-                    .foregroundColor(AviationTheme.Colors.cathayJade)
+                    .foregroundColor(OnboardingPalette.accent)
                 
                 Text("iCloud 同步")
                     .font(AviationTheme.Typography.title2)
-                    .foregroundColor(AviationTheme.Colors.primaryText(colorScheme))
+                    .foregroundColor(OnboardingPalette.titleText)
                 
                 Text("開啟後，您的資料會在所有 Apple 裝置間自動同步")
                     .font(AviationTheme.Typography.subheadline)
-                    .foregroundColor(AviationTheme.Colors.secondaryText(colorScheme))
+                    .foregroundColor(OnboardingPalette.bodyText)
                     .multilineTextAlignment(.center)
             }
             
@@ -1446,7 +1466,7 @@ struct OnboardingView: View {
             
             Text("此設定之後可在「設定 > 備份與同步」中更改")
                 .font(AviationTheme.Typography.caption)
-                .foregroundColor(AviationTheme.Colors.tertiaryText(colorScheme))
+                .foregroundColor(OnboardingPalette.bodyText.opacity(0.7))
             
             Spacer()
             Spacer()
@@ -1460,18 +1480,18 @@ struct OnboardingView: View {
                 Image(systemName: icon)
                     .font(.title2)
                     .foregroundColor(isSelected
-                                    ? AviationTheme.Colors.cathayJade
-                                    : AviationTheme.Colors.secondaryText(colorScheme))
+                                    ? OnboardingPalette.accent
+                                    : OnboardingPalette.bodyText)
                     .frame(width: 36)
                 
                 VStack(alignment: .leading, spacing: 4) {
                     Text(title)
                         .font(AviationTheme.Typography.headline)
-                        .foregroundColor(AviationTheme.Colors.primaryText(colorScheme))
+                        .foregroundColor(OnboardingPalette.titleText)
                     
                     Text(subtitle)
                         .font(AviationTheme.Typography.caption)
-                        .foregroundColor(AviationTheme.Colors.secondaryText(colorScheme))
+                        .foregroundColor(OnboardingPalette.bodyText)
                 }
                 
                 Spacer()
@@ -1481,81 +1501,74 @@ struct OnboardingView: View {
                       : "circle")
                     .font(.title3)
                     .foregroundColor(isSelected
-                                    ? AviationTheme.Colors.cathayJade
-                                    : AviationTheme.Colors.tertiaryText(colorScheme))
+                                    ? OnboardingPalette.accent
+                                    : OnboardingPalette.bodyText.opacity(0.7))
             }
             .padding(AviationTheme.Spacing.md)
-            .background(AviationTheme.Colors.cardBackground(colorScheme))
+            .background(.ultraThinMaterial)
             .clipShape(RoundedRectangle(cornerRadius: AviationTheme.CornerRadius.lg))
             .overlay(
                 RoundedRectangle(cornerRadius: AviationTheme.CornerRadius.lg)
                     .stroke(isSelected
-                            ? AviationTheme.Colors.cathayJade
+                            ? OnboardingPalette.accent
                             : Color.clear,
                             lineWidth: 2)
             )
-            .shadow(color: AviationTheme.Shadows.cardShadow(colorScheme).opacity(0.5), radius: 8, x: 0, y: 2)
+            .shadow(color: Color.black.opacity(0.08), radius: 8, x: 0, y: 2)
         }
         .buttonStyle(.plain)
     }
     
     // MARK: - 底部按鈕們
     private var bottomButtons: some View {
-        HStack(spacing: AviationTheme.Spacing.md) {
+        GlassEffectContainer(spacing: 12) {
+            HStack(spacing: 12) {
+                // 返回按鈕：小型「<」
+                if currentPage > 0 {
+                    Button {
+                        withAnimation(.easeInOut(duration: 0.3)) {
+                            currentPage -= 1
+                        }
+                    } label: {
+                        Image(systemName: "chevron.left")
+                            .font(.system(size: 18, weight: .semibold))
+                            .foregroundStyle(OnboardingPalette.glassButtonText)
+                            .frame(width: 52, height: 52)
+                            .glassEffect(.regular.interactive(), in: .circle)
+                    }
+                    .buttonStyle(.plain)
+                }
 
-            if currentPage > 0 {
+                // 下一步 / 跳過 / 開始使用
                 Button {
-                    withAnimation(.easeInOut(duration: 0.3)) {
-                        currentPage -= 1
+                    if currentPage == 7 {
+                        if notificationPermissionStatus == .notDetermined {
+                            requestNotificationPermission(advanceAfterRequest: true)
+                        } else {
+                            moveToNextPage()
+                        }
+                        return
                     }
+                    moveToNextPage()
                 } label: {
-                    Text("上一步")
-                        .font(AviationTheme.Typography.headline)
-                        .foregroundColor(AviationTheme.Colors.cathayJade)
+                    Text(bottomNextButtonText)
+                        .font(.system(size: 17, weight: .semibold, design: .rounded))
+                        .foregroundStyle(OnboardingPalette.glassButtonText)
                         .frame(maxWidth: .infinity)
-                        .padding(.vertical, 16)
-                        .background(AviationTheme.Colors.cardBackground(colorScheme))
-                        .clipShape(RoundedRectangle(cornerRadius: AviationTheme.CornerRadius.lg))
-                        .overlay(
-                            RoundedRectangle(cornerRadius: AviationTheme.CornerRadius.lg)
-                                .stroke(AviationTheme.Colors.cathayJade.opacity(0.3), lineWidth: 1)
-                        )
+                        .frame(height: 52)
+                        .glassEffect(.regular.interactive(), in: .capsule)
                 }
+                .buttonStyle(.plain)
+                .simultaneousGesture(
+                    LongPressGesture(minimumDuration: 1)
+                        .onEnded { _ in
+                            guard currentPage == 0 else { return }
+                            let generator = UIImpactFeedbackGenerator(style: .heavy)
+                            generator.impactOccurred()
+                            verifyDevAndPromptSkip()
+                        }
+                )
             }
-            
-            Button {
-                if currentPage == 7 {
-                    if notificationPermissionStatus == .notDetermined {
-                        requestNotificationPermission(advanceAfterRequest: true)
-                    } else {
-                        moveToNextPage()
-                    }
-                    return
-                }
-
-                moveToNextPage()
-            } label: {
-                Text(bottomNextButtonText)
-                    .font(AviationTheme.Typography.headline)
-                    .foregroundColor(bottomNextButtonTextColor)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 16)
-                    .background(bottomNextButtonBackgroundColor)
-                    .clipShape(RoundedRectangle(cornerRadius: AviationTheme.CornerRadius.lg))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: AviationTheme.CornerRadius.lg)
-                            .stroke(bottomNextButtonStrokeColor, lineWidth: 1)
-                    )
-            }
-            .simultaneousGesture(
-                LongPressGesture(minimumDuration: 1)
-                    .onEnded { _ in
-                        guard currentPage == 0 else { return }
-                        let generator = UIImpactFeedbackGenerator(style: .heavy)
-                        generator.impactOccurred()
-                        verifyDevAndPromptSkip()
-                    }
-            )
         }
     }
 
@@ -1572,35 +1585,7 @@ struct OnboardingView: View {
         return "下一步"
     }
 
-    private var bottomNextButtonTextColor: Color {
-        if currentPage == 2 && selectedCardBanks.isEmpty {
-            return AviationTheme.Colors.cathayJade
-        }
-        if currentPage == 4 && (existingMilesText.isEmpty || existingMilesText == "0") {
-            return AviationTheme.Colors.cathayJade
-        }
-        return .white
-    }
 
-    private var bottomNextButtonBackgroundColor: Color {
-        if currentPage == 2 && selectedCardBanks.isEmpty {
-            return AviationTheme.Colors.cardBackground(colorScheme)
-        }
-        if currentPage == 4 && (existingMilesText.isEmpty || existingMilesText == "0") {
-            return AviationTheme.Colors.cardBackground(colorScheme)
-        }
-        return AviationTheme.Colors.cathayJade
-    }
-
-    private var bottomNextButtonStrokeColor: Color {
-        if currentPage == 2 && selectedCardBanks.isEmpty {
-            return AviationTheme.Colors.cathayJade.opacity(0.3)
-        }
-        if currentPage == 4 && (existingMilesText.isEmpty || existingMilesText == "0") {
-            return AviationTheme.Colors.cathayJade.opacity(0.3)
-        }
-        return .clear
-    }
     
     // MARK: - 完成 Onboarding
     private func completeOnboarding() {
