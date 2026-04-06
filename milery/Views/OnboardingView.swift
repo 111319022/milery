@@ -466,7 +466,7 @@ struct OnboardingView: View {
                     
                     Text(programType == .asiaMiles
                          ? "國泰航空/寰宇一家"
-                         : "其他里程計劃")
+                         : "加入其他哩程計劃（開發中）")
                         .font(AviationTheme.Typography.caption)
                         .foregroundColor(AviationTheme.Colors.secondaryText(colorScheme))
                 }
