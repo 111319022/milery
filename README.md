@@ -5,21 +5,19 @@
 ![SwiftUI](https://img.shields.io/badge/SwiftUI-Blue?style=for-the-badge&logo=swift)
 ![SwiftData](https://img.shields.io/badge/SwiftData-CloudKit-green?style=for-the-badge)
 
-Milery 是一款專為亞洲萬里通 (Asia Miles) 哩程玩家打造的 iOS 原生應用程式。透過信用卡消費自動換算、航線兌換表即時查詢、目標進度視覺化，讓使用者輕鬆掌握哩程資產與飛行計畫。
+Milery 是一款專為哩程玩家打造的 iOS 原生應用程式。透過信用卡消費自動換算、航線兌換表即時查詢、目標進度視覺化，讓使用者輕鬆掌握哩程資產與飛行計畫。
 
 ## 下載
 
-| 通路 | 連結 |
-|------|------|
-| App Store 正式版 | [點此下載](https://apps.apple.com/tw/app/milery-%E5%B0%88%E7%82%BA%E5%93%A9%E7%A8%8B%E7%8E%A9%E5%AE%B6%E6%89%93%E9%80%A0/id6760928932) |
-| TestFlight 公測版 | [加入測試計畫](https://testflight.apple.com/join/gWaMP1w2) |
+- **App Store 正式版:** [點此下載](https://apps.apple.com/tw/app/milery-%E5%B0%88%E7%82%BA%E5%93%A9%E7%A8%8B%E7%8E%A9%E5%AE%B6%E6%89%93%E9%80%A0/id6760928932)
+- **TestFlight 公測版:** [點此加入 TestFlight 測試計畫](https://testflight.apple.com/join/gWaMP1w2)
 
 ## 核心功能
 
 ### 哩程帳戶管理
 - 多來源交易記錄：信用卡消費、哩程加速器、飛行累積、銀行點數兌換、活動贈送等 11 種來源
-- 哩程到期日自動計算（最後活動日 + 18 個月）
-- 多里程計畫支援（目前以 Asia Miles 為主，結構已支援擴充）
+- 哩程到期日自動計算
+- 多里程計畫支援（⚠️目前以 Asia Miles 為主，結構已支援擴充，未來會支援更多里程計劃）
 
 ### 信用卡規則引擎
 - 目前支援兩家銀行共 7 個卡別：
@@ -31,11 +29,10 @@ Milery 是一款專為亞洲萬里通 (Asia Miles) 哩程玩家打造的 iOS 原
 - Protocol + Registry 架構，新增銀行僅需加一個 Definition 檔案
 
 ### 飛行目標追蹤
-- 內建 Asia Miles 2026 年最新兌換表（6 個航距級別 x 4 種艙等）
-- 內建約 40 個亞太常用機場（含座標與距離計算）
-- 短途 1 / 短途 2 自動判定（日本、釜山等城市走較貴的短途 2 費率）
+- 內建 亞洲萬里通 2026 年最新兌換表（6 個航距級別 x 4 種艙等）
+- 內建約 40 個常用機場（含座標與距離計算）（⚠️未來會擴充）
 - 目標進度百分比、剩餘哩程、可兌換通知
-- 支援來回程哩程自動加倍
+- 支援來回里程計算
 
 ### 兌換紀錄
 - 機票兌換後自動建立扣點交易與已兌換機票紀錄
@@ -44,11 +41,11 @@ Milery 是一款專為亞洲萬里通 (Asia Miles) 哩程玩家打造的 iOS 原
 ### 同步與備份
 - SwiftData + CloudKit 自動同步（私有資料庫 `iCloud.com.73app.milery`）
 - 手動 JSON 備份/還原（CloudKit 自訂 Zone，支援版本化格式）
-- 同步診斷日誌（可在 App 內查看）
+- 同步診斷日誌（開發者可在 App 內查看）
 
 ### 個人化
-- 航空風格主題色彩系統（深色/淺色自適應）
-- 背景自訂：漸層 / 純色 / 預設桌布 / 自訂圖片
+- 深色/淺色模式
+- 背景自訂：預設漸層 / 純色 / 預設背景 / 自訂
 - App Icon 切換（`CFBundleAlternateIcons`）
 
 ## 架構
@@ -124,9 +121,9 @@ milery/
 |------|------|
 | UI | SwiftUI（`@Observable` MVVM） |
 | 資料 | SwiftData + CloudKit 私有資料庫 |
-| 計算 | `Decimal` 精確運算（`Double` 儲存 + `String` 中介轉換避免精度損失） |
+| 計算 | `Decimal` 精確運算（`Double` 儲存 + `String` ） |
 | 備份 | CloudKit 自訂 Zone + JSON 序列化（版本化格式） |
-| 地理 | CoreLocation（Haversine 公式計算航線距離） |
+| 地圖 | Mapkit + CoreLocation（Haversine 公式計算航線距離） |
 | 測試 | Swift Testing 框架 |
 
 ### 設計決策
@@ -138,13 +135,14 @@ milery/
 
 ## 系統需求
 
-| 項目 | 需求 |
-|------|------|
-| iPhone | iOS 26.0+（iPhone 11 / SE 2 及後續機型） |
-| iPad | iPadOS 26.0+（iPhone 相容模式） |
-| Mac | macOS 26.0+（僅 Apple Silicon） |
-| Vision Pro | visionOS 26.0+（iPhone 相容模式） |
-| 開發環境 | Xcode 26.3+ |
+* **機型與作業系統**
+    * **iPhone**: 需為 **iOS 26.0** 或以上版本 (支援 iPhone 11/SE 2 及後續機型)。
+    * **多平台相容性**: 本APP採 iOS 原生架構開發，可於下列裝置以 **iPhone 相容模式**執行：
+        * **iPad**: 需運行 iPadOS 26.0 或以上版本。
+        * **Mac**: 僅支援搭載 **Apple Silicon** 晶片之機型，並且需運行 MacOS 26.0 或以上版本。
+        * **Apple Vision Pro**: 需運行 VisionOS 26.0 或以上版本。
+        
+* **開發環境:** 建議使用 Xcode 26.3 或以上版本進行編譯，並選擇或連接符合作業系統要求之裝置。
 
 ## 快速開始
 
@@ -171,8 +169,15 @@ xcodebuild test -project milery.xcodeproj -scheme milery \
 - **Raaay** — [github.com/111319022](https://github.com/111319022)
 - **阿姿** — [github.com/mewneko-edu](https://github.com/mewneko-edu)
 
+## 使用的AI輔助
+
+- Gemini from Google
+- Claude Code from Anthropic
+
 ---
 
 *本專案為「2026 餘73 的 跨平台APP設計」課程之期中*
+
+---
 
 > 完整技術文件、檔案用途、操作流程與維護指南，請參閱 **[PROJECT_GUIDE.md](PROJECT_GUIDE.md)**。
