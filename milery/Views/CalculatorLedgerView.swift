@@ -63,7 +63,7 @@ struct CalculatorLedgerView: View {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("儲存") { saveNewTransaction() }
                         .disabled(!formCanSave)
-                        .foregroundColor(formCanSave ? AviationTheme.Colors.cathayJade : AviationTheme.Colors.silver.opacity(0.3))
+                        .foregroundColor(formCanSave ? AviationTheme.Colors.brandColor(colorScheme) : AviationTheme.Colors.silver.opacity(0.3))
                         .fontWeight(.bold)
                 }
             }

@@ -77,7 +77,7 @@ struct LedgerView: View {
                                 HStack(spacing: 6) {
                                     Image(systemName: "airplane.circle.fill")
                                         .font(.caption)
-                                        .foregroundColor(AviationTheme.Colors.success)
+                                        .foregroundColor(AviationTheme.Colors.brandColor(colorScheme))
                                     Text("本月總哩程")
                                         .font(AviationTheme.Typography.caption)
                                         .foregroundColor(AviationTheme.Colors.secondaryText(colorScheme))
@@ -89,7 +89,7 @@ struct LedgerView: View {
                                     Text("哩")
                                         .font(AviationTheme.Typography.subheadline)
                                 }
-                                .foregroundColor(AviationTheme.Colors.success)
+                                .foregroundColor(AviationTheme.Colors.brandColor(colorScheme))
                             }
                             .frame(maxWidth: .infinity)
                             .padding(AviationTheme.Spacing.md)
@@ -622,7 +622,7 @@ struct MonthSelectorSheet: View {
                                     RoundedRectangle(cornerRadius: AviationTheme.CornerRadius.md)
                                         .fill(
                                             selected
-                                                ? AviationTheme.Colors.cathayJade
+                                            ? AviationTheme.Colors.brandColor(colorScheme)
                                                 : AviationTheme.Colors.cardBackground(colorScheme)
                                         )
                                 )
@@ -636,11 +636,11 @@ struct MonthSelectorSheet: View {
                                 .overlay(
                                     RoundedRectangle(cornerRadius: AviationTheme.CornerRadius.md)
                                         .stroke(
-                                            selected ? AviationTheme.Colors.cathayJade : Color.clear,
+                                            selected ? AviationTheme.Colors.brandColor(colorScheme) : Color.clear,
                                             lineWidth: 2
                                         )
                                 )
-                                .shadow(color: selected ? AviationTheme.Colors.cathayJade.opacity(0.3) : .clear, radius: 4, x: 0, y: 2)
+                                .shadow(color: selected ? AviationTheme.Colors.brandColor(colorScheme).opacity(0.28) : .clear, radius: 4, x: 0, y: 2)
                         }
                         .disabled(future)
                     }
@@ -658,7 +658,7 @@ struct MonthSelectorSheet: View {
                     Button("完成") {
                         dismiss()
                     }
-                    .foregroundColor(AviationTheme.Colors.cathayJade)
+                    .foregroundColor(AviationTheme.Colors.brandColor(colorScheme))
                 }
             }
         }
@@ -721,7 +721,7 @@ struct TransactionDetailRow: View {
     }
 
     var milesTintColor: Color {
-        isRedeemTransaction ? AviationTheme.Colors.danger : AviationTheme.Colors.successColor(colorScheme)
+        isRedeemTransaction ? AviationTheme.Colors.danger : AviationTheme.Colors.brandColor(colorScheme)
     }
 
     var redeemAccentColor: Color {
@@ -756,7 +756,7 @@ struct TransactionDetailRow: View {
         HStack(alignment: .top, spacing: AviationTheme.Spacing.md) {
             ZStack {
                 Circle()
-                    .fill(isRedeemTransaction ? redeemAccentColor : AviationTheme.Colors.cathayJade)
+                    .fill(isRedeemTransaction ? redeemAccentColor : AviationTheme.Colors.brandColor(colorScheme))
                     .frame(width: 44, height: 44)
 
                 Image(systemName: isRedeemTransaction ? "ticket.fill" : transaction.source.icon)
@@ -774,7 +774,7 @@ struct TransactionDetailRow: View {
                 if let cardName = transaction.cardDisplayName, isCardSource {
                     Text(cardName)
                         .font(AviationTheme.Typography.caption)
-                        .foregroundColor(AviationTheme.Colors.cathayJade)
+                        .foregroundColor(AviationTheme.Colors.brandColor(colorScheme))
                         .lineLimit(1)
                 }
 
@@ -802,12 +802,12 @@ struct TransactionDetailRow: View {
                             .lineLimit(1)
                             .truncationMode(.tail)
                     }
-                    .foregroundColor(isRedeemTransaction ? redeemAccentColor : AviationTheme.Colors.cathayJade)
+                    .foregroundColor(isRedeemTransaction ? redeemAccentColor : AviationTheme.Colors.brandColor(colorScheme))
                     .padding(.horizontal, 8)
                     .padding(.vertical, 3)
                     .background(
                         Capsule()
-                            .fill((isRedeemTransaction ? redeemAccentColor : AviationTheme.Colors.cathayJade).opacity(0.15))
+                            .fill((isRedeemTransaction ? redeemAccentColor : AviationTheme.Colors.brandColor(colorScheme)).opacity(0.15))
                     )
                 }
 
