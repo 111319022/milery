@@ -73,7 +73,7 @@ private enum OnboardingPalette {
     )
 }
 
-// MARK: - iOS 風格大圓漸層背景
+// MARK: - 大圓漸層背景
 struct OnboardingBlobBackground: View {
     @State private var phase = false
 
@@ -221,6 +221,7 @@ struct OnboardingView: View {
     // 開發者跳過 Onboarding
     @State private var showDevSkipAlert = false
     @State private var devVerificationMessage: String = ""
+    @State private var programPageEntranceProgress: CGFloat = 1
     
     // 分段入場動畫狀態
     
@@ -367,6 +368,19 @@ struct OnboardingView: View {
             )
         }
         .onChange(of: currentPage) { oldValue, newValue in
+            if oldValue == 0 && newValue == 1 {
+                programPageEntranceProgress = 0
+                DispatchQueue.main.async {
+                    withAnimation(.spring(response: 0.52, dampingFraction: 0.86)) {
+                        programPageEntranceProgress = 1
+                    }
+                }
+            }
+
+            if newValue != 1 {
+                programPageEntranceProgress = 1
+            }
+
             if newValue >= themePageIndex {
                 if oldValue < themePageIndex {
                     // 從前面頁面（強制淺色）首次跨入主題頁時，
@@ -451,10 +465,22 @@ struct OnboardingView: View {
                     .font(AviationTheme.Typography.subheadline)
                     .foregroundColor(OnboardingPalette.bodyText)
             }
+            .opacity(0.72 + (0.28 * programPageEntranceProgress))
+            .offset(y: 18 * (1 - programPageEntranceProgress))
+            .scaleEffect(0.98 + (0.02 * programPageEntranceProgress))
+            .animation(.easeOut(duration: 0.28), value: programPageEntranceProgress)
             
             VStack(spacing: AviationTheme.Spacing.md) {
                 ForEach(Array(MilageProgramType.allCases.enumerated()), id: \.element) { index, programType in
                     programSelectionCard(programType)
+                        .opacity(0.78 + (0.22 * programPageEntranceProgress))
+                        .offset(y: 14 * (1 - programPageEntranceProgress))
+                        .scaleEffect(0.985 + (0.015 * programPageEntranceProgress))
+                        .animation(
+                            .spring(response: 0.45, dampingFraction: 0.88)
+                                .delay(Double(index) * 0.05),
+                            value: programPageEntranceProgress
+                        )
                 }
             }
             .padding(.horizontal, AviationTheme.Spacing.md)
@@ -1535,8 +1561,12 @@ struct OnboardingView: View {
                             .foregroundStyle(OnboardingPalette.glassButtonText)
                             .frame(width: 52, height: 52)
                             .glassEffect(.regular.interactive(), in: .circle)
+                            .frame(width: 60, height: 60)
+                            .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
+                    .padding(.vertical, 4)
+                    .contentShape(Rectangle())
                 }
 
                 // 下一步 / 跳過 / 開始使用
@@ -1554,11 +1584,13 @@ struct OnboardingView: View {
                     Text(bottomNextButtonText)
                         .font(.system(size: 17, weight: .semibold, design: .rounded))
                         .foregroundStyle(OnboardingPalette.glassButtonText)
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 52)
+                        .frame(maxWidth: .infinity, minHeight: 52)
+                        .contentShape(Rectangle())
                         .glassEffect(.regular.interactive(), in: .capsule)
                 }
                 .buttonStyle(.plain)
+                .padding(.vertical, 4)
+                .contentShape(Rectangle())
                 .simultaneousGesture(
                     LongPressGesture(minimumDuration: 1)
                         .onEnded { _ in
