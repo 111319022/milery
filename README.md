@@ -1,112 +1,178 @@
-# Milery: 航空哩程管理與目標追蹤
+# Milery — 航空哩程管理與目標追蹤
 
 ![iOS](https://img.shields.io/badge/iOS-26.0+-black?style=for-the-badge&logo=apple)
-![Swift](https://img.shields.io/badge/Swift-Native-FA7343?style=for-the-badge&logo=swift)
+![Swift](https://img.shields.io/badge/Swift-6-FA7343?style=for-the-badge&logo=swift)
 ![SwiftUI](https://img.shields.io/badge/SwiftUI-Blue?style=for-the-badge&logo=swift)
+![SwiftData](https://img.shields.io/badge/SwiftData-CloudKit-green?style=for-the-badge)
 
-Milery是一款專為航空常客與哩程使用者開發之 iOS 原生應用程式，旨在透過視覺化介面與本地/雲端資料庫，協助使用者系統化地管理哩程資產、設定機票兌換目標，並將抽象的點數轉換為具體的飛行進度與 3D 航線空間視覺回饋。
+Milery 是一款專為亞洲萬里通 (Asia Miles) 哩程玩家打造的 iOS 原生應用程式。透過信用卡消費自動換算、航線兌換表即時查詢、目標進度視覺化，讓使用者輕鬆掌握哩程資產與飛行計畫。
 
 ## 下載
 
-- **App Store 正式版:** [點此下載](https://apps.apple.com/tw/app/milery-%E5%B0%88%E7%82%BA%E5%93%A9%E7%A8%8B%E7%8E%A9%E5%AE%B6%E6%89%93%E9%80%A0/id6760928932)
-- **TestFlight 公測版:** [點此加入 TestFlight 測試計畫](https://testflight.apple.com/join/gWaMP1w2)
-
-## 目前架構
-
-### 技術堆疊
-
-- SwiftUI
-- SwiftData + CloudKit（私有資料庫）
-- MVVM（`@Observable`）
-- MapKit / CoreLocation
-- CloudKit JSON 手動備份（自訂 Zone）
-
-### 分層概念
-
-- App Layer
-  - `MileryApp.swift`：Schema、CloudKit/Local 容器建立、啟動診斷
-- Domain / Model Layer
-  - `Models/`：交易、帳戶、目標、兌換機票、卡片偏好、里程計畫
-  - `Models/CardDefinitions/`：信用卡規則定義 + Registry
-  - `Database/`：航線兌換邏輯、機場資料
-- Application Layer
-  - `ViewModels/MileageViewModel.swift`（核心狀態）
-  - `ViewModels/MileageViewModel+Program.swift`
-  - `ViewModels/MileageViewModel+Transaction.swift`
-  - `ViewModels/MileageViewModel+Card.swift`
-  - `ViewModels/MileageViewModel+Sync.swift`
-- Service Layer
-  - `Service/CloudBackupService.swift`
-  - `Service/DeveloperAccessService.swift`
-- Presentation Layer
-  - `Views/`（Tab 主流程 + 設定 + 表單 + DevViews）
-
-> 完整的技術文件、檔案用途說明、操作流程與新增/更新指南，請參閱 **[`PROJECT_GUIDE.md`](PROJECT_GUIDE.md)**。
+| 通路 | 連結 |
+|------|------|
+| App Store 正式版 | [點此下載](https://apps.apple.com/tw/app/milery-%E5%B0%88%E7%82%BA%E5%93%A9%E7%A8%8B%E7%8E%A9%E5%AE%B6%E6%89%93%E9%80%A0/id6760928932) |
+| TestFlight 公測版 | [加入測試計畫](https://testflight.apple.com/join/gWaMP1w2) |
 
 ## 核心功能
 
-- 里程帳戶與交易管理
-  - 支援多來源交易（刷卡、飛行、點數轉入、活動贈送、機票兌換）
-- 信用卡規則引擎
-  - 以 `CardBrandDefinition + CardBrandRegistry` 擴充品牌/等級/來源對應
-- 飛行目標追蹤
-  - 目標進度、剩餘里程、可兌換判斷
-- 兌換紀錄與里程碑
-  - 兌換後自動建立扣點交易與機票紀錄關聯
-- 背景與主題系統
-  - 預設漸層、純色、預設桌布、自訂圖片
-- App Icon 切換
-  - 使用 `CFBundleAlternateIcons`
-- CloudKit 同步與手動備份
-  - 自動同步 + JSON 備份還原
+### 哩程帳戶管理
+- 多來源交易記錄：信用卡消費、哩程加速器、飛行累積、銀行點數兌換、活動贈送等 11 種來源
+- 哩程到期日自動計算（最後活動日 + 18 個月）
+- 多里程計畫支援（目前以 Asia Miles 為主，結構已支援擴充）
 
-## 里程計畫支援
+### 信用卡規則引擎
+- 目前支援兩家銀行共 7 個卡別：
+  - **國泰世華**：世界卡 / 鈦商卡 / 白金卡 / 里享卡
+  - **台新銀行**：世界卡 / 翱翔鈦金卡 / 鈦金卡
+- 自動計算刷卡金額 → 可獲哩程數，支援不同費率來源（一般消費、加速器、海外、指定消費）
+- 三種進位模式：無條件捨去 / 無條件進位 / 四捨五入
+- 生日月加碼倍數（國泰卡加速器消費雙倍）
+- Protocol + Registry 架構，新增銀行僅需加一個 Definition 檔案
 
-目前以 Asia Miles 為主，資料結構已支援多計畫（`MileageProgram`），未來會擴充其他哩程方案。
+### 飛行目標追蹤
+- 內建 Asia Miles 2026 年最新兌換表（6 個航距級別 x 4 種艙等）
+- 內建約 40 個亞太常用機場（含座標與距離計算）
+- 短途 1 / 短途 2 自動判定（日本、釜山等城市走較貴的短途 2 費率）
+- 目標進度百分比、剩餘哩程、可兌換通知
+- 支援來回程哩程自動加倍
 
-## 資料現況
+### 兌換紀錄
+- 機票兌換後自動建立扣點交易與已兌換機票紀錄
+- 里程碑展示（已完成航線回顧）
 
-- 金額欄位
-  - `Transaction` 與 `CreditCardRule` 目前採 SwiftData `Double` 欄位搭配 `Decimal` 計算屬性（為了 CloudKit/SwiftData 相容與舊資料遷移）。
-- ViewModel 拆分
-  - 已從單一大檔案拆成 extension 分工（Program / Transaction / Card / Sync）。
-- 測試現況
-  - 已建立 `mileryTests/` 測試目標檔案與基礎骨架。
-  - 目前測試內容仍以 placeholder 為主，下一步應補齊關鍵邏輯測試（信用卡計算、航區判定、到期日計算、備份往返）。
+### 同步與備份
+- SwiftData + CloudKit 自動同步（私有資料庫 `iCloud.com.73app.milery`）
+- 手動 JSON 備份/還原（CloudKit 自訂 Zone，支援版本化格式）
+- 同步診斷日誌（可在 App 內查看）
 
-## 系統需求與安裝執行
+### 個人化
+- 航空風格主題色彩系統（深色/淺色自適應）
+- 背景自訂：漸層 / 純色 / 預設桌布 / 自訂圖片
+- App Icon 切換（`CFBundleAlternateIcons`）
 
-### 系統需求
+## 架構
 
-* **機型與作業系統**
-    * **iPhone**: 需為 **iOS 26.0** 或以上版本 (支援 iPhone 11/SE 2 及後續機型)。
-    * **多平台相容性**: 本APP採 iOS 原生架構開發，可於下列裝置以 **iPhone 相容模式**執行：
-        * **iPad**: 需運行 iPadOS 26.0 或以上版本。
-        * **Mac**: 僅支援搭載 **Apple Silicon** 晶片之機型，並且需運行 MacOS 26.0 或以上版本。
-        * **Apple Vision Pro**: 需運行 VisionOS 26.0 或以上版本。
-        
-* **開發環境:** 建議使用 Xcode 26.3 或以上版本進行編譯，並選擇或連接符合作業系統要求之裝置。
-
-### 安裝與執行指引
-
-1. 複製本專案原始碼：`git clone https://github.com/111319022/milery.git`
-2. 於 Xcode 中開啟 `milery.xcodeproj`。
-3. 選擇適當模擬器或實機，完成編譯並執行。
-
-
-### 測試
-
-可在 Xcode 中執行 `mileryTests`，或用 CLI：
-
-```bash
-xcodebuild test -project milery.xcodeproj -scheme milery -destination 'platform=iOS Simulator,name=iPhone 16'
+```
+milery/
+├── MileryApp.swift                  # App 入口、Schema、CloudKit 容器
+├── AviationTheme.swift              # 主題色彩系統
+├── Models/
+│   ├── Transaction.swift            # 交易模型（11 種來源）
+│   ├── MileageAccount.swift         # 帳戶（哩程總額、到期日）
+│   ├── FlightGoal.swift             # 飛行目標（進度計算）
+│   ├── CreditCardRule.swift         # 信用卡計算模型
+│   ├── RedeemedTicket.swift         # 已兌換機票
+│   ├── CardPreference.swift         # 卡片偏好（跨裝置同步）
+│   ├── MileageProgram.swift         # 里程計畫（多計畫支援）
+│   ├── BackgroundImageManager.swift # 自訂背景管理
+│   └── CardDefinitions/
+│       ├── CardBrandDefinition.swift    # 品牌定義 Protocol
+│       ├── CardBrandRegistry.swift      # 中央查表 Registry
+│       ├── CathayUnitedBankCard.swift   # 國泰世華（4 卡別）
+│       └── TaishinCathayCard.swift      # 台新銀行（3 卡別）
+├── Database/
+│   ├── CathayAwardChart.swift       # 兌換表 + FlightCalculator
+│   ├── AirportDatabase.swift        # 機場查詢與距離計算
+│   └── airports.csv                 # 機場原始資料
+├── ViewModels/
+│   ├── MileageViewModel.swift       # 主檔：狀態、init、loadData
+│   ├── MileageViewModel+Program.swift     # 計畫 CRUD、去重、遷移
+│   ├── MileageViewModel+Transaction.swift # 交易/目標/兌換 CRUD
+│   ├── MileageViewModel+Card.swift        # 卡片重建與偏好
+│   └── MileageViewModel+Sync.swift        # 遠端監聽與指紋比對
+├── Service/
+│   ├── CloudBackupService.swift     # CloudKit JSON 備份還原
+│   └── DeveloperAccessService.swift # 開發者模式驗證
+├── Views/
+│   ├── MainTabView.swift            # 5 Tab 容器
+│   ├── DashboardView.swift          # 總覽儀表板
+│   ├── ProgressView.swift           # 目標進度
+│   ├── LedgerView.swift             # 交易帳本
+│   ├── MilestonesView.swift         # 里程碑
+│   ├── SettingsView.swift           # 設定
+│   ├── TransactionFormView.swift    # 新增交易表單
+│   ├── EditTransactionView.swift    # 編輯交易
+│   ├── CreditCardPageView.swift     # 信用卡管理
+│   ├── AllGoalsView.swift           # 全部目標
+│   ├── CloudBackupView.swift        # 備份還原
+│   ├── OnboardingView.swift         # 首次引導
+│   ├── AppBackgroundView.swift      # 背景渲染
+│   ├── BackgroundPickerView.swift   # 背景選擇
+│   ├── CalculatorComponents.swift   # 計算機元件
+│   ├── CalculatorLedgerView.swift   # 計算機帳本
+│   ├── NotificationSettingsView.swift
+│   ├── AppIconPickerView.swift
+│   └── DevViews/                    # 開發者工具
+│       ├── ConsoleLogView.swift
+│       ├── DataManagementView.swift
+│       ├── CloudKitAdvancedView.swift
+│       ├── AirportListView.swift
+│       ├── ProgramSwitcherView.swift
+│       └── TabVisibilitySettingsView.swift
+└── mileryTests/
+    ├── FlightCalculatorTests.swift
+    ├── CreditCardRuleTests.swift
+    ├── FlightGoalTests.swift
+    ├── MileageAccountTests.swift
+    └── AirportDatabaseTests.swift
 ```
 
----
+### 技術堆疊
+
+| 層級 | 技術 |
+|------|------|
+| UI | SwiftUI（`@Observable` MVVM） |
+| 資料 | SwiftData + CloudKit 私有資料庫 |
+| 計算 | `Decimal` 精確運算（`Double` 儲存 + `String` 中介轉換避免精度損失） |
+| 備份 | CloudKit 自訂 Zone + JSON 序列化（版本化格式） |
+| 地理 | CoreLocation（Haversine 公式計算航線距離） |
+| 測試 | Swift Testing 框架 |
+
+### 設計決策
+
+- **金額精度**：SwiftData/CloudKit 不直接支援 `Decimal`，因此底層以 `Double` 儲存，對外透過 `Decimal(string: String(doubleValue))` 轉換，避免浮點精度損失。
+- **ViewModel 拆分**：`MileageViewModel` 透過 extension 按職責分為 4 個檔案（Program / Transaction / Card / Sync），主檔僅保留共享狀態與核心方法。
+- **信用卡架構**：採 Protocol (`CardBrandDefinition`) + Registry (`CardBrandRegistry`) 模式，新增銀行品牌無需修改既有程式碼。
+- **錯誤處理**：核心資料流程使用 `do-catch` + `appLog()` 記錄，儲存失敗透過 UI Alert 通知使用者。
+
+## 系統需求
+
+| 項目 | 需求 |
+|------|------|
+| iPhone | iOS 26.0+（iPhone 11 / SE 2 及後續機型） |
+| iPad | iPadOS 26.0+（iPhone 相容模式） |
+| Mac | macOS 26.0+（僅 Apple Silicon） |
+| Vision Pro | visionOS 26.0+（iPhone 相容模式） |
+| 開發環境 | Xcode 26.3+ |
+
+## 快速開始
+
+```bash
+git clone https://github.com/111319022/milery.git
+open milery/milery.xcodeproj
+```
+
+選擇模擬器或實機，按 `Cmd+R` 編譯執行。
+
+### 執行測試
+
+Xcode 內：`Cmd+U` 或 Test Navigator 執行 `mileryTests`。
+
+命令列：
+
+```bash
+xcodebuild test -project milery.xcodeproj -scheme milery \
+  -destination 'platform=iOS Simulator,name=iPhone 16'
+```
 
 ## 團隊
 
-- Raaay: https://github.com/111319022
-- 阿姿: https://github.com/mewneko-edu
+- **Raaay** — [github.com/111319022](https://github.com/111319022)
+- **阿姿** — [github.com/mewneko-edu](https://github.com/mewneko-edu)
+
 ---
+
 *本專案為「2026 餘73 的 跨平台APP設計」課程之期中*
+
+> 完整技術文件、檔案用途、操作流程與維護指南，請參閱 **[PROJECT_GUIDE.md](PROJECT_GUIDE.md)**。
