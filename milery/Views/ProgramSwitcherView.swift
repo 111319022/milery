@@ -13,8 +13,7 @@ struct ProgramSwitcherView: View {
     
     var body: some View {
         ZStack {
-            AviationTheme.Gradients.dashboardBackground(colorScheme)
-                .ignoresSafeArea()
+            AppBackgroundView()
             
             ScrollView {
                 VStack(spacing: AviationTheme.Spacing.xl) {

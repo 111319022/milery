@@ -13,71 +13,74 @@ struct AppLockSettingsView: View {
     @State private var showDisableConfirm = false
     
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 16) {
-                // MARK: - 主開關
-                VStack(spacing: 0) {
-                    SettingToggleRow(
-                        icon: "lock.fill",
-                        title: "啟用 App 密碼鎖",
-                        subtitle: "開啟後，每次啟動或從背景返回都需要解鎖",
-                        isOn: Binding(
-                            get: { appLockEnabled },
-                            set: { newValue in
-                                if newValue {
-                                    showSetPasscodeSheet = true
-                                } else {
-                                    showDisableConfirm = true
-                                }
-                            }
-                        )
-                    )
-                }
-                .background(AviationTheme.Colors.cardBackground(colorScheme))
-                .clipShape(RoundedRectangle(cornerRadius: AviationTheme.CornerRadius.lg))
-                .shadow(color: AviationTheme.Shadows.cardShadow(colorScheme).opacity(0.5), radius: 8, x: 0, y: 2)
-                
-                // MARK: - 生物辨識 & 修改密碼（僅在開啟後顯示）
-                if appLockEnabled {
+        ZStack {
+            AppBackgroundView()
+
+            ScrollView {
+                VStack(alignment: .leading, spacing: 16) {
+                    // MARK: - 主開關
                     VStack(spacing: 0) {
-                        // 生物辨識
-                        if lockService.isBiometricAvailable {
-                            SettingToggleRow(
-                                icon: biometricIconName,
-                                title: "使用 \(lockService.biometricTypeName)",
-                                subtitle: "驗證通過後可跳過密碼輸入",
-                                isOn: $biometricEnabled
+                        SettingToggleRow(
+                            icon: "lock.fill",
+                            title: "啟用 App 密碼鎖",
+                            subtitle: "開啟後，每次啟動或從背景返回都需要解鎖",
+                            isOn: Binding(
+                                get: { appLockEnabled },
+                                set: { newValue in
+                                    if newValue {
+                                        showSetPasscodeSheet = true
+                                    } else {
+                                        showDisableConfirm = true
+                                    }
+                                }
                             )
-                            
-                            CustomDivider(colorScheme: colorScheme)
-                        }
-                        
-                        // 修改密碼
-                        Button {
-                            showChangePasscodeSheet = true
-                        } label: {
-                            SettingRow(
-                                icon: "key.fill",
-                                title: "修改密碼",
-                                subtitle: nil
-                            ) {
-                                Image(systemName: "chevron.right")
-                                    .foregroundColor(AviationTheme.Colors.tertiaryText(colorScheme))
-                                    .font(.subheadline)
-                                    .fontWeight(.semibold)
-                            }
-                        }
-                        .buttonStyle(.plain)
+                        )
                     }
                     .background(AviationTheme.Colors.cardBackground(colorScheme))
                     .clipShape(RoundedRectangle(cornerRadius: AviationTheme.CornerRadius.lg))
                     .shadow(color: AviationTheme.Shadows.cardShadow(colorScheme).opacity(0.5), radius: 8, x: 0, y: 2)
+                    
+                    // MARK: - 生物辨識 & 修改密碼（僅在開啟後顯示）
+                    if appLockEnabled {
+                        VStack(spacing: 0) {
+                            // 生物辨識
+                            if lockService.isBiometricAvailable {
+                                SettingToggleRow(
+                                    icon: biometricIconName,
+                                    title: "使用 \(lockService.biometricTypeName)",
+                                    subtitle: "驗證通過後可跳過密碼輸入",
+                                    isOn: $biometricEnabled
+                                )
+                                
+                                CustomDivider(colorScheme: colorScheme)
+                            }
+                            
+                            // 修改密碼
+                            Button {
+                                showChangePasscodeSheet = true
+                            } label: {
+                                SettingRow(
+                                    icon: "key.fill",
+                                    title: "修改密碼",
+                                    subtitle: nil
+                                ) {
+                                    Image(systemName: "chevron.right")
+                                        .foregroundColor(AviationTheme.Colors.tertiaryText(colorScheme))
+                                        .font(.subheadline)
+                                        .fontWeight(.semibold)
+                                }
+                            }
+                            .buttonStyle(.plain)
+                        }
+                        .background(AviationTheme.Colors.cardBackground(colorScheme))
+                        .clipShape(RoundedRectangle(cornerRadius: AviationTheme.CornerRadius.lg))
+                        .shadow(color: AviationTheme.Shadows.cardShadow(colorScheme).opacity(0.5), radius: 8, x: 0, y: 2)
+                    }
                 }
+                .padding(.horizontal, AviationTheme.Spacing.md)
+                .padding(.top, AviationTheme.Spacing.md)
             }
-            .padding(.horizontal, AviationTheme.Spacing.md)
-            .padding(.top, AviationTheme.Spacing.md)
         }
-        .background(AviationTheme.Colors.background(colorScheme).ignoresSafeArea())
         .navigationTitle("App 密碼鎖")
         .navigationBarTitleDisplayMode(.inline)
         .sheet(isPresented: $showSetPasscodeSheet) {

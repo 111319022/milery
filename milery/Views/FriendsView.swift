@@ -11,54 +11,57 @@ struct FriendsView: View {
     @State private var profileInitialized = false
     
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: AviationTheme.Spacing.lg) {
-                
-                // MARK: - 我的好友代碼
-                myFriendCodeSection
-                
-                // MARK: - 好友列表
-                if !friendService.friends.isEmpty {
-                    friendsListSection(
-                        title: "好友",
-                        friends: friendService.friends
-                    )
+        ZStack {
+            AppBackgroundView()
+
+            ScrollView {
+                VStack(alignment: .leading, spacing: AviationTheme.Spacing.lg) {
+                    
+                    // MARK: - 我的好友代碼
+                    myFriendCodeSection
+                    
+                    // MARK: - 好友列表
+                    if !friendService.friends.isEmpty {
+                        friendsListSection(
+                            title: "好友",
+                            friends: friendService.friends
+                        )
+                    }
+                    
+                    // MARK: - 等待對方加入
+                    if !friendService.pendingOutgoing.isEmpty {
+                        friendsListSection(
+                            title: "等待對方加入",
+                            friends: friendService.pendingOutgoing
+                        )
+                    }
+                    
+                    // MARK: - 對方已加你
+                    if !friendService.pendingIncoming.isEmpty {
+                        incomingRequestsSection
+                    }
+                    
+                    // MARK: - 空狀態
+                    if friendService.friends.isEmpty
+                        && friendService.pendingOutgoing.isEmpty
+                        && friendService.pendingIncoming.isEmpty
+                        && profileInitialized
+                        && !friendService.isLoading {
+                        emptyStateView
+                    }
+                    
+                    // Loading
+                    if friendService.isLoading && !profileInitialized {
+                        SwiftUI.ProgressView()
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, AviationTheme.Spacing.xxl)
+                    }
                 }
-                
-                // MARK: - 等待對方加入
-                if !friendService.pendingOutgoing.isEmpty {
-                    friendsListSection(
-                        title: "等待對方加入",
-                        friends: friendService.pendingOutgoing
-                    )
-                }
-                
-                // MARK: - 對方已加你
-                if !friendService.pendingIncoming.isEmpty {
-                    incomingRequestsSection
-                }
-                
-                // MARK: - 空狀態
-                if friendService.friends.isEmpty
-                    && friendService.pendingOutgoing.isEmpty
-                    && friendService.pendingIncoming.isEmpty
-                    && profileInitialized
-                    && !friendService.isLoading {
-                    emptyStateView
-                }
-                
-                // Loading
-                if friendService.isLoading && !profileInitialized {
-                    SwiftUI.ProgressView()
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, AviationTheme.Spacing.xxl)
-                }
+                .padding(.horizontal, AviationTheme.Spacing.md)
+                .padding(.top, AviationTheme.Spacing.md)
+                .padding(.bottom, AviationTheme.Spacing.xxl)
             }
-            .padding(.horizontal, AviationTheme.Spacing.md)
-            .padding(.top, AviationTheme.Spacing.md)
-            .padding(.bottom, AviationTheme.Spacing.xxl)
         }
-        .background(AviationTheme.Colors.background(colorScheme).ignoresSafeArea())
         .navigationTitle("好友（開發中）")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
