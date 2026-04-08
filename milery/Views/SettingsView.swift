@@ -419,6 +419,38 @@ struct SettingsView: View {
                                         }
                                     }
                                     .buttonStyle(.plain)
+                                    
+                                    CustomDivider(colorScheme: colorScheme)
+                                    
+                                    NavigationLink(destination: AppLockSettingsView()) {
+                                        SettingRow(
+                                            icon: "lock.fill",
+                                            title: "App 密碼鎖（開發中）",
+                                            subtitle: UserDefaults.standard.bool(forKey: "appLockEnabled") ? "已開啟" : "未開啟"
+                                        ) {
+                                            Image(systemName: "chevron.right")
+                                                .foregroundColor(AviationTheme.Colors.tertiaryText(colorScheme))
+                                                .font(.subheadline)
+                                                .fontWeight(.semibold)
+                                        }
+                                    }
+                                    .buttonStyle(.plain)
+                                    
+                                    CustomDivider(colorScheme: colorScheme)
+                                    
+                                    NavigationLink(destination: FriendsView()) {
+                                        SettingRow(
+                                            icon: "person.2.fill",
+                                            title: "好友（開發中）",
+                                            subtitle: "透過好友代碼加入好友"
+                                        ) {
+                                            Image(systemName: "chevron.right")
+                                                .foregroundColor(AviationTheme.Colors.tertiaryText(colorScheme))
+                                                .font(.subheadline)
+                                                .fontWeight(.semibold)
+                                        }
+                                    }
+                                    .buttonStyle(.plain)
                                 }
                                 .background(AviationTheme.Colors.cardBackground(colorScheme))
                                 .clipShape(RoundedRectangle(cornerRadius: AviationTheme.CornerRadius.lg))

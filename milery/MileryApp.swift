@@ -158,6 +158,9 @@ final class SyncDiagnosticsObserver {
 struct MileryApp: App {
     let sharedModelContainer: ModelContainer
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding: Bool = false
+    @AppStorage("appLockEnabled") private var appLockEnabled: Bool = false
+    @State private var isLocked: Bool = false
+    @Environment(\.scenePhase) private var scenePhase
     
     init() {
         SyncDiagnosticsObserver.shared.start()
@@ -198,11 +201,31 @@ struct MileryApp: App {
     
     var body: some Scene {
         WindowGroup {
-            if hasCompletedOnboarding {
-                MainTabView()
-            } else {
-                NavigationStack {
-                    OnboardingView(viewModel: MileageViewModel())
+            ZStack {
+                if hasCompletedOnboarding {
+                    MainTabView()
+                } else {
+                    NavigationStack {
+                        OnboardingView(viewModel: MileageViewModel())
+                    }
+                }
+            }
+            .fullScreenCover(isPresented: $isLocked) {
+                AppLockView {
+                    isLocked = false
+                }
+            }
+            .onAppear {
+                if appLockEnabled {
+                    isLocked = true
+                }
+            }
+            .onChange(of: scenePhase) { _, newPhase in
+                if newPhase == .active && appLockEnabled && !isLocked {
+                    // 從背景回到前景時重新鎖定
+                }
+                if newPhase == .background && appLockEnabled {
+                    isLocked = true
                 }
             }
         }

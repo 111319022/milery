@@ -68,6 +68,11 @@
 		FB8547A62F82C367007E3EC2 /* MileageAccountTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB8547A12F82C367007E3EC2 /* MileageAccountTests.swift */; };
 		FB8547A72F82C367007E3EC2 /* AirportDatabaseTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB85479D2F82C367007E3EC2 /* AirportDatabaseTests.swift */; };
 		FB8547AB2F8614EC007E3EC2 /* SolidColorDefinition.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB8547AA2F8614EC007E3EC2 /* SolidColorDefinition.swift */; };
+		FB8547AD2F8638AD007E3EC2 /* AppLockService.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB8547AC2F8638AD007E3EC2 /* AppLockService.swift */; };
+		FB8547AF2F8638CA007E3EC2 /* AppLockView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB8547AE2F8638CA007E3EC2 /* AppLockView.swift */; };
+		FB8547B12F863909007E3EC2 /* AppLockSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB8547B02F863909007E3EC2 /* AppLockSettingsView.swift */; };
+		FB8547B32F86582A007E3EC2 /* FriendService.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB8547B22F86582A007E3EC2 /* FriendService.swift */; };
+		FB8547B52F865867007E3EC2 /* FriendsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB8547B42F865867007E3EC2 /* FriendsView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -146,6 +151,11 @@
 		FB8547A82F82C468007E3EC2 /* milery.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = milery.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		FB8547A92F840CD7007E3EC2 /* mileryTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = mileryTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		FB8547AA2F8614EC007E3EC2 /* SolidColorDefinition.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SolidColorDefinition.swift; sourceTree = "<group>"; };
+		FB8547AC2F8638AD007E3EC2 /* AppLockService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppLockService.swift; sourceTree = "<group>"; };
+		FB8547AE2F8638CA007E3EC2 /* AppLockView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppLockView.swift; sourceTree = "<group>"; };
+		FB8547B02F863909007E3EC2 /* AppLockSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppLockSettingsView.swift; sourceTree = "<group>"; };
+		FB8547B22F86582A007E3EC2 /* FriendService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FriendService.swift; sourceTree = "<group>"; };
+		FB8547B42F865867007E3EC2 /* FriendsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FriendsView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -220,6 +230,8 @@
 			children = (
 				FB85473A2F82C327007E3EC2 /* CloudBackupService.swift */,
 				FB85473B2F82C327007E3EC2 /* DeveloperAccessService.swift */,
+				FB8547AC2F8638AD007E3EC2 /* AppLockService.swift */,
+				FB8547B22F86582A007E3EC2 /* FriendService.swift */,
 			);
 			path = Service;
 			sourceTree = "<group>";
@@ -239,11 +251,11 @@
 		FB8547492F82C327007E3EC2 /* DevViews */ = {
 			isa = PBXGroup;
 			children = (
+				FBEACD8C2F865AA4008B6847 /* UnderDev */,
 				FB8547432F82C327007E3EC2 /* AirportListView.swift */,
 				FB8547442F82C327007E3EC2 /* CloudKitAdvancedView.swift */,
 				FB8547452F82C327007E3EC2 /* ConsoleLogView.swift */,
 				FB8547462F82C327007E3EC2 /* DataManagementView.swift */,
-				FB8547472F82C327007E3EC2 /* ProgramSwitcherView.swift */,
 				FB8547482F82C327007E3EC2 /* TabVisibilitySettingsView.swift */,
 			);
 			path = DevViews;
@@ -271,6 +283,7 @@
 				FB8547592F82C327007E3EC2 /* ProgressView.swift */,
 				FB85475A2F82C327007E3EC2 /* SettingsView.swift */,
 				FB85475B2F82C327007E3EC2 /* TransactionFormView.swift */,
+				FB8547AE2F8638CA007E3EC2 /* AppLockView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -315,6 +328,16 @@
 				FB8547A82F82C468007E3EC2 /* milery.app */,
 				FB8547A92F840CD7007E3EC2 /* mileryTests.xctest */,
 			);
+			sourceTree = "<group>";
+		};
+		FBEACD8C2F865AA4008B6847 /* UnderDev */ = {
+			isa = PBXGroup;
+			children = (
+				FB8547472F82C327007E3EC2 /* ProgramSwitcherView.swift */,
+				FB8547B02F863909007E3EC2 /* AppLockSettingsView.swift */,
+				FB8547B42F865867007E3EC2 /* FriendsView.swift */,
+			);
+			path = UnderDev;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -437,10 +460,12 @@
 				FB8547692F82C327007E3EC2 /* MileageViewModel+Program.swift in Sources */,
 				FB85476A2F82C327007E3EC2 /* SettingsView.swift in Sources */,
 				FB85476B2F82C327007E3EC2 /* DataManagementView.swift in Sources */,
+				FB8547AF2F8638CA007E3EC2 /* AppLockView.swift in Sources */,
 				FB85476C2F82C327007E3EC2 /* CalculatorComponents.swift in Sources */,
 				FB85476D2F82C327007E3EC2 /* CreditCardPageView.swift in Sources */,
 				FB85476E2F82C327007E3EC2 /* CreditCardRule.swift in Sources */,
 				FB85476F2F82C327007E3EC2 /* LedgerView.swift in Sources */,
+				FB8547B12F863909007E3EC2 /* AppLockSettingsView.swift in Sources */,
 				FB8547702F82C327007E3EC2 /* TransactionFormView.swift in Sources */,
 				FB8547712F82C327007E3EC2 /* MileryApp.swift in Sources */,
 				FB8547722F82C327007E3EC2 /* MilestonesView.swift in Sources */,
@@ -465,9 +490,12 @@
 				FB8547852F82C327007E3EC2 /* MileageAccount.swift in Sources */,
 				FB8547862F82C327007E3EC2 /* CathayAwardChart.swift in Sources */,
 				FB8547872F82C327007E3EC2 /* MileageViewModel+Transaction.swift in Sources */,
+				FB8547B32F86582A007E3EC2 /* FriendService.swift in Sources */,
+				FB8547B52F865867007E3EC2 /* FriendsView.swift in Sources */,
 				FB8547882F82C327007E3EC2 /* AppBackgroundView.swift in Sources */,
 				FB8547892F82C327007E3EC2 /* DashboardView.swift in Sources */,
 				FB85478A2F82C327007E3EC2 /* FlightGoal.swift in Sources */,
+				FB8547AD2F8638AD007E3EC2 /* AppLockService.swift in Sources */,
 				FB8547AB2F8614EC007E3EC2 /* SolidColorDefinition.swift in Sources */,
 				FB85478B2F82C327007E3EC2 /* MileageViewModel+Sync.swift in Sources */,
 				FB85478C2F82C327007E3EC2 /* AviationTheme.swift in Sources */,
@@ -675,7 +703,7 @@
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CODE_SIGN_ENTITLEMENTS = milery/milery.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 38;
+				CURRENT_PROJECT_VERSION = 40;
 				DEVELOPMENT_TEAM = 45SQT63B67;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -692,7 +720,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 0.0.14;
+				MARKETING_VERSION = 0.0.15;
 				PRODUCT_BUNDLE_IDENTIFIER = com.73app.milery;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -715,7 +743,7 @@
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CODE_SIGN_ENTITLEMENTS = milery/milery.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 38;
+				CURRENT_PROJECT_VERSION = 40;
 				DEVELOPMENT_TEAM = 45SQT63B67;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -732,7 +760,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 0.0.14;
+				MARKETING_VERSION = 0.0.15;
 				PRODUCT_BUNDLE_IDENTIFIER = com.73app.milery;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;

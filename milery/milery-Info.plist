@@ -37,6 +37,8 @@
 	<array>
 		<string>pikmin</string>
 	</array>
+	<key>NSFaceIDUsageDescription</key>
+	<string>使用 Face ID 快速解鎖 App</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>需要存取您的照片以設定自訂背景圖片</string>
 	<key>UIBackgroundModes</key>

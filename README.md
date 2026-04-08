@@ -83,38 +83,39 @@ milery/
 ├── Service/
 │   ├── CloudBackupService.swift     # CloudKit JSON 備份還原
 │   └── DeveloperAccessService.swift # 開發者模式驗證
-├── Views/
-│   ├── MainTabView.swift            # 5 Tab 容器
-│   ├── DashboardView.swift          # 總覽儀表板
-│   ├── ProgressView.swift           # 目標進度
-│   ├── LedgerView.swift             # 交易帳本
-│   ├── MilestonesView.swift         # 里程碑
-│   ├── SettingsView.swift           # 設定
-│   ├── TransactionFormView.swift    # 新增交易表單
-│   ├── EditTransactionView.swift    # 編輯交易
-│   ├── CreditCardPageView.swift     # 信用卡管理
-│   ├── AllGoalsView.swift           # 全部目標
-│   ├── CloudBackupView.swift        # 備份還原
-│   ├── OnboardingView.swift         # 首次引導
-│   ├── AppBackgroundView.swift      # 背景渲染
-│   ├── BackgroundPickerView.swift   # 背景選擇
-│   ├── CalculatorComponents.swift   # 計算機元件
-│   ├── CalculatorLedgerView.swift   # 計算機帳本
-│   ├── NotificationSettingsView.swift
-│   ├── AppIconPickerView.swift
-│   └── DevViews/                    # 開發者工具
-│       ├── ConsoleLogView.swift
-│       ├── DataManagementView.swift
-│       ├── CloudKitAdvancedView.swift
-│       ├── AirportListView.swift
-│       ├── ProgramSwitcherView.swift
-│       └── TabVisibilitySettingsView.swift
-└── mileryTests/
-    ├── FlightCalculatorTests.swift
-    ├── CreditCardRuleTests.swift
-    ├── FlightGoalTests.swift
-    ├── MileageAccountTests.swift
-    └── AirportDatabaseTests.swift
+└── Views/
+    ├── MainTabView.swift            # 5 Tab 容器
+    ├── DashboardView.swift          # 總覽儀表板
+    ├── ProgressView.swift           # 目標進度
+    ├── LedgerView.swift             # 交易帳本
+    ├── MilestonesView.swift         # 里程碑
+    ├── SettingsView.swift           # 設定
+    ├── TransactionFormView.swift    # 新增交易表單
+    ├── EditTransactionView.swift    # 編輯交易
+    ├── CreditCardPageView.swift     # 信用卡管理
+    ├── AllGoalsView.swift           # 全部目標
+    ├── CloudBackupView.swift        # 備份還原
+    ├── OnboardingView.swift         # 首次引導
+    ├── AppBackgroundView.swift      # 背景渲染
+    ├── BackgroundPickerView.swift   # 背景選擇
+    ├── CalculatorComponents.swift   # 計算機元件
+    ├── CalculatorLedgerView.swift   # 計算機帳本
+    ├── NotificationSettingsView.swift
+    ├── AppIconPickerView.swift
+    └── DevViews/                    # 開發者工具
+       ├── ConsoleLogView.swift
+       ├── DataManagementView.swift
+       ├── CloudKitAdvancedView.swift
+       ├── AirportListView.swift
+       ├── ProgramSwitcherView.swift
+       └── TabVisibilitySettingsView.swift
+       
+mileryTests/
+├── FlightCalculatorTests.swift
+├── CreditCardRuleTests.swift
+├── FlightGoalTests.swift
+├── MileageAccountTests.swift
+└── AirportDatabaseTests.swift
 ```
 
 ### 技術堆疊
