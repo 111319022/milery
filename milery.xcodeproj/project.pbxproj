@@ -143,7 +143,7 @@
 		FB8547A02F82C367007E3EC2 /* FlightGoalTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlightGoalTests.swift; sourceTree = "<group>"; };
 		FB8547A12F82C367007E3EC2 /* MileageAccountTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MileageAccountTests.swift; sourceTree = "<group>"; };
 		FB8547A82F82C468007E3EC2 /* milery.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = milery.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		FB900F012F90000100AAAAAA /* mileryTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; name = mileryTests.xctest; path = "/Users/rayhsu/Documents/milery/build/Debug-iphoneos/milery.app/PlugIns/mileryTests.xctest"; sourceTree = "<absolute>"; };
+		FB8547A92F840CD7007E3EC2 /* mileryTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = mileryTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -310,6 +310,7 @@
 				FB85479A2F82C353007E3EC2 /* README.md */,
 				FB8547A22F82C367007E3EC2 /* mileryTests */,
 				FB8547A82F82C468007E3EC2 /* milery.app */,
+				FB8547A92F840CD7007E3EC2 /* mileryTests.xctest */,
 			);
 			sourceTree = "<group>";
 		};
@@ -332,7 +333,7 @@
 			packageProductDependencies = (
 			);
 			productName = mileryTests;
-			productReference = FB900F012F90000100AAAAAA /* mileryTests.xctest */;
+			productReference = FB8547A92F840CD7007E3EC2 /* mileryTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
 		FBB3ADD92F67A60600D7ADE3 /* milery */ = {
@@ -670,7 +671,7 @@
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CODE_SIGN_ENTITLEMENTS = milery/milery.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 37;
+				CURRENT_PROJECT_VERSION = 38;
 				DEVELOPMENT_TEAM = 45SQT63B67;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -687,7 +688,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 0.0.13;
+				MARKETING_VERSION = 0.0.14;
 				PRODUCT_BUNDLE_IDENTIFIER = com.73app.milery;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -710,7 +711,7 @@
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CODE_SIGN_ENTITLEMENTS = milery/milery.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 37;
+				CURRENT_PROJECT_VERSION = 38;
 				DEVELOPMENT_TEAM = 45SQT63B67;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -727,7 +728,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 0.0.13;
+				MARKETING_VERSION = 0.0.14;
 				PRODUCT_BUNDLE_IDENTIFIER = com.73app.milery;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;

@@ -51,7 +51,12 @@ struct MainTabView: View {
                 )
                     .tag(0)
                     .tabItem {
-                        Label("儀表板", systemImage: "gauge.with.dots.needle.bottom.50percent")
+                        Label {
+                            Text("儀表板")
+                        } icon: {
+                            Image("tabicon_1")
+                                .renderingMode(.template)
+                        }
                     }
             }
             
@@ -59,7 +64,12 @@ struct MainTabView: View {
                 ProgressView(viewModel: viewModel)
                     .tag(1)
                     .tabItem {
-                        Label("進度", systemImage: "chart.line.uptrend.xyaxis")
+                        Label {
+                            Text("進度")
+                        } icon: {
+                            Image("tabicon_2")
+                                .renderingMode(.template)
+                        }
                     }
             }
             
@@ -67,7 +77,12 @@ struct MainTabView: View {
                 LedgerView(viewModel: viewModel)
                     .tag(2)
                     .tabItem {
-                        Label("記帳", systemImage: "book.pages.fill")
+                        Label {
+                            Text("記帳")
+                        } icon: {
+                            Image("tabicon_3")
+                                .renderingMode(.template)
+                        }
                     }
             }
 
@@ -75,14 +90,24 @@ struct MainTabView: View {
                 MilestonesView(viewModel: viewModel)
                     .tag(3)
                     .tabItem {
-                        Label("里程碑", systemImage: "ticket.fill")
+                        Label {
+                            Text("里程碑")
+                        } icon: {
+                            Image("tabicon_4")
+                                .renderingMode(.template)
+                        }
                     }
             }
             
             SettingsView(viewModel: viewModel)
                 .tag(4)
                 .tabItem {
-                    Label("設定", systemImage: "gearshape.fill")
+                    Label {
+                        Text("設定")
+                    } icon: {
+                        Image("tabicon_5")
+                            .renderingMode(.template)
+                    }
                 }
         }
         .tint(AviationTheme.Colors.cathayJade)
