@@ -4,10 +4,11 @@ import UIKit
 // MARK: - 背景選擇列舉
 
 enum BackgroundSelection: Equatable, RawRepresentable {
-    case none                       // 預設漸層
+    case none                       // 預設
     case preset(name: String)       // Asset Catalog 預設圖片
     case custom(filename: String)   // 使用者上傳圖片
     case solidColor(hex: String)    // 純色背景
+    case gradient(id: String)       // 內建漸層背景
 
     // MARK: - RawRepresentable（手動序列化，避免與 Codable 衝突造成遞迴）
 
@@ -23,6 +24,9 @@ enum BackgroundSelection: Equatable, RawRepresentable {
         } else if rawValue.hasPrefix("solidColor:") {
             let hex = String(rawValue.dropFirst(11))
             self = .solidColor(hex: hex)
+        } else if rawValue.hasPrefix("gradient:") {
+            let id = String(rawValue.dropFirst(9))
+            self = .gradient(id: id)
         } else {
             self = .none
         }
@@ -38,6 +42,8 @@ enum BackgroundSelection: Equatable, RawRepresentable {
             return "custom:\(filename)"
         case .solidColor(let hex):
             return "solidColor:\(hex)"
+        case .gradient(let id):
+            return "gradient:\(id)"
         }
     }
 }
@@ -342,6 +348,8 @@ final class BackgroundImageManager {
         case .preset(let name): return name
         case .custom: return "自訂圖片"
         case .solidColor: return "純色背景"
+        case .gradient(let id):
+            return GradientRegistry.definition(for: id)?.name ?? "漸層背景"
         }
     }
 }

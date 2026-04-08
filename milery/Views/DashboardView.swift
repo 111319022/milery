@@ -13,7 +13,7 @@ struct DashboardView: View {
     private var hasBackgroundImage: Bool {
         switch backgroundSelection {
         case .preset, .custom: return true
-        case .none, .solidColor: return false
+        case .none, .solidColor, .gradient: return false
         }
     }
     

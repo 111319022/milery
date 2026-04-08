@@ -40,7 +40,7 @@ struct SettingsView: View {
         switch backgroundSelection {
         case .preset, .custom:
             return true
-        case .none, .solidColor:
+        case .none, .solidColor, .gradient:
             return false
         }
     }
@@ -545,7 +545,7 @@ struct SectionHeaderView: View {
         switch backgroundSelection {
         case .preset, .custom:
             return true
-        case .none, .solidColor:
+        case .none, .solidColor, .gradient:
             return false
         }
     }
