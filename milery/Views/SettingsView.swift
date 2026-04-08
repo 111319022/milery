@@ -10,6 +10,7 @@ struct SettingsView: View {
     @AppStorage("userColorScheme") private var userColorScheme: String = "system"
     @AppStorage("backgroundSelection") private var backgroundSelection: BackgroundSelection = .none
     @AppStorage("enableNotifications") private var enableNotifications: Bool = true
+    @AppStorage("appLockEnabled") private var appLockEnabled: Bool = false
     
     @State private var showingAirportPicker = false
     @State private var versionTapCount = 0
@@ -214,6 +215,22 @@ struct SettingsView: View {
                                 .buttonStyle(.plain)
                                 
                                 CustomDivider(colorScheme: colorScheme)
+
+                                NavigationLink(destination: AppLockSettingsView()) {
+                                    SettingRow(
+                                        icon: "lock.fill",
+                                        title: "App 密碼鎖",
+                                        subtitle: appLockEnabled ? "已開啟" : "未開啟"
+                                    ) {
+                                        Image(systemName: "chevron.right")
+                                            .foregroundColor(AviationTheme.Colors.tertiaryText(colorScheme))
+                                            .font(.subheadline)
+                                            .fontWeight(.semibold)
+                                    }
+                                }
+                                .buttonStyle(.plain)
+
+                                CustomDivider(colorScheme: colorScheme)
                                 
                                 NavigationLink(destination: NotificationSettingsView()) {
                                     SettingRow(
@@ -243,7 +260,7 @@ struct SettingsView: View {
                                 SettingToggleRow(
                                     icon: "arrow.triangle.2.circlepath",
                                     title: "iCloud 同步",
-                                    subtitle: "在相同 Apple ID 的裝置間自動同步資料",
+                                    subtitle: "相同 Apple ID 的裝置間自動同步",
                                     isOn: $cloudKitSyncEnabled
                                 )
                                 .onChange(of: cloudKitSyncEnabled) {
@@ -411,22 +428,6 @@ struct SettingsView: View {
                                             icon: "arrow.triangle.2.circlepath.circle.fill",
                                             title: "里程計劃切換（開發中）",
                                             subtitle: "當前：\(viewModel.activeProgram?.name ?? "Asia Miles")"
-                                        ) {
-                                            Image(systemName: "chevron.right")
-                                                .foregroundColor(AviationTheme.Colors.tertiaryText(colorScheme))
-                                                .font(.subheadline)
-                                                .fontWeight(.semibold)
-                                        }
-                                    }
-                                    .buttonStyle(.plain)
-                                    
-                                    CustomDivider(colorScheme: colorScheme)
-                                    
-                                    NavigationLink(destination: AppLockSettingsView()) {
-                                        SettingRow(
-                                            icon: "lock.fill",
-                                            title: "App 密碼鎖（開發中）",
-                                            subtitle: UserDefaults.standard.bool(forKey: "appLockEnabled") ? "已開啟" : "未開啟"
                                         ) {
                                             Image(systemName: "chevron.right")
                                                 .foregroundColor(AviationTheme.Colors.tertiaryText(colorScheme))

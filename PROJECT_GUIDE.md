@@ -334,7 +334,7 @@ Asia Miles 2026 年兌換表計算引擎。
 
 開發者模式存取控制。透過 CloudKit 公開記錄查詢 + 雜湊驗證，確認使用者是否有開發者權限。
 
-### AppLockService（🔴🔧開發中）
+### AppLockService
 
 App 密碼鎖與生物辨識解鎖服務。
 

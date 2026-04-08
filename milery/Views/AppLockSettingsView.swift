@@ -78,7 +78,7 @@ struct AppLockSettingsView: View {
             .padding(.top, AviationTheme.Spacing.md)
         }
         .background(AviationTheme.Colors.background(colorScheme).ignoresSafeArea())
-        .navigationTitle("App 密碼鎖（開發中）")
+        .navigationTitle("App 密碼鎖")
         .navigationBarTitleDisplayMode(.inline)
         .sheet(isPresented: $showSetPasscodeSheet) {
             PasscodeSetupSheet(mode: .create) { success in

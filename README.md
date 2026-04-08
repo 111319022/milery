@@ -96,7 +96,7 @@ milery/
 │   ├── MileageViewModel+Card.swift        # 卡片重建與偏好
 │   └── MileageViewModel+Sync.swift        # 遠端監聽與資料指紋比對
 ├── Service/
-│   ├── AppLockService.swift         # App 密碼鎖與生物辨識（🔴🔧開發中）
+│   ├── AppLockService.swift         # App 密碼鎖與生物辨識
 │   ├── CloudBackupService.swift     # CloudKit JSON 備份還原
 │   ├── FriendService.swift          # 好友系統（CloudKit 公開資料庫）（🔴🔧開發中）
 │   └── DeveloperAccessService.swift # 開發者模式驗證
@@ -113,8 +113,8 @@ milery/
     ├── AllGoalsView.swift           # 全部目標
     ├── CloudBackupView.swift        # 備份還原
     ├── OnboardingView.swift         # 首次引導
-    ├── AppLockView.swift            # App 解鎖頁（🔴🔧開發中）
-    ├── AppLockSettingsView.swift    # 密碼鎖設定頁（🔴🔧開發中）
+    ├── AppLockView.swift            # App 解鎖頁
+    ├── AppLockSettingsView.swift    # App 密碼鎖設定頁
     ├── AppBackgroundView.swift      # 背景渲染
     ├── BackgroundPickerView.swift   # 背景選擇
     ├── ProgramSwitcherView.swift    # 里程計劃切換（🔴🔧開發中）
