@@ -334,6 +334,26 @@ Asia Miles 2026 年兌換表計算引擎。
 
 開發者模式存取控制。透過 CloudKit 公開記錄查詢 + 雜湊驗證，確認使用者是否有開發者權限。
 
+### AppLockService（🔴🔧開發中）
+
+App 密碼鎖與生物辨識解鎖服務。
+
+- `@Observable + @MainActor` 單例服務（`AppLockService.shared`）
+- `isEnabled`、`isBiometricEnabled` 透過 UserDefaults 持久化
+- 4 碼密碼存放於 Keychain（`kSecClassGenericPassword`）
+- Keychain 權限使用 `kSecAttrAccessibleWhenUnlockedThisDeviceOnly`
+- 支援 Face ID / Touch ID / Optic ID，使用 `LAContext.evaluatePolicy` 驗證
+
+### FriendService（🔴🔧開發中）
+
+好友系統服務，使用 CloudKit 公開資料庫。
+
+- 使用容器：`iCloud.com.73app.milery`，資料庫為 `publicCloudDatabase`
+- 首次進入好友頁會 Lazy 建立 `UserProfile`
+- 好友代碼為 6 碼，字元集排除易混淆字元（O/0/I/1）
+- 加好友流程支援互加升級：若偵測到反向 pending，雙方關係同步改為 `accepted`
+- 列表分流為：`friends`（accepted）、`pendingOutgoing`、`pendingIncoming`
+
 ---
 
 ## View 層
@@ -359,9 +379,13 @@ Asia Miles 2026 年兌換表計算引擎。
 - `AllGoalsView`：所有目標列表
 - `OnboardingView`：首次使用引導
 - `CloudBackupView`：備份/還原 UI
+- `AppLockView`：App 鎖定時解鎖介面（數字鍵盤 + 生物辨識）
+- `AppLockSettingsView`：密碼鎖開關、生物辨識開關、修改密碼
 - `BackgroundPickerView`：背景選擇
 - `AppIconPickerView`：App 圖示切換
 - `NotificationSettingsView`：通知設定
+- `ProgramSwitcherView`：里程計畫切換/新增/刪除（非預設）
+- `FriendsView`：好友代碼展示、加好友、好友狀態列表（開發中）
 
 ### DevViews（開發者工具）
 
@@ -371,7 +395,6 @@ Asia Miles 2026 年兌換表計算引擎。
 | `DataManagementView` | 資料管理（匯出、清除） |
 | `CloudKitAdvancedView` | CloudKit 進階診斷 |
 | `AirportListView` | 機場資料庫瀏覽 |
-| `ProgramSwitcherView` | 計畫切換 |
 | `TabVisibilitySettingsView` | Tab 顯示控制 |
 
 ---
@@ -530,6 +553,19 @@ xcodebuild test -project milery.xcodeproj -scheme milery \
 2. 若有專屬兌換表，新增對應的 Calculator
 3. 確認 `loadData()` 的 `programID` 過濾邏輯
 4. 更新 `CloudBackupService` 的序列化/反序列化
+
+### 維護好友系統（CloudKit 公開資料庫）
+
+1. 確認 CloudKit Dashboard 已建立 `UserProfile` 與 `FriendRelation` record type
+2. 若新增欄位，先做相容讀取（提供預設值）避免舊資料解碼失敗
+3. 保持互加邏輯一致：反向 pending 需雙方升級為 accepted
+4. 測試 iCloud 未登入情境，確認錯誤訊息與 UI 提示可用
+
+### 維護 App 密碼鎖
+
+1. 調整密碼策略時，確認 Keychain 查詢 key 不變（避免舊密碼遺失）
+2. 若變更生物辨識流程，需同時測試 Face ID / Touch ID 不可用 fallback 行為
+3. 關閉密碼鎖時必須同步清除 Keychain 密碼與生物辨識開關狀態
 
 ### 新增資料模型
 

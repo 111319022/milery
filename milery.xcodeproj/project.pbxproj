@@ -52,7 +52,6 @@
 		FB85478D2F82C327007E3EC2 /* Transaction.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB8547382F82C327007E3EC2 /* Transaction.swift */; };
 		FB85478E2F82C327007E3EC2 /* CardPreference.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB8547322F82C327007E3EC2 /* CardPreference.swift */; };
 		FB85478F2F82C327007E3EC2 /* CloudKitAdvancedView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB8547442F82C327007E3EC2 /* CloudKitAdvancedView.swift */; };
-		FB8547902F82C327007E3EC2 /* ProgramSwitcherView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB8547472F82C327007E3EC2 /* ProgramSwitcherView.swift */; };
 		FB8547912F82C327007E3EC2 /* EditTransactionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB8547532F82C327007E3EC2 /* EditTransactionView.swift */; };
 		FB8547922F82C327007E3EC2 /* airports.csv in Resources */ = {isa = PBXBuildFile; fileRef = FB8547292F82C327007E3EC2 /* airports.csv */; };
 		FB8547932F82C327007E3EC2 /* AppIcon-Dark-1-60@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = FB8547252F82C327007E3EC2 /* AppIcon-Dark-1-60@2x.png */; };
@@ -70,9 +69,10 @@
 		FB8547AB2F8614EC007E3EC2 /* SolidColorDefinition.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB8547AA2F8614EC007E3EC2 /* SolidColorDefinition.swift */; };
 		FB8547AD2F8638AD007E3EC2 /* AppLockService.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB8547AC2F8638AD007E3EC2 /* AppLockService.swift */; };
 		FB8547AF2F8638CA007E3EC2 /* AppLockView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB8547AE2F8638CA007E3EC2 /* AppLockView.swift */; };
-		FB8547B12F863909007E3EC2 /* AppLockSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB8547B02F863909007E3EC2 /* AppLockSettingsView.swift */; };
 		FB8547B32F86582A007E3EC2 /* FriendService.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB8547B22F86582A007E3EC2 /* FriendService.swift */; };
-		FB8547B52F865867007E3EC2 /* FriendsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB8547B42F865867007E3EC2 /* FriendsView.swift */; };
+		FBEACD902F865DDF008B6847 /* AppLockSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBEACD8D2F865DDF008B6847 /* AppLockSettingsView.swift */; };
+		FBEACD912F865DDF008B6847 /* ProgramSwitcherView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBEACD8F2F865DDF008B6847 /* ProgramSwitcherView.swift */; };
+		FBEACD922F865DDF008B6847 /* FriendsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBEACD8E2F865DDF008B6847 /* FriendsView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -116,7 +116,6 @@
 		FB8547442F82C327007E3EC2 /* CloudKitAdvancedView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudKitAdvancedView.swift; sourceTree = "<group>"; };
 		FB8547452F82C327007E3EC2 /* ConsoleLogView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConsoleLogView.swift; sourceTree = "<group>"; };
 		FB8547462F82C327007E3EC2 /* DataManagementView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataManagementView.swift; sourceTree = "<group>"; };
-		FB8547472F82C327007E3EC2 /* ProgramSwitcherView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgramSwitcherView.swift; sourceTree = "<group>"; };
 		FB8547482F82C327007E3EC2 /* TabVisibilitySettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabVisibilitySettingsView.swift; sourceTree = "<group>"; };
 		FB85474A2F82C327007E3EC2 /* AllGoalsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AllGoalsView.swift; sourceTree = "<group>"; };
 		FB85474B2F82C327007E3EC2 /* AppBackgroundView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppBackgroundView.swift; sourceTree = "<group>"; };
@@ -153,9 +152,10 @@
 		FB8547AA2F8614EC007E3EC2 /* SolidColorDefinition.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SolidColorDefinition.swift; sourceTree = "<group>"; };
 		FB8547AC2F8638AD007E3EC2 /* AppLockService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppLockService.swift; sourceTree = "<group>"; };
 		FB8547AE2F8638CA007E3EC2 /* AppLockView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppLockView.swift; sourceTree = "<group>"; };
-		FB8547B02F863909007E3EC2 /* AppLockSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppLockSettingsView.swift; sourceTree = "<group>"; };
 		FB8547B22F86582A007E3EC2 /* FriendService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FriendService.swift; sourceTree = "<group>"; };
-		FB8547B42F865867007E3EC2 /* FriendsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FriendsView.swift; sourceTree = "<group>"; };
+		FBEACD8D2F865DDF008B6847 /* AppLockSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppLockSettingsView.swift; sourceTree = "<group>"; };
+		FBEACD8E2F865DDF008B6847 /* FriendsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FriendsView.swift; sourceTree = "<group>"; };
+		FBEACD8F2F865DDF008B6847 /* ProgramSwitcherView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgramSwitcherView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -251,7 +251,6 @@
 		FB8547492F82C327007E3EC2 /* DevViews */ = {
 			isa = PBXGroup;
 			children = (
-				FBEACD8C2F865AA4008B6847 /* UnderDev */,
 				FB8547432F82C327007E3EC2 /* AirportListView.swift */,
 				FB8547442F82C327007E3EC2 /* CloudKitAdvancedView.swift */,
 				FB8547452F82C327007E3EC2 /* ConsoleLogView.swift */,
@@ -283,6 +282,9 @@
 				FB8547592F82C327007E3EC2 /* ProgressView.swift */,
 				FB85475A2F82C327007E3EC2 /* SettingsView.swift */,
 				FB85475B2F82C327007E3EC2 /* TransactionFormView.swift */,
+				FBEACD8D2F865DDF008B6847 /* AppLockSettingsView.swift */,
+				FBEACD8E2F865DDF008B6847 /* FriendsView.swift */,
+				FBEACD8F2F865DDF008B6847 /* ProgramSwitcherView.swift */,
 				FB8547AE2F8638CA007E3EC2 /* AppLockView.swift */,
 			);
 			path = Views;
@@ -328,16 +330,6 @@
 				FB8547A82F82C468007E3EC2 /* milery.app */,
 				FB8547A92F840CD7007E3EC2 /* mileryTests.xctest */,
 			);
-			sourceTree = "<group>";
-		};
-		FBEACD8C2F865AA4008B6847 /* UnderDev */ = {
-			isa = PBXGroup;
-			children = (
-				FB8547472F82C327007E3EC2 /* ProgramSwitcherView.swift */,
-				FB8547B02F863909007E3EC2 /* AppLockSettingsView.swift */,
-				FB8547B42F865867007E3EC2 /* FriendsView.swift */,
-			);
-			path = UnderDev;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -465,7 +457,6 @@
 				FB85476D2F82C327007E3EC2 /* CreditCardPageView.swift in Sources */,
 				FB85476E2F82C327007E3EC2 /* CreditCardRule.swift in Sources */,
 				FB85476F2F82C327007E3EC2 /* LedgerView.swift in Sources */,
-				FB8547B12F863909007E3EC2 /* AppLockSettingsView.swift in Sources */,
 				FB8547702F82C327007E3EC2 /* TransactionFormView.swift in Sources */,
 				FB8547712F82C327007E3EC2 /* MileryApp.swift in Sources */,
 				FB8547722F82C327007E3EC2 /* MilestonesView.swift in Sources */,
@@ -473,6 +464,9 @@
 				FB8547742F82C327007E3EC2 /* CalculatorLedgerView.swift in Sources */,
 				FB8547752F82C327007E3EC2 /* AirportListView.swift in Sources */,
 				FB8547762F82C327007E3EC2 /* ConsoleLogView.swift in Sources */,
+				FBEACD902F865DDF008B6847 /* AppLockSettingsView.swift in Sources */,
+				FBEACD912F865DDF008B6847 /* ProgramSwitcherView.swift in Sources */,
+				FBEACD922F865DDF008B6847 /* FriendsView.swift in Sources */,
 				FB8547772F82C327007E3EC2 /* CathayUnitedBankCard.swift in Sources */,
 				FB8547782F82C327007E3EC2 /* TabVisibilitySettingsView.swift in Sources */,
 				FB8547792F82C327007E3EC2 /* AllGoalsView.swift in Sources */,
@@ -491,7 +485,6 @@
 				FB8547862F82C327007E3EC2 /* CathayAwardChart.swift in Sources */,
 				FB8547872F82C327007E3EC2 /* MileageViewModel+Transaction.swift in Sources */,
 				FB8547B32F86582A007E3EC2 /* FriendService.swift in Sources */,
-				FB8547B52F865867007E3EC2 /* FriendsView.swift in Sources */,
 				FB8547882F82C327007E3EC2 /* AppBackgroundView.swift in Sources */,
 				FB8547892F82C327007E3EC2 /* DashboardView.swift in Sources */,
 				FB85478A2F82C327007E3EC2 /* FlightGoal.swift in Sources */,
@@ -502,7 +495,6 @@
 				FB85478D2F82C327007E3EC2 /* Transaction.swift in Sources */,
 				FB85478E2F82C327007E3EC2 /* CardPreference.swift in Sources */,
 				FB85478F2F82C327007E3EC2 /* CloudKitAdvancedView.swift in Sources */,
-				FB8547902F82C327007E3EC2 /* ProgramSwitcherView.swift in Sources */,
 				FB8547912F82C327007E3EC2 /* EditTransactionView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
