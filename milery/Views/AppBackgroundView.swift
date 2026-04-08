@@ -17,6 +17,12 @@ struct AppBackgroundView: View {
                     Color(hex: hex)
                 }
 
+                // 漸層背景
+                if case .gradient(let id) = backgroundSelection,
+                   let def = GradientRegistry.definition(for: id) {
+                    def.linearGradient
+                }
+
                 // 若有選擇背景圖片
                 if let image = resolvedImage {
                     Image(uiImage: image)
@@ -41,7 +47,7 @@ struct AppBackgroundView: View {
 
     private var resolvedImage: UIImage? {
         switch backgroundSelection {
-        case .none, .solidColor:
+        case .none, .solidColor, .gradient:
             return nil
         case .preset(let name):
             return BackgroundImageManager.shared.loadPresetImage(name: name)

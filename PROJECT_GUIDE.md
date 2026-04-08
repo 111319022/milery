@@ -391,9 +391,26 @@ Asia Miles 2026 年兌換表計算引擎。
 
 | 元件 | 職責 |
 |------|------|
-| `BackgroundImageManager` | 自訂背景圖片的儲存/讀取/刪除（App Documents） |
-| `AppBackgroundView` | 統一背景渲染（漸層 / 純色 / 預設桌布 / 自訂圖片） |
-| `BackgroundPickerView` | 背景選擇 UI |
+| `BackgroundImageManager` | 背景選擇型別與序列化（none/preset/custom/solidColor/gradient）、自訂背景圖片儲存/讀取/刪除（App Documents） |
+| `SolidColorDefinition` / `SolidColorRegistry` | 內建純色背景定義，支援依 ColorScheme（light/dark/both）過濾顯示 |
+| `GradientDefinition` / `GradientRegistry` | 內建漸層背景定義（含色票 stop、方向、標題色），支援依 ColorScheme 過濾顯示 |
+| `BackgroundPickerView` | 背景選擇 UI，顯示「預設」「內建純色背景」「內建漸層背景」「自訂圖片」 |
+| `AppBackgroundView` | 統一背景渲染（預設 / 純色 / 漸層 / 預設圖片 / 自訂圖片） |
+| `MainTabView` | 監聽系統外觀變更，若目前純色或漸層背景不適用新模式，會自動回退為預設背景 |
+
+背景選擇持久化格式（AppStorage）：
+
+- `none`
+- `preset:名稱`
+- `custom:檔名`
+- `solidColor:HEX`
+- `gradient:ID`
+
+可見性策略：
+
+- 純色與漸層皆可標記為 `light`、`dark`、`both`
+- `BackgroundPickerView` 僅顯示當前模式可用選項
+- 使用者切換模式後，若當前背景不可見，`MainTabView` 會觸發自動回退，避免顯示不一致
 
 圖片背景啟用時會疊加 material + overlay 確保文字可讀性。
 

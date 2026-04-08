@@ -24,10 +24,15 @@ struct BackgroundPickerView: View {
         ""
     ]
 
-    // 純色背景選項：(hex, 顯示名稱)
-    private let solidColorOptions: [(hex: String, name: String)] = [
-        ("F2F2F7", "淺灰色"),
-    ]
+    // 純色背景選項：根據目前外觀模式篩選
+    private var solidColorOptions: [SolidColorDefinition] {
+        SolidColorRegistry.visible(for: colorScheme)
+    }
+
+    // 漸層背景選項：根據目前外觀模式篩選
+    private var gradientOptions: [GradientDefinition] {
+        GradientRegistry.visible(for: colorScheme)
+    }
 
     private let columns = [
         GridItem(.flexible(), spacing: 12),
@@ -41,7 +46,7 @@ struct BackgroundPickerView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: AviationTheme.Spacing.xl) {
 
-                    // MARK: - 預設漸層
+                    // MARK: - 預設
                     VStack(alignment: .leading, spacing: 8) {
                         SectionHeaderView(title: "預設", colorScheme: colorScheme)
 
@@ -55,19 +60,19 @@ struct BackgroundPickerView: View {
                         .buttonStyle(.plain)
                     }
 
-                    // MARK: - 純色背景
+                    // MARK: - 內建純色背景
                     if !solidColorOptions.isEmpty {
                         VStack(alignment: .leading, spacing: 8) {
-                            SectionHeaderView(title: "純色背景", colorScheme: colorScheme)
+                            SectionHeaderView(title: "內建純色背景", colorScheme: colorScheme)
 
                             LazyVGrid(columns: columns, spacing: 12) {
-                                ForEach(solidColorOptions, id: \.hex) { option in
+                                ForEach(solidColorOptions) { option in
                                     Button {
                                         withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
                                             backgroundSelection = .solidColor(hex: option.hex)
                                         }
                                     } label: {
-                                        solidColorThumbnail(hex: option.hex, name: option.name)
+                                        solidColorThumbnail(option: option)
                                     }
                                     .buttonStyle(.plain)
                                 }
@@ -75,6 +80,27 @@ struct BackgroundPickerView: View {
                         }
                     }
 
+                    // MARK: - 內建漸層背景
+                    if !gradientOptions.isEmpty {
+                        VStack(alignment: .leading, spacing: 8) {
+                            SectionHeaderView(title: "內建漸層背景", colorScheme: colorScheme)
+
+                            LazyVGrid(columns: columns, spacing: 12) {
+                                ForEach(gradientOptions) { option in
+                                    Button {
+                                        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                                            backgroundSelection = .gradient(id: option.id)
+                                        }
+                                    } label: {
+                                        gradientThumbnail(definition: option)
+                                    }
+                                    .buttonStyle(.plain)
+                                }
+                            }
+                        }
+                    }
+
+                    /*未有預設圖片先註解掉
                     // MARK: - 預設圖片
                     if !presetNames.isEmpty {
                         VStack(alignment: .leading, spacing: 8) {
@@ -94,7 +120,8 @@ struct BackgroundPickerView: View {
                             }
                         }
                     }
-
+                     */
+                     
                     // MARK: - 自訂圖片
                     VStack(alignment: .leading, spacing: 8) {
                         SectionHeaderView(title: "自訂圖片", colorScheme: colorScheme)
@@ -227,17 +254,46 @@ struct BackgroundPickerView: View {
 
     // MARK: - 純色背景縮圖
 
-    private func solidColorThumbnail(hex: String, name: String) -> some View {
-        let isSelected = backgroundSelection == .solidColor(hex: hex)
+    private func solidColorThumbnail(option: SolidColorDefinition) -> some View {
+        let isSelected = backgroundSelection == .solidColor(hex: option.hex)
         return ZStack {
             RoundedRectangle(cornerRadius: AviationTheme.CornerRadius.lg)
-                .fill(Color(hex: hex))
+                .fill(Color(hex: option.hex))
                 .frame(maxWidth: .infinity)
                 .frame(height: 120)
                 .overlay {
-                    Text(name)
+                    Text(option.name)
                         .font(AviationTheme.Typography.caption)
-                        .foregroundColor(.gray)
+                        .foregroundColor(option.titleColor)
+                }
+
+            if isSelected {
+                selectionBadge
+            }
+        }
+        .clipShape(RoundedRectangle(cornerRadius: AviationTheme.CornerRadius.lg))
+        .contentShape(RoundedRectangle(cornerRadius: AviationTheme.CornerRadius.lg))
+        .overlay(
+            RoundedRectangle(cornerRadius: AviationTheme.CornerRadius.lg)
+                .stroke(isSelected ? AviationTheme.Colors.cathayJade : Color.clear, lineWidth: 2.5)
+        )
+        .shadow(color: AviationTheme.Shadows.cardShadow(colorScheme).opacity(0.3), radius: 6, x: 0, y: 2)
+    }
+
+    // MARK: - 漸層背景縮圖
+
+    private func gradientThumbnail(definition: GradientDefinition) -> some View {
+        let isSelected = backgroundSelection == .gradient(id: definition.id)
+        return ZStack {
+            RoundedRectangle(cornerRadius: AviationTheme.CornerRadius.lg)
+                .fill(definition.linearGradient)
+                .frame(maxWidth: .infinity)
+                .frame(height: 120)
+                .overlay {
+                    Text(definition.name)
+                        .font(AviationTheme.Typography.caption)
+                        .foregroundColor(definition.titleColor)
+                        .shadow(color: .black.opacity(0.5), radius: 2, x: 0, y: 1)
                 }
 
             if isSelected {

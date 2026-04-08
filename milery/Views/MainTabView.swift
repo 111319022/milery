@@ -3,6 +3,7 @@ import SwiftData
 
 struct MainTabView: View {
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.colorScheme) private var colorScheme
     @AppStorage("userColorScheme") private var userColorScheme: String = "system"
     @AppStorage("backgroundSelection") private var backgroundSelection: BackgroundSelection = .none
     @AppStorage("tabVisible_dashboard") private var dashboardVisible = true
@@ -13,7 +14,7 @@ struct MainTabView: View {
     private var hasBackgroundImage: Bool {
         switch backgroundSelection {
         case .preset, .custom: return true
-        case .none, .solidColor: return false
+        case .none, .solidColor, .gradient: return false
         }
     }
     @State private var viewModel = MileageViewModel()
@@ -130,6 +131,9 @@ struct MainTabView: View {
             guard oldValue != newValue else { return }
             animateThemeTransition(to: newValue)
         }
+        .onChange(of: colorScheme) { _, newScheme in
+            ensureBackgroundVisibility(for: newScheme)
+        }
         .onChange(of: dashboardVisible) { ensureValidTab() }
         .onChange(of: progressVisible) { ensureValidTab() }
         .onChange(of: ledgerVisible) { ensureValidTab() }
@@ -141,6 +145,28 @@ struct MainTabView: View {
         }
     }
     
+    /// 當外觀模式切換後，若目前背景不適用於新模式，自動回到預設背景
+    private func ensureBackgroundVisibility(for scheme: ColorScheme) {
+        switch backgroundSelection {
+        case .solidColor(let hex):
+            if let def = SolidColorRegistry.all.first(where: { $0.hex == hex }),
+               !def.isVisible(in: scheme) {
+                withAnimation(.easeInOut(duration: 0.3)) {
+                    backgroundSelection = .none
+                }
+            }
+        case .gradient(let id):
+            if let def = GradientRegistry.definition(for: id),
+               !def.isVisible(in: scheme) {
+                withAnimation(.easeInOut(duration: 0.3)) {
+                    backgroundSelection = .none
+                }
+            }
+        default:
+            break
+        }
+    }
+
     /// 當分頁被隱藏時，若目前選中的分頁已不可見，自動切換到第一個可見分頁
     private func ensureValidTab() {
         let visibilityMap: [Int: Bool] = [

@@ -67,6 +67,7 @@
 		FB8547A52F82C367007E3EC2 /* CreditCardRuleTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB85479E2F82C367007E3EC2 /* CreditCardRuleTests.swift */; };
 		FB8547A62F82C367007E3EC2 /* MileageAccountTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB8547A12F82C367007E3EC2 /* MileageAccountTests.swift */; };
 		FB8547A72F82C367007E3EC2 /* AirportDatabaseTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB85479D2F82C367007E3EC2 /* AirportDatabaseTests.swift */; };
+		FB8547AB2F8614EC007E3EC2 /* SolidColorDefinition.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB8547AA2F8614EC007E3EC2 /* SolidColorDefinition.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -144,6 +145,7 @@
 		FB8547A12F82C367007E3EC2 /* MileageAccountTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MileageAccountTests.swift; sourceTree = "<group>"; };
 		FB8547A82F82C468007E3EC2 /* milery.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = milery.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		FB8547A92F840CD7007E3EC2 /* mileryTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = mileryTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		FB8547AA2F8614EC007E3EC2 /* SolidColorDefinition.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SolidColorDefinition.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -208,6 +210,7 @@
 				FB8547362F82C327007E3EC2 /* MileageProgram.swift */,
 				FB8547372F82C327007E3EC2 /* RedeemedTicket.swift */,
 				FB8547382F82C327007E3EC2 /* Transaction.swift */,
+				FB8547AA2F8614EC007E3EC2 /* SolidColorDefinition.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -465,6 +468,7 @@
 				FB8547882F82C327007E3EC2 /* AppBackgroundView.swift in Sources */,
 				FB8547892F82C327007E3EC2 /* DashboardView.swift in Sources */,
 				FB85478A2F82C327007E3EC2 /* FlightGoal.swift in Sources */,
+				FB8547AB2F8614EC007E3EC2 /* SolidColorDefinition.swift in Sources */,
 				FB85478B2F82C327007E3EC2 /* MileageViewModel+Sync.swift in Sources */,
 				FB85478C2F82C327007E3EC2 /* AviationTheme.swift in Sources */,
 				FB85478D2F82C327007E3EC2 /* Transaction.swift in Sources */,
