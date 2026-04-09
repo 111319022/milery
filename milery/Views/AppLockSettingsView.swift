@@ -48,7 +48,7 @@ struct AppLockSettingsView: View {
                                 SettingToggleRow(
                                     icon: biometricIconName,
                                     title: "使用 \(lockService.biometricTypeName)",
-                                    subtitle: "驗證通過後可跳過密碼輸入",
+                                    subtitle: "免輸入密碼",
                                     isOn: $biometricEnabled
                                 )
                                 

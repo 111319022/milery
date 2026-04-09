@@ -344,7 +344,7 @@ final class BackgroundImageManager {
     /// 取得背景選擇的描述文字
     static func displayName(for selection: BackgroundSelection) -> String {
         switch selection {
-        case .none: return "預設漸層"
+        case .none: return "預設"
         case .preset(let name): return name
         case .custom: return "自訂圖片"
         case .solidColor: return "純色背景"
