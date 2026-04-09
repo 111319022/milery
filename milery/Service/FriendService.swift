@@ -251,12 +251,10 @@ final class FriendService {
 
         appLog("[FriendService] 反向查詢結果: \(reverseResults.count) 筆")
 
-        if let (_, reverseResult) = reverseResults.first,
-           let reverseRecord = try? reverseResult.get() {
-            // 互加！升級為 accepted
-            reverseRecord["status"] = "accepted" as CKRecordValue
-            _ = try await database.save(reverseRecord)
-
+          if let (_, reverseResult) = reverseResults.first,
+              (try? reverseResult.get()) != nil {
+            // 互加！但我只能修改自己的記錄，不能修改對方的
+            // 建立/更新自己的關係記錄設置為 accepted
             let myRelation = CKRecord(recordType: "FriendRelation")
             myRelation["fromUserRecordID"] = myRef
             myRelation["toUserRecordID"] = targetRef
@@ -264,7 +262,7 @@ final class FriendService {
             myRelation["createdAt"] = Date() as CKRecordValue
             _ = try await database.save(myRelation)
 
-            appLog("[FriendService] 互加成功！code: \(code)")
+            appLog("[FriendService] 已確認互加！code: \(code)")
         } else {
             // 單方加好友，建立 pending
             let myRelation = CKRecord(recordType: "FriendRelation")
@@ -360,18 +358,9 @@ final class FriendService {
                         return rec
                     }.first
 
-                    if let myRecord = myFromRecord {
-                        // 雙方都有 pending → 自動升級為 accepted
-                        record["status"] = "accepted" as CKRecordValue
-                        myRecord["status"] = "accepted" as CKRecordValue
-                        do {
-                            _ = try await database.save(record)
-                            _ = try await database.save(myRecord)
-                            appLog("[FriendService] 自動互加升級: \(senderRef.recordID.recordName)")
-                        } catch {
-                            appLog("[FriendService] 自動升級失敗: \(error.localizedDescription)")
-                        }
-                        // 升級後加入 accepted 列表
+                    if let myRecord = myFromRecord, let myStatus = myRecord["status"] as? String,
+                       myStatus == "accepted" {
+                        // 我已經確認了，這是互加完成的狀態
                         if let profile = try? await resolveProfile(for: senderRef) {
                             let friendCode = profile["friendCode"] as? String ?? ""
                             accepted.append(FriendData(
@@ -388,7 +377,7 @@ final class FriendService {
                             outgoing.removeAll { $0.friendCode == friendCode }
                         }
                     } else {
-                        // 對方加了我，但我還沒加對方
+                        // 對方加了我，但我還沒確認（或只是pending）
                         if let profile = try? await resolveProfile(for: senderRef) {
                             incoming.append(FriendData(
                                 id: record.recordID.recordName,
@@ -416,6 +405,57 @@ final class FriendService {
             appLog("[FriendService] fetchFriends 失敗: \(error.localizedDescription)")
             errorMessage = error.localizedDescription
         }
+    }
+    
+    // MARK: - Remove Friend
+    
+    /// 刪除好友（刪除雙向的 FriendRelation 記錄）
+    func removeFriend(friendCode: String) async throws {
+        try await ensureiCloudAvailable()
+        let myUserRecordID = try await currentUserRecordID()
+        let myRef = CKRecord.Reference(recordID: myUserRecordID, action: .none)
+        
+        // 1. 透過 friendCode 查詢對方簡介
+        let targetProfile = try await lookUpProfile(byFriendCode: friendCode.uppercased())
+        guard let targetUserRef = targetProfile["userRecordID"] as? CKRecord.Reference else {
+            throw FriendServiceError.profileNotFound
+        }
+        let targetRef = CKRecord.Reference(recordID: targetUserRef.recordID, action: .none)
+        
+        // 2. 刪除我加對方的記錄 (from=me, to=target)
+        let myToTargetPred = NSPredicate(
+            format: "fromUserRecordID == %@ AND toUserRecordID == %@", myRef, targetRef
+        )
+        let myToTargetQuery = CKQuery(recordType: "FriendRelation", predicate: myToTargetPred)
+        let (myToTargetResults, _) = try await database.records(matching: myToTargetQuery, resultsLimit: 1)
+        
+        if let (recordID, _) = myToTargetResults.first {
+            do {
+                try await database.deleteRecord(withID: recordID)
+                appLog("[FriendService] 已刪除記錄: me→\(friendCode)")
+            } catch {
+                appLog("[FriendService] 刪除記錄失敗: \(error.localizedDescription)")
+            }
+        }
+        
+        // 3. 刪除對方加我的記錄 (from=target, to=me)
+        let targetToMyPred = NSPredicate(
+            format: "fromUserRecordID == %@ AND toUserRecordID == %@", targetRef, myRef
+        )
+        let targetToMyQuery = CKQuery(recordType: "FriendRelation", predicate: targetToMyPred)
+        let (targetToMyResults, _) = try await database.records(matching: targetToMyQuery, resultsLimit: 1)
+        
+        if let (recordID, _) = targetToMyResults.first {
+            do {
+                try await database.deleteRecord(withID: recordID)
+                appLog("[FriendService] 已刪除記錄: \(friendCode)→me")
+            } catch {
+                appLog("[FriendService] 刪除記錄失敗: \(error.localizedDescription)")
+            }
+        }
+        
+        // 4. 重新加載好友列表
+        await fetchFriends()
     }
     
     // MARK: - Sync Local Stats to UserProfile

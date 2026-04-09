@@ -1,9 +1,7 @@
 import SwiftUI
-import SwiftData
 
 struct FriendsView: View {
     @Environment(\.colorScheme) var colorScheme
-    @Environment(\.modelContext) private var modelContext
     @AppStorage("userName") private var userName: String = ""
     
     private let friendService = FriendService.shared
@@ -11,60 +9,56 @@ struct FriendsView: View {
     @State private var showAddFriendSheet = false
     @State private var showCopiedToast = false
     @State private var profileInitialized = false
-    @State private var profileError: String?
     
     var body: some View {
-        ZStack {
-            AppBackgroundView()
-
-            ScrollView {
-                VStack(alignment: .leading, spacing: AviationTheme.Spacing.lg) {
-                    
-                    // MARK: - 我的好友代碼
-                    myFriendCodeSection
-                    
-                    // MARK: - 好友列表
-                    if !friendService.friends.isEmpty {
-                        friendsListSection(
-                            title: "好友",
-                            friends: friendService.friends
-                        )
-                    }
-                    
-                    // MARK: - 等待對方加入
-                    if !friendService.pendingOutgoing.isEmpty {
-                        friendsListSection(
-                            title: "等待對方加入",
-                            friends: friendService.pendingOutgoing
-                        )
-                    }
-                    
-                    // MARK: - 對方已加你
-                    if !friendService.pendingIncoming.isEmpty {
-                        incomingRequestsSection
-                    }
-                    
-                    // MARK: - 空狀態
-                    if friendService.friends.isEmpty
-                        && friendService.pendingOutgoing.isEmpty
-                        && friendService.pendingIncoming.isEmpty
-                        && profileInitialized
-                        && !friendService.isLoading {
-                        emptyStateView
-                    }
-                    
-                    // Loading
-                    if friendService.isLoading && !profileInitialized {
-                        SwiftUI.ProgressView()
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, AviationTheme.Spacing.xxl)
-                    }
+        ScrollView {
+            VStack(alignment: .leading, spacing: AviationTheme.Spacing.lg) {
+                
+                // MARK: - 我的好友代碼
+                myFriendCodeSection
+                
+                // MARK: - 好友列表
+                if !friendService.friends.isEmpty {
+                    friendsListSection(
+                        title: "好友",
+                        friends: friendService.friends
+                    )
                 }
-                .padding(.horizontal, AviationTheme.Spacing.md)
-                .padding(.top, AviationTheme.Spacing.md)
-                .padding(.bottom, AviationTheme.Spacing.xxl)
+                
+                // MARK: - 等待對方加入
+                if !friendService.pendingOutgoing.isEmpty {
+                    friendsListSection(
+                        title: "等待對方加入",
+                        friends: friendService.pendingOutgoing
+                    )
+                }
+                
+                // MARK: - 對方已加你
+                if !friendService.pendingIncoming.isEmpty {
+                    incomingRequestsSection
+                }
+                
+                // MARK: - 空狀態
+                if friendService.friends.isEmpty
+                    && friendService.pendingOutgoing.isEmpty
+                    && friendService.pendingIncoming.isEmpty
+                    && profileInitialized
+                    && !friendService.isLoading {
+                    emptyStateView
+                }
+                
+                // Loading
+                if friendService.isLoading && !profileInitialized {
+                    SwiftUI.ProgressView()
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, AviationTheme.Spacing.xxl)
+                }
             }
+            .padding(.horizontal, AviationTheme.Spacing.md)
+            .padding(.top, AviationTheme.Spacing.md)
+            .padding(.bottom, AviationTheme.Spacing.xxl)
         }
+        .background(AviationTheme.Colors.background(colorScheme).ignoresSafeArea())
         .navigationTitle("好友（開發中）")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
@@ -94,7 +88,6 @@ struct FriendsView: View {
         }
         .task {
             await initializeProfile()
-            await friendService.syncLocalStatsToProfile(context: modelContext)
             await friendService.fetchFriends()
         }
         .refreshable {
@@ -157,29 +150,6 @@ struct FriendsView: View {
                     SwiftUI.ProgressView()
                         .frame(maxWidth: .infinity)
                         .padding()
-                } else if let error = profileError {
-                    VStack(spacing: 12) {
-                        Image(systemName: "exclamationmark.icloud")
-                            .font(.title2)
-                            .foregroundColor(AviationTheme.Colors.warning)
-                        Text(error)
-                            .font(AviationTheme.Typography.footnote)
-                            .foregroundColor(AviationTheme.Colors.secondaryText(colorScheme))
-                            .multilineTextAlignment(.center)
-                        Button {
-                            Task { await initializeProfile() }
-                        } label: {
-                            Text("重試")
-                                .font(AviationTheme.Typography.caption)
-                                .fontWeight(.medium)
-                                .foregroundColor(.white)
-                                .padding(.horizontal, 16)
-                                .padding(.vertical, 8)
-                                .background(Capsule().fill(AviationTheme.Colors.cathayJade))
-                        }
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding()
                 } else {
                     Text("無法載入好友代碼，請確認 iCloud 已登入")
                         .font(AviationTheme.Typography.footnote)
@@ -219,122 +189,38 @@ struct FriendsView: View {
     
     @ViewBuilder
     private func friendRow(_ friend: FriendService.FriendData) -> some View {
-        VStack(spacing: 0) {
-            // 上半：名稱 + 代碼 + 狀態
-            HStack(spacing: 16) {
-                Image(systemName: "person.circle.fill")
-                    .font(.title3)
-                    .foregroundColor(AviationTheme.Colors.cathayJade)
-                    .frame(width: 28)
+        HStack(spacing: 16) {
+            Image(systemName: "person.circle.fill")
+                .font(.title3)
+                .foregroundColor(AviationTheme.Colors.cathayJade)
+                .frame(width: 28)
+            
+            VStack(alignment: .leading, spacing: 4) {
+                Text(friend.displayName)
+                    .font(AviationTheme.Typography.body)
+                    .foregroundColor(AviationTheme.Colors.primaryText(colorScheme))
                 
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(friend.displayName)
-                        .font(AviationTheme.Typography.body)
-                        .foregroundColor(AviationTheme.Colors.primaryText(colorScheme))
-                    
-                    Text(friend.friendCode)
-                        .font(.system(.caption, design: .monospaced))
-                        .foregroundColor(AviationTheme.Colors.secondaryText(colorScheme))
-                }
-                
-                Spacer()
-                
-                if friend.status == "pending" && !friend.isIncoming {
-                    HStack(spacing: 8) {
-                        Text("等待中")
-                            .font(AviationTheme.Typography.caption)
-                            .foregroundColor(AviationTheme.Colors.warning)
-                            .padding(.horizontal, 8)
-                            .padding(.vertical, 4)
-                            .background(
-                                Capsule()
-                                    .fill(AviationTheme.Colors.warning.opacity(0.12))
-                            )
-                        
-                        Button {
-                            Task {
-                                do {
-                                    try await friendService.removeFriend(friendCode: friend.friendCode)
-                                } catch {
-                                    appLog("取消邀請失敗: \(error.localizedDescription)")
-                                }
-                            }
-                        } label: {
-                            Image(systemName: "xmark")
-                                .font(.caption)
-                                .foregroundColor(AviationTheme.Colors.secondaryText(colorScheme))
-                        }
-                    }
-                }
+                Text(friend.friendCode)
+                    .font(.system(.caption, design: .monospaced))
+                    .foregroundColor(AviationTheme.Colors.secondaryText(colorScheme))
             }
             
-            // 下半：進度摘要（僅已接受的好友顯示）
-            if friend.status == "accepted" {
-                HStack(spacing: 0) {
-                    // 左邊留出 icon 對齊空間
-                    Color.clear.frame(width: 44, height: 1)
-                    
-                    HStack(spacing: 16) {
-                        friendStatItem(
-                            icon: "star.fill",
-                            value: friend.totalMiles.formatted(),
-                            label: "里程"
-                        )
-                        
-                        friendStatItem(
-                            icon: "flag.fill",
-                            value: "\(friend.goalCount)",
-                            label: "目標"
-                        )
-                        
-                        friendStatItem(
-                            icon: "airplane",
-                            value: "\(friend.completedRoutesCount)",
-                            label: "已完成"
-                        )
-                        
-                        Spacer()
-                        
-                        // 刪除按鈕
-                        Button {
-                            Task {
-                                do {
-                                    try await friendService.removeFriend(friendCode: friend.friendCode)
-                                } catch {
-                                    appLog("刪除好友失敗: \(error.localizedDescription)")
-                                }
-                            }
-                        } label: {
-                            Image(systemName: "trash")
-                                .font(.caption)
-                                .foregroundColor(AviationTheme.Colors.warning)
-                        }
-                        .padding(.trailing, 4)
-                    }
-                }
-                .padding(.top, 8)
+            Spacer()
+            
+            if friend.status == "pending" && !friend.isIncoming {
+                Text("等待中")
+                    .font(AviationTheme.Typography.caption)
+                    .foregroundColor(AviationTheme.Colors.warning)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(
+                        Capsule()
+                            .fill(AviationTheme.Colors.warning.opacity(0.12))
+                    )
             }
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 14)
-    }
-    
-    @ViewBuilder
-    private func friendStatItem(icon: String, value: String, label: String) -> some View {
-        HStack(spacing: 4) {
-            Image(systemName: icon)
-                .font(.system(size: 10))
-                .foregroundColor(AviationTheme.Colors.cathayJade)
-            
-            Text(value)
-                .font(AviationTheme.Typography.caption)
-                .fontWeight(.semibold)
-                .foregroundColor(AviationTheme.Colors.primaryText(colorScheme))
-            
-            Text(label)
-                .font(AviationTheme.Typography.caption)
-                .foregroundColor(AviationTheme.Colors.tertiaryText(colorScheme))
-        }
     }
     
     // MARK: - 對方已加你 Section
@@ -366,42 +252,18 @@ struct FriendsView: View {
                         
                         Spacer()
                         
-                        HStack(spacing: 8) {
-                            Button {
-                                Task {
-                                    do {
-                                        try await friendService.addFriend(byCode: friend.friendCode)
-                                        appLog("好友添加成功: \(friend.friendCode)")
-                                    } catch {
-                                        appLog("好友添加失敗: \(error.localizedDescription)")
-                                        await MainActor.run {
-                                            friendService.errorMessage = "確認好友失敗: \(error.localizedDescription)"
-                                        }
-                                    }
-                                }
-                            } label: {
-                                Text("加為好友")
-                                    .font(AviationTheme.Typography.caption)
-                                    .fontWeight(.medium)
-                                    .foregroundColor(.white)
-                                    .padding(.horizontal, 12)
-                                    .padding(.vertical, 6)
-                                    .background(Capsule().fill(AviationTheme.Colors.cathayJade))
+                        Button {
+                            Task {
+                                try? await friendService.addFriend(byCode: friend.friendCode)
                             }
-                            
-                            Button {
-                                Task {
-                                    do {
-                                        try await friendService.removeFriend(friendCode: friend.friendCode)
-                                    } catch {
-                                        appLog("拒絕邀請失敗: \(error.localizedDescription)")
-                                    }
-                                }
-                            } label: {
-                                Image(systemName: "xmark")
-                                    .font(.caption)
-                                    .foregroundColor(AviationTheme.Colors.warning)
-                            }
+                        } label: {
+                            Text("加為好友")
+                                .font(AviationTheme.Typography.caption)
+                                .fontWeight(.medium)
+                                .foregroundColor(.white)
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 6)
+                                .background(Capsule().fill(AviationTheme.Colors.cathayJade))
                         }
                     }
                     .padding(.horizontal, 16)
@@ -461,13 +323,10 @@ struct FriendsView: View {
     // MARK: - Helper
     
     private func initializeProfile() async {
-        profileError = nil
         do {
             _ = try await friendService.ensureUserProfile(defaultDisplayName: userName)
             profileInitialized = true
         } catch {
-            profileError = error.localizedDescription
-            profileInitialized = true // 標記已嘗試過，避免卡在 loading
             appLog("[FriendsView] Profile 初始化失敗: \(error.localizedDescription)")
         }
     }
