@@ -154,6 +154,23 @@ enum MileageSource: String, Codable, CaseIterable {
         case .initialInput: return "tray.and.arrow.down.fill"
         }
     }
+
+    /// 記帳細項專用自訂圖示資產名稱（Assets）
+    var ledgerIconAssetName: String {
+        switch self {
+        case .cardGeneral: return "ledgericon_一般消費"
+        case .cardAccelerator: return "ledgericon_加速器"
+        case .taishinOverseas: return "ledgericon_國外"
+        case .taishinDesignated: return "ledgericon_越飛越有哩"
+        case .specialMerchant: return "ledgericon_特店"
+        case .promotion: return "ledgericon_活動"
+        case .pointsConversion: return "ledgericon_點數兌換"
+        case .pointsTransfer: return "ledgericon_他點轉入"
+        case .flight: return "ledgericon_飛行"
+        case .ticketRedemption: return "ledgericon_機票兌換"
+        case .initialInput: return "ledgericon_初次輸入"
+        }
+    }
     
     var color: String {
         switch self {

@@ -1,5 +1,6 @@
 import SwiftUI
 import SwiftData
+import UIKit
 
 struct LedgerView: View {
     @Environment(\.colorScheme) var colorScheme
@@ -318,12 +319,28 @@ struct CompactCategoryStatRow: View {
     }
 
     /// 圖標：有子類別時用子類別 icon
-    var displayIcon: String {
+    @ViewBuilder
+    var displayIconView: some View {
         if let subID = subcategoryID,
            let cat = CardBrandRegistry.spendingCategory(for: subID) {
-            return cat.icon
+            Image(systemName: cat.icon)
+                .font(.caption2)
+                .foregroundColor(milesColor)
+                .frame(width: 16)
+        } else if UIImage(named: source.ledgerIconAssetName) != nil {
+            Image(source.ledgerIconAssetName)
+                .renderingMode(.template)
+                .resizable()
+                .scaledToFit()
+                .foregroundColor(milesColor)
+                .frame(width: 12, height: 12)
+                .frame(width: 16)
+        } else {
+            Image(systemName: source.icon)
+                .font(.caption2)
+                .foregroundColor(milesColor)
+                .frame(width: 16)
         }
-        return source.icon
     }
 
     var milesColor: Color {
@@ -335,10 +352,7 @@ struct CompactCategoryStatRow: View {
     var body: some View {
         HStack(spacing: 6) {
             // 圖標
-            Image(systemName: displayIcon)
-                .font(.caption2)
-                .foregroundColor(milesColor)
-                .frame(width: 16)
+            displayIconView
             
             // 類別名稱
             VStack(alignment: .leading, spacing: 1) {
@@ -381,6 +395,22 @@ struct CategoryStatRow: View {
     var hasAmount: Bool {
         amount > 0
     }
+
+    @ViewBuilder
+    var sourceIconView: some View {
+        if UIImage(named: source.ledgerIconAssetName) != nil {
+            Image(source.ledgerIconAssetName)
+                .renderingMode(.template)
+                .resizable()
+                .scaledToFit()
+                .foregroundColor(AviationTheme.Colors.brandColor(colorScheme))
+                .frame(width: 14, height: 14)
+        } else {
+            Image(systemName: source.icon)
+                .font(.caption)
+                .foregroundColor(AviationTheme.Colors.brandColor(colorScheme))
+        }
+    }
     
     var body: some View {
         HStack(spacing: AviationTheme.Spacing.sm) {
@@ -390,9 +420,7 @@ struct CategoryStatRow: View {
                     .fill(AviationTheme.Colors.brandColor(colorScheme).opacity(0.2))
                     .frame(width: 32, height: 32)
                 
-                Image(systemName: source.icon)
-                    .font(.caption)
-                    .foregroundColor(AviationTheme.Colors.brandColor(colorScheme))
+                sourceIconView
             }
             
             // 類別名稱
@@ -751,6 +779,22 @@ struct TransactionDetailRow: View {
         }
         return note
     }
+
+    @ViewBuilder
+    var transactionIconView: some View {
+        if UIImage(named: transaction.source.ledgerIconAssetName) != nil {
+            Image(transaction.source.ledgerIconAssetName)
+                .renderingMode(.template)
+                .resizable()
+                .scaledToFit()
+                .foregroundColor(.white)
+                .frame(width: 20, height: 20)
+        } else {
+            Image(systemName: isRedeemTransaction ? "ticket.fill" : transaction.source.icon)
+                .font(.body)
+                .foregroundColor(.white)
+        }
+    }
     
     var body: some View {
         HStack(alignment: .top, spacing: AviationTheme.Spacing.md) {
@@ -759,9 +803,7 @@ struct TransactionDetailRow: View {
                     .fill(isRedeemTransaction ? redeemAccentColor : AviationTheme.Colors.brandColor(colorScheme))
                     .frame(width: 44, height: 44)
 
-                Image(systemName: isRedeemTransaction ? "ticket.fill" : transaction.source.icon)
-                    .font(.body)
-                    .foregroundColor(.white)
+                transactionIconView
             }
 
             VStack(alignment: .leading, spacing: 6) {
