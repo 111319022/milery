@@ -346,42 +346,30 @@ struct AddFlightGoalView: View {
         self.viewModel = viewModel
     }
     
-    /// 判斷是否為國泰可自動計算的航線（起點台北 + 目的地在國泰航點表內 + 當前計劃支援）
-    private var isCathayAutoRoute: Bool {
+    /// 只要資料庫與兌換表可算出哩程，就走自動計算；查不到就改手動輸入
+    private var autoCalculatedMiles: Int? {
         guard viewModel.supportsCathayAwardChart,
               let origin = selectedOrigin?.iataCode,
-              let destination = selectedDestination?.iataCode else { return false }
-        return origin.uppercased() == "TPE" && FlightCalculator.isCathayRouteFromTPE(destination: destination)
+              let destination = selectedDestination?.iataCode,
+              let miles = FlightCalculator.calculateRequiredMiles(
+                from: origin,
+                to: destination,
+                cabinClass: cabinClass
+              ) else { return nil }
+        return isRoundTrip ? miles * 2 : miles
     }
-    
-    /// 起點為台北但目的地不在國泰航點表 → 需兌換寰宇一家夥伴
+
+    /// 起點為台北但資料庫查不到自動計算結果 → 需兌換寰宇一家夥伴
     private var isOneworldRequired: Bool {
         guard viewModel.supportsCathayAwardChart,
               let origin = selectedOrigin?.iataCode,
               selectedDestination != nil else { return false }
-        return origin.uppercased() == "TPE" && !isCathayAutoRoute
+        return origin.uppercased() == "TPE" && autoCalculatedMiles == nil
     }
-    
-    /// 起點非台北或非國泰計劃 → 一律手動輸入
-    private var isNonTPEOrigin: Bool {
-        guard let origin = selectedOrigin?.iataCode else { return false }
-        return origin.uppercased() != "TPE" || !viewModel.supportsCathayAwardChart
-    }
-    
+
     /// 是否需要使用者手動輸入哩程
     private var needsManualMiles: Bool {
-        return isOneworldRequired || isNonTPEOrigin
-    }
-    
-    /// 自動計算的哩程（僅國泰台北航線且當前計劃支援）
-    private var autoCathayMiles: Int? {
-        guard isCathayAutoRoute,
-              let origin = selectedOrigin?.iataCode,
-              let destination = selectedDestination?.iataCode,
-              let miles = CathayAwardChart.requiredMiles(from: origin, to: destination, cabinClass: cabinClass) else {
-            return nil
-        }
-        return isRoundTrip ? miles * 2 : miles
+        selectedOrigin != nil && selectedDestination != nil && autoCalculatedMiles == nil
     }
     
     /// 手動輸入的哩程
@@ -392,7 +380,7 @@ struct AddFlightGoalView: View {
     
     /// 最終使用的哩程（自動或手動）
     private var finalMiles: Int? {
-        if isCathayAutoRoute { return autoCathayMiles }
+        if let autoCalculatedMiles { return autoCalculatedMiles }
         return manualMiles
     }
     
@@ -481,7 +469,7 @@ struct AddFlightGoalView: View {
                     }
                 }
                 
-                // 寰宇一家夥伴提醒（台北出發但不在國泰航點表）
+                // 資料庫查無自動計算提醒（台北出發時標示可能為寰宇一家）
                 if selectedOrigin != nil && selectedDestination != nil && isOneworldRequired {
                     Section {
                         HStack(spacing: 10) {
@@ -489,11 +477,11 @@ struct AddFlightGoalView: View {
                                 .font(.title3)
                                 .foregroundColor(.purple)
                             VStack(alignment: .leading, spacing: 2) {
-                                Text("需兌換寰宇一家夥伴航空")
+                                Text("資料庫暫無自動計算")
                                     .font(.subheadline)
                                     .fontWeight(.semibold)
                                     .foregroundColor(.purple)
-                                Text("此航線非國泰航空直飛，需透過日航、英航等夥伴航空兌換，所需哩程較高")
+                                Text("此航線目前無法自動換算，請自行查詢後手動輸入所需哩程")
                                     .font(.caption)
                                     .foregroundStyle(.secondary)
                             }
@@ -520,8 +508,8 @@ struct AddFlightGoalView: View {
                     }
                 }
                 
-                // 非台北出發 → 一律手動輸入
-                if selectedOrigin != nil && selectedDestination != nil && isNonTPEOrigin {
+                // 資料庫查無可自動計算結果 → 手動輸入
+                if needsManualMiles {
                     Section {
                         HStack(spacing: 10) {
                             Image(systemName: "info.circle.fill")
@@ -531,7 +519,7 @@ struct AddFlightGoalView: View {
                                 Text("自訂哩程")
                                     .font(.subheadline)
                                     .fontWeight(.semibold)
-                                Text("出發地非台北，請自行查詢並輸入所需哩程")
+                                Text("資料庫無資料，請自行查詢並輸入所需哩程")
                                     .font(.caption)
                                     .foregroundStyle(.secondary)
                             }
@@ -558,8 +546,8 @@ struct AddFlightGoalView: View {
                     }
                 }
                 
-                // 國泰自動計算的航線資訊
-                if isCathayAutoRoute, let distance = flightDistance, let miles = autoCathayMiles {
+                // 可由資料庫自動計算的航線資訊
+                if let distance = flightDistance, let miles = autoCalculatedMiles {
                     Section {
                         HStack {
                             Text("飛行距離")
@@ -684,42 +672,30 @@ struct EditFlightGoalView: View {
     
     private var airports = AirportDatabase.shared.getAllAirports()
     
-    /// 判斷是否為國泰可自動計算的航線（起點台北 + 目的地在國泰航點表內 + 當前計劃支援）
-    private var isCathayAutoRoute: Bool {
+    /// 只要資料庫與兌換表可算出哩程，就走自動計算；查不到就改手動輸入
+    private var autoCalculatedMiles: Int? {
         guard viewModel.supportsCathayAwardChart,
               let origin = selectedOrigin?.iataCode,
-              let destination = selectedDestination?.iataCode else { return false }
-        return origin.uppercased() == "TPE" && FlightCalculator.isCathayRouteFromTPE(destination: destination)
+              let destination = selectedDestination?.iataCode,
+              let miles = FlightCalculator.calculateRequiredMiles(
+                from: origin,
+                to: destination,
+                cabinClass: cabinClass
+              ) else { return nil }
+        return isRoundTrip ? miles * 2 : miles
     }
-    
-    /// 起點為台北但目的地不在國泰航點表 → 需兌換寰宇一家夥伴
+
+    /// 起點為台北但資料庫查不到自動計算結果 → 需兌換寰宇一家夥伴
     private var isOneworldRequired: Bool {
         guard viewModel.supportsCathayAwardChart,
               let origin = selectedOrigin?.iataCode,
               selectedDestination != nil else { return false }
-        return origin.uppercased() == "TPE" && !isCathayAutoRoute
+        return origin.uppercased() == "TPE" && autoCalculatedMiles == nil
     }
-    
-    /// 起點非台北或非國泰計劃 → 一律手動輸入
-    private var isNonTPEOrigin: Bool {
-        guard let origin = selectedOrigin?.iataCode else { return false }
-        return origin.uppercased() != "TPE" || !viewModel.supportsCathayAwardChart
-    }
-    
+
     /// 是否需要使用者手動輸入哩程
     private var needsManualMiles: Bool {
-        return isOneworldRequired || isNonTPEOrigin
-    }
-    
-    /// 自動計算的哩程（僅國泰台北航線且當前計劃支援）
-    private var autoCathayMiles: Int? {
-        guard isCathayAutoRoute,
-              let origin = selectedOrigin?.iataCode,
-              let destination = selectedDestination?.iataCode,
-              let miles = CathayAwardChart.requiredMiles(from: origin, to: destination, cabinClass: cabinClass) else {
-            return nil
-        }
-        return isRoundTrip ? miles * 2 : miles
+        selectedOrigin != nil && selectedDestination != nil && autoCalculatedMiles == nil
     }
     
     /// 手動輸入的哩程
@@ -730,7 +706,7 @@ struct EditFlightGoalView: View {
     
     /// 最終使用的哩程
     private var finalMiles: Int? {
-        if isCathayAutoRoute { return autoCathayMiles }
+        if let autoCalculatedMiles { return autoCalculatedMiles }
         return manualMiles
     }
     
@@ -753,8 +729,12 @@ struct EditFlightGoalView: View {
         _isPriority = State(initialValue: goal.isPriority)
         _isRoundTrip = State(initialValue: goal.isRoundTrip)
         
-        // 如果不是國泰自動航線（或非國泰計劃），需要反推單程哩程作為手動輸入初始值
-        let isAuto = viewModel.supportsCathayAwardChart && goal.origin.uppercased() == "TPE" && FlightCalculator.isCathayRouteFromTPE(destination: goal.destination)
+        // 如果資料庫查不到自動計算結果，反推單程哩程作為手動輸入初始值
+        let isAuto = viewModel.supportsCathayAwardChart && FlightCalculator.calculateRequiredMiles(
+            from: goal.origin,
+            to: goal.destination,
+            cabinClass: goal.cabinClass
+        ) != nil
         if !isAuto {
             let singleMiles = goal.isRoundTrip ? goal.requiredMiles / 2 : goal.requiredMiles
             _manualMilesInput = State(initialValue: "\(singleMiles)")
@@ -840,7 +820,7 @@ struct EditFlightGoalView: View {
                     }
                 }
                 
-                // 寰宇一家夥伴提醒（台北出發但不在國泰航點表）
+                // 資料庫查無自動計算提醒（台北出發時標示可能為寰宇一家）
                 if selectedOrigin != nil && selectedDestination != nil && isOneworldRequired {
                     Section {
                         HStack(spacing: 10) {
@@ -848,11 +828,11 @@ struct EditFlightGoalView: View {
                                 .font(.title3)
                                 .foregroundColor(.purple)
                             VStack(alignment: .leading, spacing: 2) {
-                                Text("需兌換寰宇一家夥伴航空")
+                                Text("資料庫暫無自動計算")
                                     .font(.subheadline)
                                     .fontWeight(.semibold)
                                     .foregroundColor(.purple)
-                                Text("此航線非國泰航空直飛，需透過日航、英航等夥伴航空兌換，所需哩程較高")
+                                Text("此航線目前無法自動換算，請自行查詢後手動輸入所需哩程")
                                     .font(.caption)
                                     .foregroundStyle(.secondary)
                             }
@@ -879,8 +859,8 @@ struct EditFlightGoalView: View {
                     }
                 }
                 
-                // 非台北出發 → 一律手動輸入
-                if selectedOrigin != nil && selectedDestination != nil && isNonTPEOrigin {
+                // 資料庫查無可自動計算結果 → 手動輸入
+                if needsManualMiles {
                     Section {
                         HStack(spacing: 10) {
                             Image(systemName: "info.circle.fill")
@@ -890,7 +870,7 @@ struct EditFlightGoalView: View {
                                 Text("自訂哩程")
                                     .font(.subheadline)
                                     .fontWeight(.semibold)
-                                Text("出發地非台北，請自行查詢並輸入所需哩程")
+                                Text("資料庫無資料，請自行查詢並輸入所需哩程")
                                     .font(.caption)
                                     .foregroundStyle(.secondary)
                             }
@@ -917,8 +897,8 @@ struct EditFlightGoalView: View {
                     }
                 }
                 
-                // 國泰自動計算的航線資訊
-                if isCathayAutoRoute, let distance = flightDistance, let miles = autoCathayMiles {
+                // 可由資料庫自動計算的航線資訊
+                if let distance = flightDistance, let miles = autoCalculatedMiles {
                     Section {
                         HStack {
                             Text("飛行距離")
