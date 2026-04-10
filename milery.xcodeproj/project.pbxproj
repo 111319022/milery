@@ -70,6 +70,9 @@
 		FB8547AD2F8638AD007E3EC2 /* AppLockService.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB8547AC2F8638AD007E3EC2 /* AppLockService.swift */; };
 		FB8547AF2F8638CA007E3EC2 /* AppLockView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB8547AE2F8638CA007E3EC2 /* AppLockView.swift */; };
 		FB8547B32F86582A007E3EC2 /* FriendService.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB8547B22F86582A007E3EC2 /* FriendService.swift */; };
+		FB9314522F8972E5009F4A81 /* ProfileService.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB9314512F8972E5009F4A81 /* ProfileService.swift */; };
+		FB9314542F8972F0009F4A81 /* ProfileAvatarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB9314532F8972F0009F4A81 /* ProfileAvatarView.swift */; };
+		FB9314562F89730D009F4A81 /* ProfileEditView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB9314552F89730D009F4A81 /* ProfileEditView.swift */; };
 		FBEACD902F865DDF008B6847 /* AppLockSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBEACD8D2F865DDF008B6847 /* AppLockSettingsView.swift */; };
 		FBEACD912F865DDF008B6847 /* ProgramSwitcherView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBEACD8F2F865DDF008B6847 /* ProgramSwitcherView.swift */; };
 		FBEACD922F865DDF008B6847 /* FriendsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBEACD8E2F865DDF008B6847 /* FriendsView.swift */; };
@@ -153,6 +156,9 @@
 		FB8547AC2F8638AD007E3EC2 /* AppLockService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppLockService.swift; sourceTree = "<group>"; };
 		FB8547AE2F8638CA007E3EC2 /* AppLockView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppLockView.swift; sourceTree = "<group>"; };
 		FB8547B22F86582A007E3EC2 /* FriendService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FriendService.swift; sourceTree = "<group>"; };
+		FB9314512F8972E5009F4A81 /* ProfileService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileService.swift; sourceTree = "<group>"; };
+		FB9314532F8972F0009F4A81 /* ProfileAvatarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileAvatarView.swift; sourceTree = "<group>"; };
+		FB9314552F89730D009F4A81 /* ProfileEditView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileEditView.swift; sourceTree = "<group>"; };
 		FBEACD8D2F865DDF008B6847 /* AppLockSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppLockSettingsView.swift; sourceTree = "<group>"; };
 		FBEACD8E2F865DDF008B6847 /* FriendsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FriendsView.swift; sourceTree = "<group>"; };
 		FBEACD8F2F865DDF008B6847 /* ProgramSwitcherView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgramSwitcherView.swift; sourceTree = "<group>"; };
@@ -232,6 +238,7 @@
 				FB85473B2F82C327007E3EC2 /* DeveloperAccessService.swift */,
 				FB8547AC2F8638AD007E3EC2 /* AppLockService.swift */,
 				FB8547B22F86582A007E3EC2 /* FriendService.swift */,
+				FB9314512F8972E5009F4A81 /* ProfileService.swift */,
 			);
 			path = Service;
 			sourceTree = "<group>";
@@ -286,6 +293,8 @@
 				FBEACD8E2F865DDF008B6847 /* FriendsView.swift */,
 				FBEACD8F2F865DDF008B6847 /* ProgramSwitcherView.swift */,
 				FB8547AE2F8638CA007E3EC2 /* AppLockView.swift */,
+				FB9314532F8972F0009F4A81 /* ProfileAvatarView.swift */,
+				FB9314552F89730D009F4A81 /* ProfileEditView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -445,7 +454,9 @@
 			files = (
 				FB8547632F82C327007E3EC2 /* MainTabView.swift in Sources */,
 				FB8547642F82C327007E3EC2 /* MileageViewModel.swift in Sources */,
+				FB9314562F89730D009F4A81 /* ProfileEditView.swift in Sources */,
 				FB8547652F82C327007E3EC2 /* CloudBackupService.swift in Sources */,
+				FB9314542F8972F0009F4A81 /* ProfileAvatarView.swift in Sources */,
 				FB8547662F82C327007E3EC2 /* NotificationSettingsView.swift in Sources */,
 				FB8547672F82C327007E3EC2 /* MileageProgram.swift in Sources */,
 				FB8547682F82C327007E3EC2 /* RedeemedTicket.swift in Sources */,
@@ -472,6 +483,7 @@
 				FB8547792F82C327007E3EC2 /* AllGoalsView.swift in Sources */,
 				FB85477A2F82C327007E3EC2 /* DeveloperAccessService.swift in Sources */,
 				FB85477B2F82C327007E3EC2 /* CardBrandDefinition.swift in Sources */,
+				FB9314522F8972E5009F4A81 /* ProfileService.swift in Sources */,
 				FB85477C2F82C327007E3EC2 /* BackgroundPickerView.swift in Sources */,
 				FB85477D2F82C327007E3EC2 /* MileageViewModel+Card.swift in Sources */,
 				FB85477E2F82C327007E3EC2 /* CardBrandRegistry.swift in Sources */,

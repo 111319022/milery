@@ -64,6 +64,36 @@ struct SettingsView: View {
                 ScrollView {
                     VStack(spacing: AviationTheme.Spacing.xl) {
                         
+                        // MARK: - 個人資料
+                        NavigationLink(destination: ProfileEditView()) {
+                            HStack(spacing: 16) {
+                                ProfileAvatarView(image: ProfileService.shared.avatarImage, size: 56)
+                                
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text(userName.isEmpty ? "設定名稱" : userName)
+                                        .font(AviationTheme.Typography.headline)
+                                        .foregroundColor(AviationTheme.Colors.primaryText(colorScheme))
+                                    
+                                    Text("編輯個人資料")
+                                        .font(AviationTheme.Typography.caption)
+                                        .foregroundColor(AviationTheme.Colors.secondaryText(colorScheme))
+                                }
+                                
+                                Spacer()
+                                
+                                Image(systemName: "chevron.right")
+                                    .foregroundColor(AviationTheme.Colors.tertiaryText(colorScheme))
+                                    .font(.subheadline)
+                                    .fontWeight(.semibold)
+                            }
+                            .padding(AviationTheme.Spacing.md)
+                            .background(AviationTheme.Colors.cardBackground(colorScheme))
+                            .clipShape(RoundedRectangle(cornerRadius: AviationTheme.CornerRadius.lg))
+                            .shadow(color: AviationTheme.Shadows.cardShadow(colorScheme).opacity(0.5), radius: 8, x: 0, y: 2)
+                        }
+                        .buttonStyle(.plain)
+                        .padding(.horizontal, AviationTheme.Spacing.md)
+                        
                         // MARK: - 外觀設定
                         VStack(alignment: .leading, spacing: 8) {
                             SectionHeaderView(title: "外觀", colorScheme: colorScheme)

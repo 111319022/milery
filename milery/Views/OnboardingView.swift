@@ -2,6 +2,7 @@ import SwiftUI
 import SwiftData
 import UserNotifications
 import UIKit
+import PhotosUI
 
 // MARK: - Onboarding 專屬配色（淡金色 + 大地棕色）
 private enum OnboardingPalette {
@@ -192,6 +193,9 @@ struct OnboardingView: View {
     private let cathayDefinition = CathayUnitedBankCard()
     private let taishinDefinition = TaishinCathayCard()
     
+    // userName
+    @AppStorage("userName") private var userName: String = ""
+    
     // Page 4: 常用出發地
     @AppStorage("preferredOrigin") private var preferredOrigin: String = ""
     @State private var showingAirportPicker = false
@@ -218,6 +222,12 @@ struct OnboardingView: View {
     @State private var themeOverlayColor: Color = .white
     @State private var appliedOnboardingColorSchemeSetting: String = "system"
     
+    // Profile 頁面
+    @State private var profileName: String = ""
+    @State private var profileAvatarImage: UIImage? = nil
+    @State private var selectedPhotoItem: PhotosPickerItem? = nil
+    @FocusState private var isProfileNameFocused: Bool
+    
     // 開發者跳過 Onboarding
     @State private var showDevSkipAlert = false
     @State private var devVerificationMessage: String = ""
@@ -225,8 +235,8 @@ struct OnboardingView: View {
     
     // 分段入場動畫狀態
     
-    private let totalPages = 9
-    private let themePageIndex = 6
+    private let totalPages = 10
+    private let themePageIndex = 7
 
     private enum CardBankOption: String, CaseIterable, Hashable {
         case cathay
@@ -316,14 +326,15 @@ struct OnboardingView: View {
                 // Content
                 TabView(selection: $currentPage) {
                     welcomePage.tag(0)
-                    programPage.tag(1)
-                    creditCardPage.tag(2)
-                    departurePage.tag(3)
-                    existingMilesPage.tag(4)
-                    birthdayPage.tag(5)
-                    themePage.tag(6)
-                    notificationPage.tag(7)
-                    iCloudPage.tag(8)
+                    profilePage.tag(1)
+                    programPage.tag(2)
+                    creditCardPage.tag(3)
+                    departurePage.tag(4)
+                    existingMilesPage.tag(5)
+                    birthdayPage.tag(6)
+                    themePage.tag(7)
+                    notificationPage.tag(8)
+                    iCloudPage.tag(9)
                 }
                 .tabViewStyle(.page(indexDisplayMode: .never))
                 .animation(.easeInOut(duration: 0.35), value: currentPage)
@@ -368,7 +379,12 @@ struct OnboardingView: View {
             )
         }
         .onChange(of: currentPage) { oldValue, newValue in
-            if oldValue == 0 && newValue == 1 {
+            // 離開 profile 頁面時關閉鍵盤
+            if oldValue == 1 {
+                isProfileNameFocused = false
+            }
+            
+            if oldValue == 1 && newValue == 2 {
                 programPageEntranceProgress = 0
                 DispatchQueue.main.async {
                     withAnimation(.spring(response: 0.52, dampingFraction: 0.86)) {
@@ -377,7 +393,7 @@ struct OnboardingView: View {
                 }
             }
 
-            if newValue != 1 {
+            if newValue != 2 {
                 programPageEntranceProgress = 1
             }
 
@@ -447,7 +463,116 @@ struct OnboardingView: View {
         .padding(.horizontal, AviationTheme.Spacing.md)
     }
     
-    // MARK: - Page 2: 里程計劃選擇
+    // MARK: - Page 2: 個人資料
+    private var profilePage: some View {
+        VStack(spacing: AviationTheme.Spacing.lg) {
+            Spacer()
+
+            VStack(spacing: AviationTheme.Spacing.sm) {
+                Image(systemName: "person.crop.circle.badge.plus")
+                    .font(.system(size: 48))
+                    .foregroundColor(OnboardingPalette.accent)
+
+                Text("個人資料")
+                    .font(AviationTheme.Typography.title2)
+                    .foregroundColor(OnboardingPalette.titleText)
+
+                Text("設定您的名稱與頭貼，方便好友辨識")
+                    .font(AviationTheme.Typography.subheadline)
+                    .foregroundColor(OnboardingPalette.bodyText)
+                    .multilineTextAlignment(.center)
+            }
+
+            // 頭貼預覽 + 選擇按鈕
+            VStack(spacing: AviationTheme.Spacing.md) {
+                if let avatar = profileAvatarImage {
+                    Image(uiImage: avatar)
+                        .resizable()
+                        .scaledToFill()
+                        .frame(width: 80, height: 80)
+                        .clipShape(Circle())
+                        .shadow(color: Color.black.opacity(0.1), radius: 6, x: 0, y: 3)
+                } else {
+                    Image(systemName: "person.circle.fill")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 80, height: 80)
+                        .foregroundColor(OnboardingPalette.accent.opacity(0.6))
+                }
+
+                PhotosPicker(selection: $selectedPhotoItem, matching: .images) {
+                    HStack(spacing: 8) {
+                        Image(systemName: "photo.on.rectangle.angled")
+                            .font(.subheadline)
+                        Text(profileAvatarImage == nil ? "選擇頭貼" : "更換頭貼")
+                            .font(AviationTheme.Typography.subheadline)
+                            .fontWeight(.medium)
+                    }
+                    .foregroundColor(OnboardingPalette.accent)
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 8)
+                    .background(.ultraThinMaterial)
+                    .clipShape(Capsule())
+                    .overlay(
+                        Capsule()
+                            .stroke(OnboardingPalette.accent.opacity(0.3), lineWidth: 1)
+                    )
+                }
+                .onChange(of: selectedPhotoItem) { _, newValue in
+                    guard let newValue else { return }
+                    Task {
+                        if let data = try? await newValue.loadTransferable(type: Data.self),
+                           let image = UIImage(data: data) {
+                            profileAvatarImage = image
+                        }
+                        selectedPhotoItem = nil
+                    }
+                }
+            }
+
+            // 名稱輸入
+            VStack(alignment: .leading, spacing: 8) {
+                Text("顯示名稱")
+                    .font(AviationTheme.Typography.caption)
+                    .foregroundColor(OnboardingPalette.bodyText)
+                    .padding(.leading, 4)
+
+                TextField("", text: $profileName, prompt: Text("輸入你的名稱")
+                    .foregroundColor(OnboardingPalette.bodyText.opacity(0.5)))
+                    .font(AviationTheme.Typography.body)
+                    .foregroundColor(OnboardingPalette.titleText)
+                    .autocorrectionDisabled()
+                    .focused($isProfileNameFocused)
+                    .submitLabel(.done)
+                    .onSubmit { isProfileNameFocused = false }
+                    .padding(AviationTheme.Spacing.md)
+                    .background(.ultraThinMaterial)
+                    .clipShape(RoundedRectangle(cornerRadius: AviationTheme.CornerRadius.lg))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: AviationTheme.CornerRadius.lg)
+                            .stroke(!profileName.isEmpty
+                                    ? OnboardingPalette.accent
+                                    : Color.clear,
+                                    lineWidth: 2)
+                    )
+            }
+            .padding(.horizontal, AviationTheme.Spacing.md)
+
+            Text("此設定之後可在「設定 > 個人資料」中更改")
+                .font(AviationTheme.Typography.caption)
+                .foregroundColor(OnboardingPalette.bodyText.opacity(0.7))
+
+            Spacer()
+            Spacer()
+        }
+        .padding(.horizontal, AviationTheme.Spacing.md)
+        .contentShape(Rectangle())
+        .onTapGesture {
+            isProfileNameFocused = false
+        }
+    }
+    
+    // MARK: - Page 3: 里程計劃選擇
     private var programPage: some View {
         VStack(spacing: AviationTheme.Spacing.lg) {
             Spacer()
@@ -1571,7 +1696,7 @@ struct OnboardingView: View {
 
                 // 下一步 / 跳過 / 開始使用
                 Button {
-                    if currentPage == 7 {
+                    if currentPage == 8 {
                         if notificationPermissionStatus == .notDetermined {
                             requestNotificationPermission(advanceAfterRequest: true)
                         } else {
@@ -1608,10 +1733,13 @@ struct OnboardingView: View {
         if currentPage == totalPages - 1 {
             return "開始使用"
         }
-        if currentPage == 2 && selectedCardBanks.isEmpty {
+        if currentPage == 1 && profileName.isEmpty && profileAvatarImage == nil {
             return "跳過"
         }
-        if currentPage == 4 && (existingMilesText.isEmpty || existingMilesText == "0") {
+        if currentPage == 3 && selectedCardBanks.isEmpty {
+            return "跳過"
+        }
+        if currentPage == 5 && (existingMilesText.isEmpty || existingMilesText == "0") {
             return "跳過"
         }
         return "下一步"
@@ -1621,6 +1749,14 @@ struct OnboardingView: View {
     
     // MARK: - 完成 Onboarding
     private func completeOnboarding() {
+        // 寫入 Profile
+        if !profileName.isEmpty {
+            userName = profileName
+        }
+        if let avatar = profileAvatarImage {
+            ProfileService.shared.saveAvatar(avatar)
+        }
+        
         // 寫入現有里程（如果有輸入）
         if let miles = Int(existingMilesText.replacingOccurrences(of: ",", with: "")),
            miles > 0 {

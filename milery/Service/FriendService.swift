@@ -67,6 +67,7 @@ final class FriendService {
         let friendCode: String
         let status: String
         let isIncoming: Bool
+        let userRecordName: String
         // 好友進度（僅 accepted 好友有值）
         let totalMiles: Int
         let goalCount: Int
@@ -134,11 +135,26 @@ final class FriendService {
             
             if let (_, result) = matchResults.first,
                let record = try? result.get() {
+                let cloudName = record["displayName"] as? String ?? ""
+                var finalName = cloudName
+                
+                // 若本地名稱已更新但 CloudKit 仍是舊值，同步更新
+                if !defaultDisplayName.isEmpty && defaultDisplayName != cloudName {
+                    record["displayName"] = defaultDisplayName as CKRecordValue
+                    do {
+                        _ = try await database.save(record)
+                        finalName = defaultDisplayName
+                        appLog("[FriendService] 同步更新 CloudKit displayName: \(defaultDisplayName)")
+                    } catch {
+                        appLog("[FriendService] 同步 displayName 失敗: \(error.localizedDescription)")
+                    }
+                }
+                
                 let profile = UserProfileData(
                     recordID: record.recordID,
                     userRecordID: userRef,
                     friendCode: record["friendCode"] as? String ?? "",
-                    displayName: record["displayName"] as? String ?? ""
+                    displayName: finalName
                 )
                 self.currentUserProfile = profile
                 appLog("[FriendService] 載入已有 UserProfile, code: \(profile.friendCode)")
@@ -376,6 +392,7 @@ final class FriendService {
                             friendCode: profile["friendCode"] as? String ?? "",
                             status: "accepted",
                             isIncoming: false,
+                            userRecordName: targetUserID,
                             totalMiles: (profile["totalMiles"] as? NSNumber)?.intValue ?? 0,
                             goalCount: (profile["goalCount"] as? NSNumber)?.intValue ?? 0,
                             completedRoutesCount: (profile["completedRoutesCount"] as? NSNumber)?.intValue ?? 0
@@ -390,6 +407,7 @@ final class FriendService {
                             friendCode: profile["friendCode"] as? String ?? "",
                             status: "accepted",
                             isIncoming: false,
+                            userRecordName: targetUserID,
                             totalMiles: (profile["totalMiles"] as? NSNumber)?.intValue ?? 0,
                             goalCount: (profile["goalCount"] as? NSNumber)?.intValue ?? 0,
                             completedRoutesCount: (profile["completedRoutesCount"] as? NSNumber)?.intValue ?? 0
@@ -404,6 +422,7 @@ final class FriendService {
                             friendCode: profile["friendCode"] as? String ?? "",
                             status: "pending",
                             isIncoming: false,
+                            userRecordName: targetUserID,
                             totalMiles: 0,
                             goalCount: 0,
                             completedRoutesCount: 0
@@ -428,6 +447,7 @@ final class FriendService {
                         friendCode: profile["friendCode"] as? String ?? "",
                         status: "pending",
                         isIncoming: true,
+                        userRecordName: senderUserID,
                         totalMiles: 0,
                         goalCount: 0,
                         completedRoutesCount: 0

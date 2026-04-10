@@ -384,6 +384,30 @@ App 密碼鎖與生物辨識解鎖服務。
 - Keychain 權限使用 `kSecAttrAccessibleWhenUnlockedThisDeviceOnly`
 - 支援 Face ID / Touch ID / Optic ID，使用 `LAContext.evaluatePolicy` 驗證
 
+### ProfileService
+
+個人資料管理服務，處理頭貼儲存/上傳與顯示名稱同步。
+
+- **架構**：`@Observable + @MainActor` 單例（`ProfileService.shared`）
+- **本地儲存路徑**：`Documents/ProfileImages/avatar.jpg`
+- **圖片處理**：UIGraphicsImageRenderer 縮圖至 512px max，JPEG 品質 0.7
+- **CloudKit**：頭貼以 CKAsset 儲存於 UserProfile record 的 `avatarAsset` 欄位
+
+#### 主要方法
+
+| 方法 | 說明 |
+|------|------|
+| `loadLocalAvatar()` | 從本地 Documents 目錄載入頭貼 |
+| `saveAvatar(_ image:)` | 縮圖 → 存本地 → 上傳 CloudKit CKAsset |
+| `deleteAvatar()` | 刪除本地檔案 + 清除 CloudKit avatarAsset |
+| `uploadAvatarToCloudKit()` | 讀本地 avatar.jpg → CKAsset → 更新 UserProfile record |
+| `loadFriendAvatar(for recordName:)` | 從 CloudKit UserProfile 讀取 CKAsset → UIImage（帶 NSCache 快取） |
+| `updateDisplayName(_ name:)` | 更新 `@AppStorage("userName")` + CloudKit UserProfile.displayName |
+
+#### 快取策略
+
+好友頭貼使用 `NSCache<NSString, UIImage>` 快取，避免重複下載。key 為好友的 `userRecordName`。
+
 ### FriendService（🔴🔧開發中）
 
 好友系統服務，使用 CloudKit **公開資料庫**（`publicCloudDatabase`）。
@@ -398,6 +422,7 @@ App 密碼鎖與生物辨識解鎖服務。
 | `UserProfile` | `userRecordID` | Reference | 指向 Users record |
 | | `friendCode` | String | 6 碼好友代碼 |
 | | `displayName` | String | 顯示名稱 |
+| | `avatarAsset` | Asset (CKAsset) | 使用者頭貼圖片 |
 | | `totalMiles` | Int64 | 總哩程（從本地同步） |
 | | `goalCount` | Int64 | 飛行目標數 |
 | | `completedRoutesCount` | Int64 | 已兌換機票數 |
@@ -487,7 +512,7 @@ A 輸入 B 的好友碼
 ### 其他頁面
 
 - `AllGoalsView`：所有目標列表
-- `OnboardingView`：首次使用引導
+- `OnboardingView`：首次使用引導（10 頁，含個人資料設定頁）
 - `CloudBackupView`：備份/還原 UI
 - `AppLockView`：App 鎖定時解鎖介面（數字鍵盤 + 生物辨識）
 - `AppLockSettingsView`：密碼鎖開關、生物辨識開關、修改密碼
@@ -495,7 +520,9 @@ A 輸入 B 的好友碼
 - `AppIconPickerView`：App 圖示切換
 - `NotificationSettingsView`：通知設定
 - `ProgramSwitcherView`：里程計畫切換/新增/刪除（非預設）
-- `FriendsView`：好友代碼展示、加好友、好友狀態列表（🔴🔧開發中）
+- `FriendsView`：好友代碼展示、加好友、好友狀態列表、顯示好友頭貼（🔴🔧開發中）
+- `ProfileAvatarView`：可重用頭貼元件（有圖 → 圓形 UIImage；無圖 → `person.circle.fill` SF Symbol，cathayJade 色）
+- `ProfileEditView`：個人資料編輯頁（PhotosPicker 選擇頭貼、名稱 TextField、好友碼顯示、刪除頭貼）
 
 ### DevViews（開發者工具）
 
@@ -663,6 +690,14 @@ xcodebuild test -project milery.xcodeproj -scheme milery \
 2. 若有專屬兌換表，新增對應的 Calculator
 3. 確認 `loadData()` 的 `programID` 過濾邏輯
 4. 更新 `CloudBackupService` 的序列化/反序列化
+
+### 維護個人資料（ProfileService）
+
+1. 頭貼儲存路徑為 `Documents/ProfileImages/avatar.jpg`，變更路徑時需同步更新 `localAvatarURL`
+2. CloudKit `avatarAsset` 欄位須在 CloudKit Dashboard 確認已部署到 Production
+3. 圖片壓縮參數（512px、JPEG 0.7）可調整，但需考慮 CloudKit 上傳大小限制
+4. 好友頭貼快取使用 NSCache，App 重啟後會重新下載
+5. 顯示名稱同步：`ProfileService.updateDisplayName` 與 `FriendService.ensureUserProfile` 都會更新 CloudKit，確保邏輯一致
 
 ### 維護好友系統（CloudKit 公開資料庫）
 

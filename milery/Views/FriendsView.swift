@@ -7,11 +7,13 @@ struct FriendsView: View {
     @AppStorage("userName") private var userName: String = ""
     
     private let friendService = FriendService.shared
+    private let profileService = ProfileService.shared
     
     @State private var showAddFriendSheet = false
     @State private var showCopiedToast = false
     @State private var profileInitialized = false
     @State private var profileError: String?
+    @State private var friendAvatars: [String: UIImage] = [:]
     
     var body: some View {
         ZStack {
@@ -96,9 +98,11 @@ struct FriendsView: View {
             await initializeProfile()
             await friendService.syncLocalStatsToProfile(context: modelContext)
             await friendService.fetchFriends()
+            await loadFriendAvatars()
         }
         .refreshable {
             await friendService.fetchFriends()
+            await loadFriendAvatars()
         }
     }
     
@@ -113,9 +117,7 @@ struct FriendsView: View {
                 if let profile = friendService.currentUserProfile {
                     // 顯示名稱
                     HStack {
-                        Image(systemName: "person.circle.fill")
-                            .font(.title2)
-                            .foregroundColor(AviationTheme.Colors.cathayJade)
+                        ProfileAvatarView(image: profileService.avatarImage, size: 36)
                         Text(profile.displayName)
                             .font(AviationTheme.Typography.headline)
                             .foregroundColor(AviationTheme.Colors.primaryText(colorScheme))
@@ -222,10 +224,7 @@ struct FriendsView: View {
         VStack(spacing: 0) {
             // 名稱 + 代碼 + 操作按鈕
             HStack(spacing: 12) {
-                Image(systemName: "person.circle.fill")
-                    .font(.title3)
-                    .foregroundColor(AviationTheme.Colors.cathayJade)
-                    .frame(width: 28)
+                ProfileAvatarView(image: friendAvatars[friend.userRecordName], size: 32)
 
                 VStack(alignment: .leading, spacing: 4) {
                     Text(friend.displayName)
@@ -367,10 +366,7 @@ struct FriendsView: View {
                         CustomDivider(colorScheme: colorScheme)
                     }
                     HStack(spacing: 16) {
-                        Image(systemName: "person.circle.fill")
-                            .font(.title3)
-                            .foregroundColor(AviationTheme.Colors.cathayJade)
-                            .frame(width: 28)
+                        ProfileAvatarView(image: friendAvatars[friend.userRecordName], size: 32)
                         
                         VStack(alignment: .leading, spacing: 4) {
                             Text(friend.displayName)
@@ -492,6 +488,16 @@ struct FriendsView: View {
             profileError = error.localizedDescription
             profileInitialized = true // 標記已嘗試過，避免卡在 loading
             appLog("[FriendsView] Profile 初始化失敗: \(error.localizedDescription)")
+        }
+    }
+    
+    private func loadFriendAvatars() async {
+        let allFriends = friendService.friends + friendService.pendingOutgoing + friendService.pendingIncoming
+        for friend in allFriends {
+            guard friendAvatars[friend.userRecordName] == nil else { continue }
+            if let image = await profileService.loadFriendAvatar(for: friend.userRecordName) {
+                friendAvatars[friend.userRecordName] = image
+            }
         }
     }
 }
