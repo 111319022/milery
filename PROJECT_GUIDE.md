@@ -332,7 +332,47 @@ Asia Miles 2026 年兌換表計算引擎。
 
 ### DeveloperAccessService
 
-開發者模式存取控制。透過 CloudKit 公開記錄查詢 + 雜湊驗證，確認使用者是否有開發者權限。
+開發者模式存取控制。透過 CloudKit 公開記錄查詢 + 雜湊白名單比對，確認目前登入的 iCloud 使用者是否具備開發者權限。
+
+#### 驗證目標
+
+這個服務驗證的不是裝置、不是 App 版本，也不是 Apple ID 電子郵件，而是「目前登入這台裝置的 CloudKit 使用者身分」是否落在遠端白名單內。
+
+#### 驗證流程
+
+1. 先確認 iCloud 帳號可用，若 `accountStatus()` 不是 `.available` 就直接拒絕。
+2. 取得目前使用者的 `userRecordID`。
+3. 將 `userRecordID.recordName` 做 SHA-256，轉成 16 進位字串。
+4. 再把結果做一次正規化，只保留 0-9 與 a-f，避免貼上雜訊或大小寫差異。
+5. 到 CloudKit 公開資料庫讀取固定記錄 `DevAccessPolicy/main-dev-access-policy`。
+6. 檢查該記錄的 `recordType` 必須是 `DevAccessPolicy`。
+7. 讀取 `enabled`，若為 `false` 則代表遠端關閉開發者功能。
+8. 讀取 `allowedUserHashes`，將內容正規化後組成白名單集合。
+9. 比對目前使用者 hash 是否存在於白名單，存在則允許，不存在則拒絕。
+
+#### CloudKit 設計
+
+| Record Type | Record ID | 欄位 | 型別 | 用途 |
+|-------------|-----------|------|------|------|
+| `DevAccessPolicy` | `main-dev-access-policy` | `enabled` | Bool / NSNumber | 遠端總開關 |
+| `DevAccessPolicy` | `main-dev-access-policy` | `allowedUserHashes` | [String] | 允許使用開發者模式的使用者 hash 清單 |
+
+#### Hash 的來源
+
+目前採用的是 `SHA-256(userRecordID.recordName)`。實際流程是先拿 CloudKit 提供的使用者 record name，再用 SHA-256 轉成固定長度的十六進位字串，最後拿這個值去跟白名單比對。
+
+#### 管理者操作方式
+
+`currentUserHashForAdmin()` 會回傳目前登入者的原始 SHA-256 值，方便管理者把它貼進 CloudKit 的 `allowedUserHashes`。為了容錯，這個欄位支援多行或逗號分隔輸入，系統會自動清理格式並去重。
+
+#### 失敗情境
+
+- iCloud 不可用：回傳「無法驗證開發者權限」
+- `DevAccessPolicy/main-dev-access-policy` 不存在：回傳白名單設定尚未建立
+- `recordType` 不正確：回傳設定格式錯誤
+- `enabled = false`：回傳遠端已關閉開發者功能
+- 白名單為空：回傳需要先填入 `allowedUserHashes`
+- 使用者不在白名單：回傳目前使用者的 hash，讓管理者加入白名單
 
 ### AppLockService
 
@@ -455,7 +495,7 @@ A 輸入 B 的好友碼
 - `AppIconPickerView`：App 圖示切換
 - `NotificationSettingsView`：通知設定
 - `ProgramSwitcherView`：里程計畫切換/新增/刪除（非預設）
-- `FriendsView`：好友代碼展示、加好友、好友狀態列表（開發中）
+- `FriendsView`：好友代碼展示、加好友、好友狀態列表（🔴🔧開發中）
 
 ### DevViews（開發者工具）
 

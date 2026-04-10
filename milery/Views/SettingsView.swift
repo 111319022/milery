@@ -1,5 +1,6 @@
 import SwiftUI
 import SwiftData
+import UIKit
 
 struct SettingsView: View {
     @Environment(\.dismiss) private var dismiss
@@ -18,6 +19,7 @@ struct SettingsView: View {
     @State private var isCheckingDeveloperAccess = false
     @State private var showingDeveloperAccessAlert = false
     @State private var developerAccessMessage = ""
+    @State private var developerAccessCopyHash: String?
     @AppStorage("lastBackupDate") private var lastBackupDateTimestamp: Double = 0
     @AppStorage("cloudKitSyncEnabled") private var cloudKitSyncEnabled: Bool = true
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding: Bool = false
@@ -479,6 +481,12 @@ struct SettingsView: View {
                 .presentationDragIndicator(.visible)
             }
             .alert("開發者權限驗證", isPresented: $showingDeveloperAccessAlert) {
+                if let developerAccessCopyHash {
+                    Button("複製識別碼") {
+                        UIPasteboard.general.string = developerAccessCopyHash
+                        showDevToast("已複製識別碼")
+                    }
+                }
                 Button("確定", role: .cancel) { }
             } message: {
                 Text(developerAccessMessage)
@@ -537,12 +545,14 @@ struct SettingsView: View {
         isCheckingDeveloperAccess = true
 
         Task {
+            developerAccessCopyHash = await DeveloperAccessService.shared.currentUserHashForAdmin()
             let result = await DeveloperAccessService.shared.verifyCurrentUserAccess()
             isCheckingDeveloperAccess = false
 
             switch result {
             case .allowed:
                 isDeveloperModeEnabled = true
+                developerAccessCopyHash = nil
                 showDevToast("開發者模式已啟用")
                 appLog("[DevAccess] CloudKit 白名單驗證通過")
             case .denied(let message):
