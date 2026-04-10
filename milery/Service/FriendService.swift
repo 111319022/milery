@@ -209,26 +209,32 @@ final class FriendService {
     
     /// 加好友流程：
     /// 1. 查詢對方 UserProfile
-    /// 2. 檢查不是自己、不是已加
-    /// 3. 若對方已加我（反向 pending 存在）→ 雙方升級為 accepted
-    /// 4. 否則建立 pending 關係
+    /// 2. 檢查不是自己
+    /// 3. 檢查是否已有我→對方的關係
+    ///    - 有且 accepted → 已是好友
+    ///    - 有且 pending，對方也有反向 → 升級自己這筆為 accepted
+    /// 4. 沒有我→對方的關係時，檢查對方→我是否存在
+    ///    - 存在 → 建立我→對方 accepted
+    ///    - 不存在 → 建立我→對方 pending
+    ///
+    /// 注意：CloudKit Public DB 不允許修改別人建立的 record，
+    /// 對方的 record 由對方下次 fetchFriends 時自動偵測升級。
     func addFriend(byCode code: String) async throws {
         try await ensureiCloudAvailable()
         let myUserRecordID = try await currentUserRecordID()
         let myRef = CKRecord.Reference(recordID: myUserRecordID, action: .none)
-        
+
         // 1. 查詢對方
         let targetProfile = try await lookUpProfile(byFriendCode: code.uppercased())
         guard let targetUserRef = targetProfile["userRecordID"] as? CKRecord.Reference else {
             throw FriendServiceError.profileNotFound
         }
-        
+
         // 2. 不能加自己
         if targetUserRef.recordID == myUserRecordID {
             throw FriendServiceError.cannotAddSelf
         }
 
-        // 統一用 recordID 重建 Reference，確保 action 一致
         let targetRef = CKRecord.Reference(recordID: targetUserRef.recordID, action: .none)
 
         // 3. 檢查我是否已加過對方
@@ -238,11 +244,30 @@ final class FriendService {
         let existingQuery = CKQuery(recordType: "FriendRelation", predicate: existingPred)
         let (existingResults, _) = try await database.records(matching: existingQuery, resultsLimit: 1)
 
-        if let (_, result) = existingResults.first, let _ = try? result.get() {
-            throw FriendServiceError.alreadyFriends
+        if let (_, result) = existingResults.first, let existingRecord = try? result.get() {
+            let existingStatus = existingRecord["status"] as? String ?? ""
+            if existingStatus == "accepted" {
+                throw FriendServiceError.alreadyFriends
+            }
+            // 已有 pending，查對方是否也加了我 → 升級自己這筆
+            let reversePred = NSPredicate(
+                format: "fromUserRecordID == %@ AND toUserRecordID == %@", targetRef, myRef
+            )
+            let reverseQuery = CKQuery(recordType: "FriendRelation", predicate: reversePred)
+            let (reverseResults, _) = try await database.records(matching: reverseQuery, resultsLimit: 1)
+
+            if reverseResults.first != nil {
+                existingRecord["status"] = "accepted" as CKRecordValue
+                _ = try await database.save(existingRecord)
+                appLog("[FriendService] 升級已有記錄為 accepted, code: \(code)")
+            } else {
+                throw FriendServiceError.alreadyFriends
+            }
+            await fetchFriends()
+            return
         }
 
-        // 4. 檢查對方是否已加我（反向關係）
+        // 4. 沒有我→對方，檢查對方→我是否存在
         let reversePred = NSPredicate(
             format: "fromUserRecordID == %@ AND toUserRecordID == %@", targetRef, myRef
         )
@@ -251,156 +276,172 @@ final class FriendService {
 
         appLog("[FriendService] 反向查詢結果: \(reverseResults.count) 筆")
 
-          if let (_, reverseResult) = reverseResults.first,
-              (try? reverseResult.get()) != nil {
-            // 互加！但我只能修改自己的記錄，不能修改對方的
-            // 建立/更新自己的關係記錄設置為 accepted
-            let myRelation = CKRecord(recordType: "FriendRelation")
-            myRelation["fromUserRecordID"] = myRef
-            myRelation["toUserRecordID"] = targetRef
-            myRelation["status"] = "accepted" as CKRecordValue
-            myRelation["createdAt"] = Date() as CKRecordValue
-            _ = try await database.save(myRelation)
-
-            appLog("[FriendService] 已確認互加！code: \(code)")
+        let status: String
+        if reverseResults.first != nil {
+            status = "accepted"
+            appLog("[FriendService] 互加成功！code: \(code)")
         } else {
-            // 單方加好友，建立 pending
-            let myRelation = CKRecord(recordType: "FriendRelation")
-            myRelation["fromUserRecordID"] = myRef
-            myRelation["toUserRecordID"] = targetRef
-            myRelation["status"] = "pending" as CKRecordValue
-            myRelation["createdAt"] = Date() as CKRecordValue
-            _ = try await database.save(myRelation)
-
+            status = "pending"
             appLog("[FriendService] 已發送好友請求, code: \(code)")
         }
-        
+
+        let myRelation = CKRecord(recordType: "FriendRelation")
+        myRelation["fromUserRecordID"] = myRef
+        myRelation["toUserRecordID"] = targetRef
+        myRelation["status"] = status as CKRecordValue
+        myRelation["createdAt"] = Date() as CKRecordValue
+        _ = try await database.save(myRelation)
+
         await fetchFriends()
     }
     
     // MARK: - Fetch Friends
     
     /// 查詢所有好友關係，分為：已接受、等待對方、對方已加你
+    ///
+    /// 判斷邏輯（以我的角度）：
+    /// - 我→對方 存在 + 對方→我 存在 → accepted（若我的 record 還是 pending 則自動升級）
+    /// - 我→對方 存在 + 對方→我 不存在 → outgoing pending
+    /// - 我→對方 不存在 + 對方→我 存在 → incoming（顯示「加為好友」按鈕）
     func fetchFriends() async {
         isLoading = true
         defer { isLoading = false }
-        
+
         do {
             try await ensureiCloudAvailable()
             let myUserRecordID = try await currentUserRecordID()
             let myRef = CKRecord.Reference(recordID: myUserRecordID, action: .none)
-            
-            // 查詢「我加別人」關係（容錯：record type 不存在時回傳空）
-            let fromResults: [(CKRecord.ID, Result<CKRecord, Error>)]
+
+            // 查詢「我加別人」（容錯）
+            let fromRecords: [CKRecord]
             do {
                 let fromPred = NSPredicate(format: "fromUserRecordID == %@", myRef)
                 let fromQuery = CKQuery(recordType: "FriendRelation", predicate: fromPred)
                 let (results, _) = try await database.records(matching: fromQuery)
-                fromResults = results
+                fromRecords = results.compactMap { try? $0.1.get() }
             } catch {
-                appLog("[FriendService] 查詢 FriendRelation(from) 失敗（schema 可能尚未建立）: \(error.localizedDescription)")
-                fromResults = []
+                appLog("[FriendService] 查詢 FriendRelation(from) 失敗: \(error.localizedDescription)")
+                fromRecords = []
             }
-            
-            // 查詢「別人加我的」關係
-            let toResults: [(CKRecord.ID, Result<CKRecord, Error>)]
+
+            // 查詢「別人加我」（容錯）
+            let toRecords: [CKRecord]
             do {
                 let toPred = NSPredicate(format: "toUserRecordID == %@", myRef)
                 let toQuery = CKQuery(recordType: "FriendRelation", predicate: toPred)
                 let (results, _) = try await database.records(matching: toQuery)
-                toResults = results
+                toRecords = results.compactMap { try? $0.1.get() }
             } catch {
-                appLog("[FriendService] 查詢 FriendRelation(to) 失敗（schema 可能尚未建立）: \(error.localizedDescription)")
-                toResults = []
+                appLog("[FriendService] 查詢 FriendRelation(to) 失敗: \(error.localizedDescription)")
+                toRecords = []
             }
-            
+
+            // 建立「對方→我」的 lookup（key = 對方的 recordID name）
+            var reverseByUser: [String: CKRecord] = [:]
+            for record in toRecords {
+                if let senderRef = record["fromUserRecordID"] as? CKRecord.Reference {
+                    reverseByUser[senderRef.recordID.recordName] = record
+                }
+            }
+
             var accepted: [FriendData] = []
             var outgoing: [FriendData] = []
             var incoming: [FriendData] = []
-            
+            var processedUserIDs: Set<String> = []  // 避免重複
+
             // 處理「我加別人」
-            for (_, result) in fromResults {
-                guard let record = try? result.get(),
-                      let targetRef = record["toUserRecordID"] as? CKRecord.Reference,
-                      let status = record["status"] as? String else { continue }
-                
-                if let profile = try? await resolveProfile(for: targetRef) {
-                    let friend = FriendData(
+            for record in fromRecords {
+                guard let targetRef = record["toUserRecordID"] as? CKRecord.Reference else { continue }
+                let targetUserID = targetRef.recordID.recordName
+                processedUserIDs.insert(targetUserID)
+
+                let myStatus = record["status"] as? String ?? "pending"
+                let hasReverse = reverseByUser[targetUserID] != nil
+
+                // 雙向都存在 → accepted（自動升級自己的 record）
+                if hasReverse {
+                    if myStatus != "accepted" {
+                        record["status"] = "accepted" as CKRecordValue
+                        do {
+                            _ = try await database.save(record)
+                            appLog("[FriendService] 自動升級為 accepted: \(targetUserID)")
+                        } catch {
+                            appLog("[FriendService] 自動升級失敗: \(error.localizedDescription)")
+                        }
+                    }
+                    if let profile = try? await resolveProfile(for: targetRef) {
+                        accepted.append(FriendData(
+                            id: record.recordID.recordName,
+                            displayName: profile["displayName"] as? String ?? "Unknown",
+                            friendCode: profile["friendCode"] as? String ?? "",
+                            status: "accepted",
+                            isIncoming: false,
+                            totalMiles: profile["totalMiles"] as? Int ?? 0,
+                            goalCount: profile["goalCount"] as? Int ?? 0,
+                            completedRoutesCount: profile["completedRoutesCount"] as? Int ?? 0
+                        ))
+                    }
+                } else if myStatus == "accepted" {
+                    // 我的是 accepted 但對方已刪除反向 → 仍顯示為好友
+                    if let profile = try? await resolveProfile(for: targetRef) {
+                        accepted.append(FriendData(
+                            id: record.recordID.recordName,
+                            displayName: profile["displayName"] as? String ?? "Unknown",
+                            friendCode: profile["friendCode"] as? String ?? "",
+                            status: "accepted",
+                            isIncoming: false,
+                            totalMiles: profile["totalMiles"] as? Int ?? 0,
+                            goalCount: profile["goalCount"] as? Int ?? 0,
+                            completedRoutesCount: profile["completedRoutesCount"] as? Int ?? 0
+                        ))
+                    }
+                } else {
+                    // 只有我→對方 pending，對方還沒加
+                    if let profile = try? await resolveProfile(for: targetRef) {
+                        outgoing.append(FriendData(
+                            id: record.recordID.recordName,
+                            displayName: profile["displayName"] as? String ?? "Unknown",
+                            friendCode: profile["friendCode"] as? String ?? "",
+                            status: "pending",
+                            isIncoming: false,
+                            totalMiles: 0,
+                            goalCount: 0,
+                            completedRoutesCount: 0
+                        ))
+                    }
+                }
+            }
+
+            // 處理「別人加我」（只處理我還沒有反向關係的）
+            for record in toRecords {
+                guard let senderRef = record["fromUserRecordID"] as? CKRecord.Reference else { continue }
+                let senderUserID = senderRef.recordID.recordName
+
+                // 已在上面處理過（雙向存在）
+                if processedUserIDs.contains(senderUserID) { continue }
+
+                // 對方加了我，但我沒有反向 → incoming
+                if let profile = try? await resolveProfile(for: senderRef) {
+                    incoming.append(FriendData(
                         id: record.recordID.recordName,
                         displayName: profile["displayName"] as? String ?? "Unknown",
                         friendCode: profile["friendCode"] as? String ?? "",
-                        status: status,
-                        isIncoming: false,
-                        totalMiles: profile["totalMiles"] as? Int ?? 0,
-                        goalCount: profile["goalCount"] as? Int ?? 0,
-                        completedRoutesCount: profile["completedRoutesCount"] as? Int ?? 0
-                    )
-                    if status == "accepted" {
-                        accepted.append(friend)
-                    } else {
-                        outgoing.append(friend)
-                    }
+                        status: "pending",
+                        isIncoming: true,
+                        totalMiles: 0,
+                        goalCount: 0,
+                        completedRoutesCount: 0
+                    ))
                 }
             }
-            
-            // 處理「別人加我」
-            for (_, result) in toResults {
-                guard let record = try? result.get(),
-                      let senderRef = record["fromUserRecordID"] as? CKRecord.Reference,
-                      let status = record["status"] as? String else { continue }
 
-                if status == "pending" {
-                    // 檢查我是否也有 fromMe→sender 的關係
-                    let myFromRecord = fromResults.compactMap { (_, r) -> CKRecord? in
-                        guard let rec = try? r.get(),
-                              let ref = rec["toUserRecordID"] as? CKRecord.Reference,
-                              ref.recordID == senderRef.recordID else { return nil }
-                        return rec
-                    }.first
-
-                    if let myRecord = myFromRecord, let myStatus = myRecord["status"] as? String,
-                       myStatus == "accepted" {
-                        // 我已經確認了，這是互加完成的狀態
-                        if let profile = try? await resolveProfile(for: senderRef) {
-                            let friendCode = profile["friendCode"] as? String ?? ""
-                            accepted.append(FriendData(
-                                id: myRecord.recordID.recordName,
-                                displayName: profile["displayName"] as? String ?? "Unknown",
-                                friendCode: friendCode,
-                                status: "accepted",
-                                isIncoming: false,
-                                totalMiles: profile["totalMiles"] as? Int ?? 0,
-                                goalCount: profile["goalCount"] as? Int ?? 0,
-                                completedRoutesCount: profile["completedRoutesCount"] as? Int ?? 0
-                            ))
-                            // 從 outgoing 移除（已升級）
-                            outgoing.removeAll { $0.friendCode == friendCode }
-                        }
-                    } else {
-                        // 對方加了我，但我還沒確認（或只是pending）
-                        if let profile = try? await resolveProfile(for: senderRef) {
-                            incoming.append(FriendData(
-                                id: record.recordID.recordName,
-                                displayName: profile["displayName"] as? String ?? "Unknown",
-                                friendCode: profile["friendCode"] as? String ?? "",
-                                status: "pending",
-                                isIncoming: true,
-                                totalMiles: 0,
-                                goalCount: 0,
-                                completedRoutesCount: 0
-                            ))
-                        }
-                    }
-                }
-            }
-            
             self.friends = accepted
             self.pendingOutgoing = outgoing
             self.pendingIncoming = incoming
             self.errorMessage = nil
-            
+
             appLog("[FriendService] 好友列表更新: \(accepted.count) 已接受, \(outgoing.count) 等待, \(incoming.count) 收到")
-            
+
         } catch {
             appLog("[FriendService] fetchFriends 失敗: \(error.localizedDescription)")
             errorMessage = error.localizedDescription

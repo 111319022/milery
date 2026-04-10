@@ -250,7 +250,7 @@ struct FriendsView: View {
                                 Capsule()
                                     .fill(AviationTheme.Colors.warning.opacity(0.12))
                             )
-                        
+
                         Button {
                             Task {
                                 do {
@@ -260,9 +260,15 @@ struct FriendsView: View {
                                 }
                             }
                         } label: {
-                            Image(systemName: "xmark")
-                                .font(.caption)
-                                .foregroundColor(AviationTheme.Colors.secondaryText(colorScheme))
+                            Text("撤銷")
+                                .font(AviationTheme.Typography.caption)
+                                .foregroundColor(AviationTheme.Colors.danger)
+                                .padding(.horizontal, 10)
+                                .padding(.vertical, 4)
+                                .background(
+                                    Capsule()
+                                        .strokeBorder(AviationTheme.Colors.danger.opacity(0.3))
+                                )
                         }
                     }
                 }
@@ -305,11 +311,16 @@ struct FriendsView: View {
                                 }
                             }
                         } label: {
-                            Image(systemName: "trash")
-                                .font(.caption)
-                                .foregroundColor(AviationTheme.Colors.warning)
+                            Text("刪除好友")
+                                .font(AviationTheme.Typography.caption)
+                                .foregroundColor(AviationTheme.Colors.danger)
+                                .padding(.horizontal, 10)
+                                .padding(.vertical, 4)
+                                .background(
+                                    Capsule()
+                                        .strokeBorder(AviationTheme.Colors.danger.opacity(0.3))
+                                )
                         }
-                        .padding(.trailing, 4)
                     }
                 }
                 .padding(.top, 8)
@@ -398,9 +409,15 @@ struct FriendsView: View {
                                     }
                                 }
                             } label: {
-                                Image(systemName: "xmark")
-                                    .font(.caption)
-                                    .foregroundColor(AviationTheme.Colors.warning)
+                                Text("拒絕")
+                                    .font(AviationTheme.Typography.caption)
+                                    .foregroundColor(AviationTheme.Colors.danger)
+                                    .padding(.horizontal, 10)
+                                    .padding(.vertical, 4)
+                                    .background(
+                                        Capsule()
+                                            .strokeBorder(AviationTheme.Colors.danger.opacity(0.3))
+                                    )
                             }
                         }
                     }
