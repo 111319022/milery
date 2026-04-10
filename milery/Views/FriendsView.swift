@@ -220,25 +220,25 @@ struct FriendsView: View {
     @ViewBuilder
     private func friendRow(_ friend: FriendService.FriendData) -> some View {
         VStack(spacing: 0) {
-            // 上半：名稱 + 代碼 + 狀態
-            HStack(spacing: 16) {
+            // 名稱 + 代碼 + 操作按鈕
+            HStack(spacing: 12) {
                 Image(systemName: "person.circle.fill")
                     .font(.title3)
                     .foregroundColor(AviationTheme.Colors.cathayJade)
                     .frame(width: 28)
-                
+
                 VStack(alignment: .leading, spacing: 4) {
                     Text(friend.displayName)
                         .font(AviationTheme.Typography.body)
                         .foregroundColor(AviationTheme.Colors.primaryText(colorScheme))
-                    
+
                     Text(friend.friendCode)
                         .font(.system(.caption, design: .monospaced))
                         .foregroundColor(AviationTheme.Colors.secondaryText(colorScheme))
                 }
-                
+
                 Spacer()
-                
+
                 if friend.status == "pending" && !friend.isIncoming {
                     HStack(spacing: 8) {
                         Text("等待中")
@@ -272,55 +272,60 @@ struct FriendsView: View {
                         }
                     }
                 }
+
+                if friend.status == "accepted" {
+                    Button {
+                        Task {
+                            do {
+                                try await friendService.removeFriend(friendCode: friend.friendCode)
+                            } catch {
+                                appLog("刪除好友失敗: \(error.localizedDescription)")
+                            }
+                        }
+                    } label: {
+                        Text("刪除好友")
+                            .font(AviationTheme.Typography.caption)
+                            .foregroundColor(AviationTheme.Colors.danger)
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 4)
+                            .background(
+                                Capsule()
+                                    .strokeBorder(AviationTheme.Colors.danger.opacity(0.3))
+                            )
+                    }
+                }
             }
-            
-            // 下半：進度摘要（僅已接受的好友顯示）
+
+            // 進度摘要（僅已接受的好友顯示）
             if friend.status == "accepted" {
                 HStack(spacing: 0) {
-                    // 左邊留出 icon 對齊空間
-                    Color.clear.frame(width: 44, height: 1)
-                    
-                    HStack(spacing: 16) {
+                    // 左邊對齊 icon 空間
+                    Color.clear.frame(width: 40, height: 1)
+
+                    HStack(spacing: 0) {
                         friendStatItem(
                             icon: "star.fill",
                             value: friend.totalMiles.formatted(),
                             label: "里程"
                         )
-                        
+
+                        Spacer()
+
                         friendStatItem(
                             icon: "flag.fill",
                             value: "\(friend.goalCount)",
                             label: "目標"
                         )
-                        
+
+                        Spacer()
+
                         friendStatItem(
                             icon: "airplane",
                             value: "\(friend.completedRoutesCount)",
                             label: "已完成"
                         )
-                        
+
                         Spacer()
-                        
-                        // 刪除按鈕
-                        Button {
-                            Task {
-                                do {
-                                    try await friendService.removeFriend(friendCode: friend.friendCode)
-                                } catch {
-                                    appLog("刪除好友失敗: \(error.localizedDescription)")
-                                }
-                            }
-                        } label: {
-                            Text("刪除好友")
-                                .font(AviationTheme.Typography.caption)
-                                .foregroundColor(AviationTheme.Colors.danger)
-                                .padding(.horizontal, 10)
-                                .padding(.vertical, 4)
-                                .background(
-                                    Capsule()
-                                        .strokeBorder(AviationTheme.Colors.danger.opacity(0.3))
-                                )
-                        }
                     }
                 }
                 .padding(.top, 8)
@@ -329,21 +334,22 @@ struct FriendsView: View {
         .padding(.horizontal, 16)
         .padding(.vertical, 14)
     }
-    
+
     @ViewBuilder
     private func friendStatItem(icon: String, value: String, label: String) -> some View {
-        HStack(spacing: 4) {
-            Image(systemName: icon)
-                .font(.system(size: 10))
-                .foregroundColor(AviationTheme.Colors.cathayJade)
-            
-            Text(value)
-                .font(AviationTheme.Typography.caption)
-                .fontWeight(.semibold)
-                .foregroundColor(AviationTheme.Colors.primaryText(colorScheme))
-            
+        VStack(spacing: 2) {
+            HStack(spacing: 3) {
+                Image(systemName: icon)
+                    .font(.system(size: 10))
+                    .foregroundColor(AviationTheme.Colors.cathayJade)
+
+                Text(value)
+                    .font(AviationTheme.Typography.caption)
+                    .fontWeight(.semibold)
+                    .foregroundColor(AviationTheme.Colors.primaryText(colorScheme))
+            }
             Text(label)
-                .font(AviationTheme.Typography.caption)
+                .font(.system(size: 10))
                 .foregroundColor(AviationTheme.Colors.tertiaryText(colorScheme))
         }
     }

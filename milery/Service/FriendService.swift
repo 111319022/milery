@@ -376,9 +376,9 @@ final class FriendService {
                             friendCode: profile["friendCode"] as? String ?? "",
                             status: "accepted",
                             isIncoming: false,
-                            totalMiles: profile["totalMiles"] as? Int ?? 0,
-                            goalCount: profile["goalCount"] as? Int ?? 0,
-                            completedRoutesCount: profile["completedRoutesCount"] as? Int ?? 0
+                            totalMiles: (profile["totalMiles"] as? NSNumber)?.intValue ?? 0,
+                            goalCount: (profile["goalCount"] as? NSNumber)?.intValue ?? 0,
+                            completedRoutesCount: (profile["completedRoutesCount"] as? NSNumber)?.intValue ?? 0
                         ))
                     }
                 } else if myStatus == "accepted" {
@@ -390,9 +390,9 @@ final class FriendService {
                             friendCode: profile["friendCode"] as? String ?? "",
                             status: "accepted",
                             isIncoming: false,
-                            totalMiles: profile["totalMiles"] as? Int ?? 0,
-                            goalCount: profile["goalCount"] as? Int ?? 0,
-                            completedRoutesCount: profile["completedRoutesCount"] as? Int ?? 0
+                            totalMiles: (profile["totalMiles"] as? NSNumber)?.intValue ?? 0,
+                            goalCount: (profile["goalCount"] as? NSNumber)?.intValue ?? 0,
+                            completedRoutesCount: (profile["completedRoutesCount"] as? NSNumber)?.intValue ?? 0
                         ))
                     }
                 } else {

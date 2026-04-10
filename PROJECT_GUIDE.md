@@ -346,13 +346,83 @@ App 密碼鎖與生物辨識解鎖服務。
 
 ### FriendService（🔴🔧開發中）
 
-好友系統服務，使用 CloudKit 公開資料庫。
+好友系統服務，使用 CloudKit **公開資料庫**（`publicCloudDatabase`）。
 
-- 使用容器：`iCloud.com.73app.milery`，資料庫為 `publicCloudDatabase`
-- 首次進入好友頁會 Lazy 建立 `UserProfile`
-- 好友代碼為 6 碼，字元集排除易混淆字元（O/0/I/1）
-- 加好友流程支援互加升級：若偵測到反向 pending，雙方關係同步改為 `accepted`
-- 列表分流為：`friends`（accepted）、`pendingOutgoing`、`pendingIncoming`
+- **容器**：`iCloud.com.73app.milery`
+- **架構**：`@Observable + @MainActor` 單例（`FriendService.shared`）
+
+#### CloudKit Schema（Public Database）
+
+| Record Type | 欄位 | 型別 | 說明 |
+|-------------|------|------|------|
+| `UserProfile` | `userRecordID` | Reference | 指向 Users record |
+| | `friendCode` | String | 6 碼好友代碼 |
+| | `displayName` | String | 顯示名稱 |
+| | `totalMiles` | Int64 | 總哩程（從本地同步） |
+| | `goalCount` | Int64 | 飛行目標數 |
+| | `completedRoutesCount` | Int64 | 已兌換機票數 |
+| | `lastUpdated` | Date/Time | 最後同步時間 |
+| | `sharingEnabled` | Int64 | 分享開關 |
+| `FriendRelation` | `fromUserRecordID` | Reference | 發起方 |
+| | `toUserRecordID` | Reference | 接收方 |
+| | `status` | String | `pending` / `accepted` |
+| | `createdAt` | Date/Time | 建立時間 |
+
+> **注意**：CloudKit Development 環境在首次 `save()` 時自動建立 Record Type。部署到 Production 需在 CloudKit Console 手動「Deploy to Production」。
+
+#### 好友代碼
+
+- 6 碼，字元集 `ABCDEFGHJKLMNPQRSTUVWXYZ23456789`（排除 O/0/I/1）
+- 組合空間：28^6 ≈ 4.8 億
+- 碰撞檢查：最多重試 10 次
+
+#### 加好友流程 (`addFriend`)
+
+```
+A 輸入 B 的好友碼
+  ↓
+查詢 B 的 UserProfile → 取得 B 的 userRecordID
+  ↓
+檢查：不是自己、沒有已存在的 A→B 關係
+  ↓
+查詢反向：B→A 是否存在？
+  ├── 存在 → 建立 A→B (status=accepted)
+  └── 不存在 → 建立 A→B (status=pending)
+```
+
+**CloudKit Public DB 權限限制**：使用者只能修改自己建立的 record，無法直接修改對方的 `FriendRelation`。因此互加升級分兩階段完成：
+1. B 加 A 時，B 偵測到 A→B 存在，建立 B→A 為 `accepted`
+2. A 下次 `fetchFriends` 時，偵測到雙向關係都存在，自動將自己的 A→B 從 `pending` 升級為 `accepted`
+
+#### 好友列表查詢 (`fetchFriends`)
+
+```
+查詢 fromUserRecordID == me（我加的）
+查詢 toUserRecordID == me（別人加的）
+  ↓
+建立反向 lookup（對方 userID → record）
+  ↓
+遍歷「我加的」：
+  ├── 雙向都存在 → accepted（自動升級自己的 pending）
+  ├── 只有我→對方 且 accepted → accepted
+  └── 只有我→對方 且 pending → outgoing
+  ↓
+遍歷「別人加的」：
+  └── 對方→我 存在但我沒有反向 → incoming
+```
+
+#### 本地數據同步 (`syncLocalStatsToProfile`)
+
+進入好友頁面時自動觸發，讀取 SwiftData 中當前計畫的：
+- `MileageAccount.totalMiles`
+- `FlightGoal` 數量
+- `RedeemedTicket` 數量
+
+更新到 CloudKit UserProfile record，讓好友能看到最新進度。
+
+#### 刪除好友 (`removeFriend`)
+
+刪除雙向的 `FriendRelation` 記錄（我→對方 + 對方→我）。由於 Public DB 權限限制，只有自己建立的 record 能成功刪除，對方建立的會靜默失敗。
 
 ---
 
