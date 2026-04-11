@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		FB0A20A22F8A52E200405172 /* HAPTIC_FEEDBACK_GUIDE.md in Resources */ = {isa = PBXBuildFile; fileRef = FB0A20A12F8A52E200405172 /* HAPTIC_FEEDBACK_GUIDE.md */; };
 		FB8547632F82C327007E3EC2 /* MainTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB8547552F82C327007E3EC2 /* MainTabView.swift */; };
 		FB8547642F82C327007E3EC2 /* MileageViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB85473D2F82C327007E3EC2 /* MileageViewModel.swift */; };
 		FB8547652F82C327007E3EC2 /* CloudBackupService.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB85473A2F82C327007E3EC2 /* CloudBackupService.swift */; };
@@ -89,6 +90,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		FB0A20A12F8A52E200405172 /* HAPTIC_FEEDBACK_GUIDE.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = HAPTIC_FEEDBACK_GUIDE.md; sourceTree = "<group>"; };
 		FB8547232F82C327007E3EC2 /* AppIcon-Blue-1-60@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "AppIcon-Blue-1-60@2x.png"; sourceTree = "<group>"; };
 		FB8547242F82C327007E3EC2 /* AppIcon-Blue-1-60@3x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "AppIcon-Blue-1-60@3x.png"; sourceTree = "<group>"; };
 		FB8547252F82C327007E3EC2 /* AppIcon-Dark-1-60@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "AppIcon-Dark-1-60@2x.png"; sourceTree = "<group>"; };
@@ -338,6 +340,7 @@
 				FB8547A22F82C367007E3EC2 /* mileryTests */,
 				FB8547A82F82C468007E3EC2 /* milery.app */,
 				FB8547A92F840CD7007E3EC2 /* mileryTests.xctest */,
+				FB0A20A12F8A52E200405172 /* HAPTIC_FEEDBACK_GUIDE.md */,
 			);
 			sourceTree = "<group>";
 		};
@@ -427,6 +430,7 @@
 				FB85479C2F82C353007E3EC2 /* PROJECT_GUIDE.md in Resources */,
 				FB8547932F82C327007E3EC2 /* AppIcon-Dark-1-60@2x.png in Resources */,
 				FB8547942F82C327007E3EC2 /* AppIcon-Blue-1-60@3x.png in Resources */,
+				FB0A20A22F8A52E200405172 /* HAPTIC_FEEDBACK_GUIDE.md in Resources */,
 				FB8547952F82C327007E3EC2 /* AppIcon-Dark-1-60@3x.png in Resources */,
 				FB8547972F82C327007E3EC2 /* Assets.xcassets in Resources */,
 				FB8547982F82C327007E3EC2 /* AppIcon-Blue-1-60@2x.png in Resources */,
@@ -707,7 +711,7 @@
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CODE_SIGN_ENTITLEMENTS = milery/milery.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 44;
+				CURRENT_PROJECT_VERSION = 45;
 				DEVELOPMENT_TEAM = 45SQT63B67;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -747,7 +751,7 @@
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CODE_SIGN_ENTITLEMENTS = milery/milery.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 44;
+				CURRENT_PROJECT_VERSION = 45;
 				DEVELOPMENT_TEAM = 45SQT63B67;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
