@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="_5" data-name="5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 60">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: #009690;
+      }
+
+      .cls-1, .cls-2 {
+        stroke-width: 5px;
+      }
+
+      .cls-1, .cls-2, .cls-3 {
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      .cls-1, .cls-3 {
+        stroke: #009690;
+      }
+
+      .cls-2 {
+        fill: none;
+        stroke: #e69a00;
+      }
+
+      .cls-3 {
+        fill: #fff;
+        stroke-width: 4.73px;
+      }
+    </style>
+  </defs>
+  <polyline class="cls-3" points="19.44 24.29 14.4 24.29 6.83 34.82 53.17 34.82 45.8 24.29 41.24 24.29"/>
+  <path class="cls-1" d="M6.83,34.82v11.3c0,3.33,2.7,6.03,6.03,6.03h34.27c3.33,0,6.03-2.7,6.03-6.03v-11.3H6.83Z"/>
+  <polyline class="cls-2" points="30.17 6.31 30.17 26.56 21.82 19.12"/>
+  <line class="cls-2" x1="38.18" y1="19.36" x2="30.17" y2="26.56"/>
+</svg>

@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="_6" data-name="6" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 60">
+  <defs>
+    <style>
+      .cls-1 {
+        stroke-width: 2.61px;
+      }
+
+      .cls-1, .cls-2, .cls-3, .cls-4 {
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      .cls-1, .cls-3 {
+        fill: #009690;
+        stroke: #009690;
+      }
+
+      .cls-2 {
+        stroke: #fff;
+      }
+
+      .cls-2, .cls-5 {
+        fill: #fff;
+      }
+
+      .cls-2, .cls-3 {
+        stroke-width: 2.2px;
+      }
+
+      .cls-4 {
+        fill: #e69a00;
+        stroke: #e69a00;
+        stroke-width: .8px;
+      }
+    </style>
+  </defs>
+  <rect class="cls-2" x="10.29" y="25.75" width="37.56" height="10.35" transform="translate(18.81 -10.26) rotate(29.24)"/>
+  <path class="cls-4" d="M47.58,37.92L13.52,18.85l4.16-7.43c2.84-5.07,10-6.45,16.01-3.08l7.17,4.01c1.03.58,1.54,1.72,1.16,2.65l-2.54,6.36c-.32.79.9,1.55,1.5.94l4.93-5.04c.8-.82,2.28-.84,3.32,0,4.37,3.56,4.94,8.89,2.38,13.46l-4.03,7.19Z"/>
+  <path class="cls-3" d="M6.18,33.23h37.56v5.21c0,2.84-2.3,5.14-5.14,5.14H11.32c-2.84,0-5.14-2.3-5.14-5.14v-5.21h0Z" transform="translate(21.94 -7.3) rotate(29.24)"/>
+  <rect class="cls-1" x="16.88" y="38.67" width="6.47" height="16.74" rx="2.9" ry="2.9" transform="translate(25.54 -3.83) rotate(29.24)"/>
+  <circle class="cls-5" cx="17.48" cy="51.74" r="2.03"/>
+</svg>

@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="_8" data-name="8" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 60">
+  <defs>
+    <style>
+      .cls-1, .cls-2 {
+        fill: #009690;
+        stroke: #009690;
+      }
+
+      .cls-1, .cls-2, .cls-3, .cls-4 {
+        stroke-linecap: round;
+      }
+
+      .cls-1, .cls-3 {
+        stroke-width: 5.25px;
+      }
+
+      .cls-1, .cls-3, .cls-4 {
+        stroke-linejoin: round;
+      }
+
+      .cls-2 {
+        stroke-miterlimit: 10;
+        stroke-width: 4.79px;
+      }
+
+      .cls-5 {
+        fill: #fff;
+      }
+
+      .cls-3, .cls-4 {
+        fill: #e69a00;
+        stroke: #e69a00;
+      }
+
+      .cls-4 {
+        stroke-width: 6.34px;
+      }
+    </style>
+  </defs>
+  <circle class="cls-4" cx="30" cy="51.68" r="4.3"/>
+  <path class="cls-2" d="M28.14,11.14h3.72c9.08,0,16.45,7.37,16.45,16.45v10.51H11.69v-10.51c0-9.08,7.37-16.45,16.45-16.45Z"/>
+  <polygon class="cls-1" points="54.26 48.47 5.74 48.47 12.02 40.18 48.63 40.18 54.26 48.47"/>
+  <circle class="cls-3" cx="30" cy="7.58" r="3.56"/>
+  <path class="cls-5" d="M20.63,15.78c-5.96,2.82-8.41,9.54-8.25,15.78.06,2.14,3.38,2.15,3.33,0-.13-5.18,1.63-10.56,6.6-12.91.81-.38,1.02-1.55.6-2.28-.49-.83-1.46-.98-2.28-.6h0Z"/>
+</svg>
