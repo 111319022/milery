@@ -9,7 +9,6 @@
 /* Begin PBXBuildFile section */
 		FB0A20AA2F8A541E00405172 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FB0A20A92F8A541E00405172 /* WidgetKit.framework */; };
 		FB0A20AC2F8A541E00405172 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FB0A20AB2F8A541E00405172 /* SwiftUI.framework */; };
-		FB0A20BB2F8A541F00405172 /* MileryWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = FB0A20A72F8A541E00405172 /* MileryWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		FB0A20C32F8A543100405172 /* HAPTIC_FEEDBACK_GUIDE.md in Resources */ = {isa = PBXBuildFile; fileRef = FB0A20C12F8A543100405172 /* HAPTIC_FEEDBACK_GUIDE.md */; };
 		FB8547632F82C327007E3EC2 /* MainTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB8547552F82C327007E3EC2 /* MainTabView.swift */; };
 		FB8547642F82C327007E3EC2 /* MileageViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB85473D2F82C327007E3EC2 /* MileageViewModel.swift */; };
@@ -106,7 +105,6 @@
 			dstPath = "";
 			dstSubfolderSpec = 13;
 			files = (
-				FB0A20BB2F8A541F00405172 /* MileryWidgetExtension.appex in Embed Foundation Extensions */,
 			);
 			name = "Embed Foundation Extensions";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -114,7 +112,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		FB0A20A72F8A541E00405172 /* MileryWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = MileryWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		FB0A20A72F8A541E00405172 /* MileryWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; name = MileryWidgetExtension.appex; path = "/Users/rayhsu/Documents/milery/build/Debug-iphoneos/MileryWidgetExtension.appex"; sourceTree = "<absolute>"; };
 		FB0A20A92F8A541E00405172 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
 		FB0A20AB2F8A541E00405172 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
 		FB0A20C12F8A543100405172 /* HAPTIC_FEEDBACK_GUIDE.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = HAPTIC_FEEDBACK_GUIDE.md; sourceTree = "<group>"; };
@@ -180,8 +178,8 @@
 		FB85479F2F82C367007E3EC2 /* FlightCalculatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlightCalculatorTests.swift; sourceTree = "<group>"; };
 		FB8547A02F82C367007E3EC2 /* FlightGoalTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlightGoalTests.swift; sourceTree = "<group>"; };
 		FB8547A12F82C367007E3EC2 /* MileageAccountTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MileageAccountTests.swift; sourceTree = "<group>"; };
-		FB8547A82F82C468007E3EC2 /* milery.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = milery.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		FB8547A92F840CD7007E3EC2 /* mileryTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = mileryTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		FB8547A82F82C468007E3EC2 /* milery.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; name = milery.app; path = "/Users/rayhsu/Documents/milery/build/Debug-iphoneos/milery.app"; sourceTree = "<absolute>"; };
+		FB8547A92F840CD7007E3EC2 /* mileryTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; name = mileryTests.xctest; path = "/Users/rayhsu/Documents/milery/build/Debug-iphoneos/milery.app/PlugIns/mileryTests.xctest"; sourceTree = "<absolute>"; };
 		FB8547AA2F8614EC007E3EC2 /* SolidColorDefinition.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SolidColorDefinition.swift; sourceTree = "<group>"; };
 		FB8547AC2F8638AD007E3EC2 /* AppLockService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppLockService.swift; sourceTree = "<group>"; };
 		FB8547AE2F8638CA007E3EC2 /* AppLockView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppLockView.swift; sourceTree = "<group>"; };
@@ -409,15 +407,12 @@
 		FBB3ADD12F67A60600D7ADE3 = {
 			isa = PBXGroup;
 			children = (
-				FB0A20C42F8A55E900405172 /* MileryWidgetExtension.entitlements */,
 				FB8547622F82C327007E3EC2 /* milery */,
 				FB8547992F82C353007E3EC2 /* PROJECT_GUIDE.md */,
 				FB85479A2F82C353007E3EC2 /* README.md */,
 				FB0A20C22F8A543100405172 /* md */,
 				FB8547A22F82C367007E3EC2 /* mileryTests */,
-				FB8547A82F82C468007E3EC2 /* milery.app */,
-				FB8547A92F840CD7007E3EC2 /* mileryTests.xctest */,
-				FB0A20A72F8A541E00405172 /* MileryWidgetExtension.appex */,
+				FB0A20C42F8A55E900405172 /* MileryWidgetExtension.entitlements */,
 				FB0A20AD2F8A541E00405172 /* MileryWidget */,
 				FB0A20A82F8A541E00405172 /* Frameworks */,
 			);
