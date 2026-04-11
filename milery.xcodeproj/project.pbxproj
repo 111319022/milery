@@ -7,7 +7,10 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		FB0A20A22F8A52E200405172 /* HAPTIC_FEEDBACK_GUIDE.md in Resources */ = {isa = PBXBuildFile; fileRef = FB0A20A12F8A52E200405172 /* HAPTIC_FEEDBACK_GUIDE.md */; };
+		FB0A20AA2F8A541E00405172 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FB0A20A92F8A541E00405172 /* WidgetKit.framework */; };
+		FB0A20AC2F8A541E00405172 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FB0A20AB2F8A541E00405172 /* SwiftUI.framework */; };
+		FB0A20BB2F8A541F00405172 /* MileryWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = FB0A20A72F8A541E00405172 /* MileryWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		FB0A20C32F8A543100405172 /* HAPTIC_FEEDBACK_GUIDE.md in Resources */ = {isa = PBXBuildFile; fileRef = FB0A20C12F8A543100405172 /* HAPTIC_FEEDBACK_GUIDE.md */; };
 		FB8547632F82C327007E3EC2 /* MainTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB8547552F82C327007E3EC2 /* MainTabView.swift */; };
 		FB8547642F82C327007E3EC2 /* MileageViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB85473D2F82C327007E3EC2 /* MileageViewModel.swift */; };
 		FB8547652F82C327007E3EC2 /* CloudBackupService.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB85473A2F82C327007E3EC2 /* CloudBackupService.swift */; };
@@ -80,6 +83,13 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		FB0A20B92F8A541F00405172 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = FBB3ADD22F67A60600D7ADE3 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = FB0A20A62F8A541E00405172;
+			remoteInfo = MileryWidgetExtension;
+		};
 		FB901A012F90000100AAAAAA /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = FBB3ADD22F67A60600D7ADE3 /* Project object */;
@@ -89,8 +99,26 @@
 		};
 /* End PBXContainerItemProxy section */
 
+/* Begin PBXCopyFilesBuildPhase section */
+		FB0A20C02F8A541F00405172 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				FB0A20BB2F8A541F00405172 /* MileryWidgetExtension.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
-		FB0A20A12F8A52E200405172 /* HAPTIC_FEEDBACK_GUIDE.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = HAPTIC_FEEDBACK_GUIDE.md; sourceTree = "<group>"; };
+		FB0A20A72F8A541E00405172 /* MileryWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = MileryWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		FB0A20A92F8A541E00405172 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
+		FB0A20AB2F8A541E00405172 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
+		FB0A20C12F8A543100405172 /* HAPTIC_FEEDBACK_GUIDE.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = HAPTIC_FEEDBACK_GUIDE.md; sourceTree = "<group>"; };
+		FB0A20C42F8A55E900405172 /* MileryWidgetExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = MileryWidgetExtension.entitlements; sourceTree = "<group>"; };
 		FB8547232F82C327007E3EC2 /* AppIcon-Blue-1-60@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "AppIcon-Blue-1-60@2x.png"; sourceTree = "<group>"; };
 		FB8547242F82C327007E3EC2 /* AppIcon-Blue-1-60@3x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "AppIcon-Blue-1-60@3x.png"; sourceTree = "<group>"; };
 		FB8547252F82C327007E3EC2 /* AppIcon-Dark-1-60@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "AppIcon-Dark-1-60@2x.png"; sourceTree = "<group>"; };
@@ -166,7 +194,37 @@
 		FBEACD8F2F865DDF008B6847 /* ProgramSwitcherView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgramSwitcherView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		FB0A20BC2F8A541F00405172 /* Exceptions for "MileryWidget" folder in "MileryWidgetExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = FB0A20A62F8A541E00405172 /* MileryWidgetExtension */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		FB0A20AD2F8A541E00405172 /* MileryWidget */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				FB0A20BC2F8A541F00405172 /* Exceptions for "MileryWidget" folder in "MileryWidgetExtension" target */,
+			);
+			path = MileryWidget;
+			sourceTree = "<group>";
+		};
+/* End PBXFileSystemSynchronizedRootGroup section */
+
 /* Begin PBXFrameworksBuildPhase section */
+		FB0A20A42F8A541E00405172 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				FB0A20AC2F8A541E00405172 /* SwiftUI.framework in Frameworks */,
+				FB0A20AA2F8A541E00405172 /* WidgetKit.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		FB900E022F90000100AAAAAA /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -184,6 +242,23 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		FB0A20A82F8A541E00405172 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				FB0A20A92F8A541E00405172 /* WidgetKit.framework */,
+				FB0A20AB2F8A541E00405172 /* SwiftUI.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		FB0A20C22F8A543100405172 /* md */ = {
+			isa = PBXGroup;
+			children = (
+				FB0A20C12F8A543100405172 /* HAPTIC_FEEDBACK_GUIDE.md */,
+			);
+			path = md;
+			sourceTree = "<group>";
+		};
 		FB8547272F82C327007E3EC2 /* Alternate​Icons */ = {
 			isa = PBXGroup;
 			children = (
@@ -334,19 +409,45 @@
 		FBB3ADD12F67A60600D7ADE3 = {
 			isa = PBXGroup;
 			children = (
+				FB0A20C42F8A55E900405172 /* MileryWidgetExtension.entitlements */,
 				FB8547622F82C327007E3EC2 /* milery */,
 				FB8547992F82C353007E3EC2 /* PROJECT_GUIDE.md */,
 				FB85479A2F82C353007E3EC2 /* README.md */,
+				FB0A20C22F8A543100405172 /* md */,
 				FB8547A22F82C367007E3EC2 /* mileryTests */,
 				FB8547A82F82C468007E3EC2 /* milery.app */,
 				FB8547A92F840CD7007E3EC2 /* mileryTests.xctest */,
-				FB0A20A12F8A52E200405172 /* HAPTIC_FEEDBACK_GUIDE.md */,
+				FB0A20A72F8A541E00405172 /* MileryWidgetExtension.appex */,
+				FB0A20AD2F8A541E00405172 /* MileryWidget */,
+				FB0A20A82F8A541E00405172 /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		FB0A20A62F8A541E00405172 /* MileryWidgetExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = FB0A20BD2F8A541F00405172 /* Build configuration list for PBXNativeTarget "MileryWidgetExtension" */;
+			buildPhases = (
+				FB0A20A32F8A541E00405172 /* Sources */,
+				FB0A20A42F8A541E00405172 /* Frameworks */,
+				FB0A20A52F8A541E00405172 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				FB0A20AD2F8A541E00405172 /* MileryWidget */,
+			);
+			name = MileryWidgetExtension;
+			packageProductDependencies = (
+			);
+			productName = MileryWidgetExtension;
+			productReference = FB0A20A72F8A541E00405172 /* MileryWidgetExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 		FB900D012F90000100AAAAAA /* mileryTests */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = FB901D012F90000100AAAAAA /* Build configuration list for PBXNativeTarget "mileryTests" */;
@@ -373,10 +474,12 @@
 				FBB3ADD62F67A60600D7ADE3 /* Sources */,
 				FBB3ADD72F67A60600D7ADE3 /* Frameworks */,
 				FBB3ADD82F67A60600D7ADE3 /* Resources */,
+				FB0A20C02F8A541F00405172 /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				FB0A20BA2F8A541F00405172 /* PBXTargetDependency */,
 			);
 			name = milery;
 			packageProductDependencies = (
@@ -395,6 +498,9 @@
 				LastSwiftUpdateCheck = 2630;
 				LastUpgradeCheck = 2630;
 				TargetAttributes = {
+					FB0A20A62F8A541E00405172 = {
+						CreatedOnToolsVersion = 26.3;
+					};
 					FBB3ADD92F67A60600D7ADE3 = {
 						CreatedOnToolsVersion = 26.3;
 					};
@@ -416,11 +522,19 @@
 			targets = (
 				FBB3ADD92F67A60600D7ADE3 /* milery */,
 				FB900D012F90000100AAAAAA /* mileryTests */,
+				FB0A20A62F8A541E00405172 /* MileryWidgetExtension */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		FB0A20A52F8A541E00405172 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		FBB3ADD82F67A60600D7ADE3 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -430,8 +544,8 @@
 				FB85479C2F82C353007E3EC2 /* PROJECT_GUIDE.md in Resources */,
 				FB8547932F82C327007E3EC2 /* AppIcon-Dark-1-60@2x.png in Resources */,
 				FB8547942F82C327007E3EC2 /* AppIcon-Blue-1-60@3x.png in Resources */,
-				FB0A20A22F8A52E200405172 /* HAPTIC_FEEDBACK_GUIDE.md in Resources */,
 				FB8547952F82C327007E3EC2 /* AppIcon-Dark-1-60@3x.png in Resources */,
+				FB0A20C32F8A543100405172 /* HAPTIC_FEEDBACK_GUIDE.md in Resources */,
 				FB8547972F82C327007E3EC2 /* Assets.xcassets in Resources */,
 				FB8547982F82C327007E3EC2 /* AppIcon-Blue-1-60@2x.png in Resources */,
 			);
@@ -440,6 +554,13 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		FB0A20A32F8A541E00405172 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		FB900E012F90000100AAAAAA /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -518,6 +639,11 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		FB0A20BA2F8A541F00405172 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = FB0A20A62F8A541E00405172 /* MileryWidgetExtension */;
+			targetProxy = FB0A20B92F8A541F00405172 /* PBXContainerItemProxy */;
+		};
 		FB901B012F90000100AAAAAA /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = FBB3ADD92F67A60600D7ADE3 /* milery */;
@@ -526,6 +652,68 @@
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
+		FB0A20BE2F8A541F00405172 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_ENTITLEMENTS = MileryWidgetExtension.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 45SQT63B67;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = MileryWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = MileryWidget;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.73app.milery.MileryWidget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		FB0A20BF2F8A541F00405172 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_ENTITLEMENTS = MileryWidgetExtension.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 45SQT63B67;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = MileryWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = MileryWidget;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.73app.milery.MileryWidget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 		FB901C012F90000100AAAAAA /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -786,6 +974,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		FB0A20BD2F8A541F00405172 /* Build configuration list for PBXNativeTarget "MileryWidgetExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				FB0A20BE2F8A541F00405172 /* Debug */,
+				FB0A20BF2F8A541F00405172 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		FB901D012F90000100AAAAAA /* Build configuration list for PBXNativeTarget "mileryTests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
