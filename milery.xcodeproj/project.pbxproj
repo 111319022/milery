@@ -10,6 +10,7 @@
 		FB0A20AA2F8A541E00405172 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FB0A20A92F8A541E00405172 /* WidgetKit.framework */; };
 		FB0A20AC2F8A541E00405172 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FB0A20AB2F8A541E00405172 /* SwiftUI.framework */; };
 		FB0A20C32F8A543100405172 /* HAPTIC_FEEDBACK_GUIDE.md in Resources */ = {isa = PBXBuildFile; fileRef = FB0A20C12F8A543100405172 /* HAPTIC_FEEDBACK_GUIDE.md */; };
+		FB0A20C62F8CF45900405172 /* Friend_System_Roadmap.md in Resources */ = {isa = PBXBuildFile; fileRef = FB0A20C52F8CF45900405172 /* Friend_System_Roadmap.md */; };
 		FB8547632F82C327007E3EC2 /* MainTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB8547552F82C327007E3EC2 /* MainTabView.swift */; };
 		FB8547642F82C327007E3EC2 /* MileageViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB85473D2F82C327007E3EC2 /* MileageViewModel.swift */; };
 		FB8547652F82C327007E3EC2 /* CloudBackupService.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB85473A2F82C327007E3EC2 /* CloudBackupService.swift */; };
@@ -117,6 +118,7 @@
 		FB0A20AB2F8A541E00405172 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
 		FB0A20C12F8A543100405172 /* HAPTIC_FEEDBACK_GUIDE.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = HAPTIC_FEEDBACK_GUIDE.md; sourceTree = "<group>"; };
 		FB0A20C42F8A55E900405172 /* MileryWidgetExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = MileryWidgetExtension.entitlements; sourceTree = "<group>"; };
+		FB0A20C52F8CF45900405172 /* Friend_System_Roadmap.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = Friend_System_Roadmap.md; sourceTree = "<group>"; };
 		FB8547232F82C327007E3EC2 /* AppIcon-Blue-1-60@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "AppIcon-Blue-1-60@2x.png"; sourceTree = "<group>"; };
 		FB8547242F82C327007E3EC2 /* AppIcon-Blue-1-60@3x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "AppIcon-Blue-1-60@3x.png"; sourceTree = "<group>"; };
 		FB8547252F82C327007E3EC2 /* AppIcon-Dark-1-60@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "AppIcon-Dark-1-60@2x.png"; sourceTree = "<group>"; };
@@ -253,6 +255,7 @@
 			isa = PBXGroup;
 			children = (
 				FB0A20C12F8A543100405172 /* HAPTIC_FEEDBACK_GUIDE.md */,
+				FB0A20C52F8CF45900405172 /* Friend_System_Roadmap.md */,
 			);
 			path = md;
 			sourceTree = "<group>";
@@ -538,6 +541,7 @@
 				FB85479B2F82C353007E3EC2 /* README.md in Resources */,
 				FB85479C2F82C353007E3EC2 /* PROJECT_GUIDE.md in Resources */,
 				FB8547932F82C327007E3EC2 /* AppIcon-Dark-1-60@2x.png in Resources */,
+				FB0A20C62F8CF45900405172 /* Friend_System_Roadmap.md in Resources */,
 				FB8547942F82C327007E3EC2 /* AppIcon-Blue-1-60@3x.png in Resources */,
 				FB8547952F82C327007E3EC2 /* AppIcon-Dark-1-60@3x.png in Resources */,
 				FB0A20C32F8A543100405172 /* HAPTIC_FEEDBACK_GUIDE.md in Resources */,
