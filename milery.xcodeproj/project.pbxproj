@@ -11,6 +11,7 @@
 		FB0A20AC2F8A541E00405172 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FB0A20AB2F8A541E00405172 /* SwiftUI.framework */; };
 		FB0A20C32F8A543100405172 /* HAPTIC_FEEDBACK_GUIDE.md in Resources */ = {isa = PBXBuildFile; fileRef = FB0A20C12F8A543100405172 /* HAPTIC_FEEDBACK_GUIDE.md */; };
 		FB0A20C62F8CF45900405172 /* Friend_System_Roadmap.md in Resources */ = {isa = PBXBuildFile; fileRef = FB0A20C52F8CF45900405172 /* Friend_System_Roadmap.md */; };
+		FB0A20CA2F8E19DF00405172 /* DashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB0A20C92F8E19DF00405172 /* DashboardView.swift */; };
 		FB8547632F82C327007E3EC2 /* MainTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB8547552F82C327007E3EC2 /* MainTabView.swift */; };
 		FB8547642F82C327007E3EC2 /* MileageViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB85473D2F82C327007E3EC2 /* MileageViewModel.swift */; };
 		FB8547652F82C327007E3EC2 /* CloudBackupService.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB85473A2F82C327007E3EC2 /* CloudBackupService.swift */; };
@@ -49,7 +50,7 @@
 		FB8547862F82C327007E3EC2 /* CathayAwardChart.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB85472A2F82C327007E3EC2 /* CathayAwardChart.swift */; };
 		FB8547872F82C327007E3EC2 /* MileageViewModel+Transaction.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB8547412F82C327007E3EC2 /* MileageViewModel+Transaction.swift */; };
 		FB8547882F82C327007E3EC2 /* AppBackgroundView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB85474B2F82C327007E3EC2 /* AppBackgroundView.swift */; };
-		FB8547892F82C327007E3EC2 /* DashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB8547522F82C327007E3EC2 /* DashboardView.swift */; };
+		FB8547892F82C327007E3EC2 /* NEW_DashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB8547522F82C327007E3EC2 /* NEW_DashboardView.swift */; };
 		FB85478A2F82C327007E3EC2 /* FlightGoal.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB8547342F82C327007E3EC2 /* FlightGoal.swift */; };
 		FB85478B2F82C327007E3EC2 /* MileageViewModel+Sync.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB8547402F82C327007E3EC2 /* MileageViewModel+Sync.swift */; };
 		FB85478C2F82C327007E3EC2 /* AviationTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB85475E2F82C327007E3EC2 /* AviationTheme.swift */; };
@@ -119,6 +120,7 @@
 		FB0A20C12F8A543100405172 /* HAPTIC_FEEDBACK_GUIDE.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = HAPTIC_FEEDBACK_GUIDE.md; sourceTree = "<group>"; };
 		FB0A20C42F8A55E900405172 /* MileryWidgetExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = MileryWidgetExtension.entitlements; sourceTree = "<group>"; };
 		FB0A20C52F8CF45900405172 /* Friend_System_Roadmap.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = Friend_System_Roadmap.md; sourceTree = "<group>"; };
+		FB0A20C92F8E19DF00405172 /* DashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardView.swift; sourceTree = "<group>"; };
 		FB8547232F82C327007E3EC2 /* AppIcon-Blue-1-60@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "AppIcon-Blue-1-60@2x.png"; sourceTree = "<group>"; };
 		FB8547242F82C327007E3EC2 /* AppIcon-Blue-1-60@3x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "AppIcon-Blue-1-60@3x.png"; sourceTree = "<group>"; };
 		FB8547252F82C327007E3EC2 /* AppIcon-Dark-1-60@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "AppIcon-Dark-1-60@2x.png"; sourceTree = "<group>"; };
@@ -158,7 +160,7 @@
 		FB85474F2F82C327007E3EC2 /* CalculatorLedgerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalculatorLedgerView.swift; sourceTree = "<group>"; };
 		FB8547502F82C327007E3EC2 /* CloudBackupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudBackupView.swift; sourceTree = "<group>"; };
 		FB8547512F82C327007E3EC2 /* CreditCardPageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreditCardPageView.swift; sourceTree = "<group>"; };
-		FB8547522F82C327007E3EC2 /* DashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardView.swift; sourceTree = "<group>"; };
+		FB8547522F82C327007E3EC2 /* NEW_DashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NEW_DashboardView.swift; sourceTree = "<group>"; };
 		FB8547532F82C327007E3EC2 /* EditTransactionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditTransactionView.swift; sourceTree = "<group>"; };
 		FB8547542F82C327007E3EC2 /* LedgerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LedgerView.swift; sourceTree = "<group>"; };
 		FB8547552F82C327007E3EC2 /* MainTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainTabView.swift; sourceTree = "<group>"; };
@@ -357,7 +359,8 @@
 				FB85474F2F82C327007E3EC2 /* CalculatorLedgerView.swift */,
 				FB8547502F82C327007E3EC2 /* CloudBackupView.swift */,
 				FB8547512F82C327007E3EC2 /* CreditCardPageView.swift */,
-				FB8547522F82C327007E3EC2 /* DashboardView.swift */,
+				FB8547522F82C327007E3EC2 /* NEW_DashboardView.swift */,
+				FB0A20C92F8E19DF00405172 /* DashboardView.swift */,
 				FB8547532F82C327007E3EC2 /* EditTransactionView.swift */,
 				FB8547542F82C327007E3EC2 /* LedgerView.swift */,
 				FB8547552F82C327007E3EC2 /* MainTabView.swift */,
@@ -622,7 +625,8 @@
 				FB8547872F82C327007E3EC2 /* MileageViewModel+Transaction.swift in Sources */,
 				FB8547B32F86582A007E3EC2 /* FriendService.swift in Sources */,
 				FB8547882F82C327007E3EC2 /* AppBackgroundView.swift in Sources */,
-				FB8547892F82C327007E3EC2 /* DashboardView.swift in Sources */,
+				FB0A20CA2F8E19DF00405172 /* DashboardView.swift in Sources */,
+				FB8547892F82C327007E3EC2 /* NEW_DashboardView.swift in Sources */,
 				FB85478A2F82C327007E3EC2 /* FlightGoal.swift in Sources */,
 				FB8547AD2F8638AD007E3EC2 /* AppLockService.swift in Sources */,
 				FB8547AB2F8614EC007E3EC2 /* SolidColorDefinition.swift in Sources */,

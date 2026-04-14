@@ -10,6 +10,7 @@ struct MainTabView: View {
     @AppStorage("tabVisible_progress") private var progressVisible = true
     @AppStorage("tabVisible_ledger") private var ledgerVisible = true
     @AppStorage("tabVisible_milestones") private var milestonesVisible = true
+    @AppStorage("useNewDashboard") private var useNewDashboard = false
     
     private var hasBackgroundImage: Bool {
         switch backgroundSelection {
@@ -45,11 +46,21 @@ struct MainTabView: View {
     var body: some View {
         TabView(selection: $selectedTab) {
             if dashboardVisible {
-                DashboardView(
-                    viewModel: viewModel,
-                    switchToProgress: { withAnimation(.smooth(duration: 0.3)) { selectedTab = 1 } },
-                    switchToLedger: { withAnimation(.smooth(duration: 0.3)) { selectedTab = 2 } }
-                )
+                Group {
+                    if useNewDashboard {
+                        NEW_DashboardView(
+                            viewModel: viewModel,
+                            switchToProgress: { withAnimation(.smooth(duration: 0.3)) { selectedTab = 1 } },
+                            switchToLedger: { withAnimation(.smooth(duration: 0.3)) { selectedTab = 2 } }
+                        )
+                    } else {
+                        DashboardView(
+                            viewModel: viewModel,
+                            switchToProgress: { withAnimation(.smooth(duration: 0.3)) { selectedTab = 1 } },
+                            switchToLedger: { withAnimation(.smooth(duration: 0.3)) { selectedTab = 2 } }
+                        )
+                    }
+                }
                     .tag(0)
                     .tabItem {
                         Label {
