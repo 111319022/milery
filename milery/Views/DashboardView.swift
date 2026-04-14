@@ -184,7 +184,7 @@ struct RedeemReadyRadarCard: View {
     }
 }
 
-// MARK: - 英雄卡片
+// MARK: - 英雄卡片（Premium Boarding Pass 風格）
 struct HeroMilesCard: View {
     @Environment(\.colorScheme) var colorScheme
     let totalMiles: Int
@@ -206,12 +206,27 @@ struct HeroMilesCard: View {
             return AviationTheme.Colors.brandColor(colorScheme)
         }
     }
+
+    /// 金屬光澤邊框漸層
+    private var metallicBorderGradient: LinearGradient {
+        LinearGradient(
+            colors: [
+                AviationTheme.Colors.lightGold.opacity(0.7),
+                AviationTheme.Colors.gold.opacity(0.4),
+                Color.white.opacity(colorScheme == .dark ? 0.15 : 0.3),
+                AviationTheme.Colors.gold.opacity(0.5),
+                AviationTheme.Colors.lightGold.opacity(0.3)
+            ],
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
+        )
+    }
     
     var body: some View {
         VStack(spacing: 0) {
             // 主要哩程顯示區域
             VStack(spacing: AviationTheme.Spacing.md) {
-                // 標題
+                // 標題列：模仿 Boarding Pass 頂部
                 HStack {
                     HStack(spacing: 8) {
                         Image(systemName: "airplane")
@@ -228,6 +243,7 @@ struct HeroMilesCard: View {
                             Text("Asia Miles")
                                 .font(AviationTheme.Typography.caption)
                                 .foregroundColor(AviationTheme.Colors.brandColor(colorScheme))
+                                .tracking(1.5)
                             Text("可用哩程")
                                 .font(AviationTheme.Typography.subheadline)
                                 .fontWeight(.medium)
@@ -235,7 +251,29 @@ struct HeroMilesCard: View {
                         }
                     }
                     Spacer()
+
+                    // 會員等級風格裝飾
+                    Text("MEMBER")
+                        .font(.system(size: 9, weight: .bold, design: .monospaced))
+                        .tracking(2)
+                        .foregroundColor(AviationTheme.Colors.gold.opacity(0.7))
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 3)
+                        .background(
+                            Capsule()
+                                .stroke(AviationTheme.Colors.gold.opacity(0.3), lineWidth: 0.8)
+                        )
                 }
+                
+                // 虛線分隔 - 登機證撕裂線風格
+                HStack(spacing: 4) {
+                    ForEach(0..<40, id: \.self) { _ in
+                        Circle()
+                            .fill(AviationTheme.Colors.tertiaryText(colorScheme).opacity(0.2))
+                            .frame(width: 3, height: 3)
+                    }
+                }
+                .frame(maxWidth: .infinity)
                 
                 // 大數字哩程
                 HStack(alignment: .firstTextBaseline, spacing: 8) {
@@ -348,12 +386,22 @@ struct HeroMilesCard: View {
             .padding(AviationTheme.Spacing.md)
             .background(
                 colorScheme == .dark
-                    ? Color.white.opacity(0.05)
+                    ? Color.white.opacity(0.04)
                     : Color.black.opacity(0.02)
             )
         }
-        .background(AviationTheme.Colors.cardBackground(colorScheme))
+        .background(.ultraThinMaterial)
         .cornerRadius(AviationTheme.CornerRadius.xl)
+        .overlay(
+            RoundedRectangle(cornerRadius: AviationTheme.CornerRadius.xl)
+                .stroke(metallicBorderGradient, lineWidth: 1)
+        )
+        .shadow(
+            color: AviationTheme.Colors.gold.opacity(colorScheme == .dark ? 0.12 : 0.06),
+            radius: 16,
+            x: 0,
+            y: 6
+        )
         .shadow(
             color: AviationTheme.Shadows.cardShadow(colorScheme),
             radius: 8,

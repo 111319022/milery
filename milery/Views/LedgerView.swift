@@ -798,13 +798,12 @@ struct TransactionDetailRow: View {
     
     var body: some View {
         HStack(alignment: .top, spacing: AviationTheme.Spacing.md) {
-            ZStack {
-                Circle()
-                    .fill(isRedeemTransaction ? redeemAccentColor : AviationTheme.Colors.brandColor(colorScheme))
-                    .frame(width: 44, height: 44)
-
-                transactionIconView
-            }
+            // 行李牌風格圖示
+            LuggageTagIcon(
+                iconView: transactionIconView,
+                tintColor: isRedeemTransaction ? redeemAccentColor : AviationTheme.Colors.brandColor(colorScheme),
+                colorScheme: colorScheme
+            )
 
             VStack(alignment: .leading, spacing: 6) {
                 Text(displayTitle)
@@ -900,6 +899,55 @@ struct TransactionDetailRow: View {
                         : Color.clear,
                     lineWidth: 1
                 )
+        )
+    }
+}
+
+// MARK: - 行李牌風格圖示
+struct LuggageTagIcon<Icon: View>: View {
+    let iconView: Icon
+    let tintColor: Color
+    let colorScheme: ColorScheme
+
+    private let tagWidth: CGFloat = 44
+    private let tagHeight: CGFloat = 50
+    private let holeRadius: CGFloat = 4
+
+    var body: some View {
+        ZStack(alignment: .top) {
+            // 行李牌形狀：圓角矩形 + 頂部穿孔
+            UnevenRoundedRectangle(
+                topLeadingRadius: 6,
+                bottomLeadingRadius: 10,
+                bottomTrailingRadius: 10,
+                topTrailingRadius: 6
+            )
+            .fill(tintColor)
+            .frame(width: tagWidth, height: tagHeight)
+            .overlay(alignment: .top) {
+                // 穿孔
+                Circle()
+                    .fill(AviationTheme.Colors.cardBackground(colorScheme))
+                    .frame(width: holeRadius * 2, height: holeRadius * 2)
+                    .offset(y: 5)
+            }
+            .overlay(alignment: .top) {
+                // 穿孔環
+                Circle()
+                    .stroke(tintColor.opacity(0.5), lineWidth: 1)
+                    .frame(width: holeRadius * 2 + 2, height: holeRadius * 2 + 2)
+                    .offset(y: 4)
+            }
+
+            // 圖示居中偏下（避開穿孔區域）
+            iconView
+                .offset(y: 18)
+        }
+        .shadow(
+            color: tintColor.opacity(colorScheme == .dark ? 0.25 : 0.15),
+            radius: 4,
+            x: 0,
+            y: 2
         )
     }
 }
