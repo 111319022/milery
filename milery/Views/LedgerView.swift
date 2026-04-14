@@ -253,6 +253,12 @@ struct LedgerView: View {
                                             .tint(AviationTheme.Colors.danger)
                                         }
                                 }
+
+                                Color.clear
+                                    .frame(height: 5)
+                                    .listRowInsets(EdgeInsets())
+                                    .listRowSeparator(.hidden)
+                                    .listRowBackground(Color.clear)
                             }
                             .listStyle(.plain)
                             .scrollContentBackground(.hidden)
