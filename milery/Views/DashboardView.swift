@@ -34,7 +34,7 @@ struct DashboardView: View {
                             .transition(.move(edge: .top).combined(with: .opacity))
                         }
                         
-                        // 英雄卡片 - 總哩程與到期資訊
+                        // 英雄卡片 - 總哩程與到期
                         if let account = viewModel.mileageAccount {
                             HeroMilesCard(
                                 totalMiles: account.totalMiles,
@@ -243,7 +243,7 @@ struct HeroMilesCard: View {
                             Text("Asia Miles")
                                 .font(AviationTheme.Typography.caption)
                                 .foregroundColor(AviationTheme.Colors.brandColor(colorScheme))
-                                .tracking(1.5)
+                                .tracking(1)
                             Text("可用哩程")
                                 .font(AviationTheme.Typography.subheadline)
                                 .fontWeight(.medium)
@@ -251,18 +251,6 @@ struct HeroMilesCard: View {
                         }
                     }
                     Spacer()
-
-                    // 會員等級風格裝飾
-                    Text("MEMBER")
-                        .font(.system(size: 9, weight: .bold, design: .monospaced))
-                        .tracking(2)
-                        .foregroundColor(AviationTheme.Colors.gold.opacity(0.7))
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 3)
-                        .background(
-                            Capsule()
-                                .stroke(AviationTheme.Colors.gold.opacity(0.3), lineWidth: 0.8)
-                        )
                 }
                 
                 // 虛線分隔 - 登機證撕裂線風格

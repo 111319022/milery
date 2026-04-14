@@ -266,6 +266,13 @@ struct LedgerView: View {
                                     .frame(height: 12)
                                     
                                     Color.black
+                                    
+                                    LinearGradient(
+                                        colors: [.black, .clear],
+                                        startPoint: .top,
+                                        endPoint: .bottom
+                                    )
+                                    .frame(height: 40)
                                 }
                             )
                         }
