@@ -763,6 +763,14 @@ struct TransactionDetailRow: View {
         colorScheme == .dark ? AviationTheme.Colors.starluxIndigoLight : AviationTheme.Colors.starluxIndigo
     }
 
+    private let cardCornerRadius: CGFloat = 28
+
+    var cardBorderColor: Color {
+        colorScheme == .dark
+            ? Color.white.opacity(0.28)
+            : Color.black.opacity(0.08)
+    }
+
     /// 根據來源類型回傳對應的明細文字
     var sourceDetail: String? {
         switch transaction.source {
@@ -894,18 +902,13 @@ struct TransactionDetailRow: View {
         }
         .padding(AviationTheme.Spacing.md)
         .background(
-            RoundedRectangle(cornerRadius: AviationTheme.CornerRadius.md)
-                .fill(AviationTheme.Colors.cardBackground(colorScheme))
+            RoundedRectangle(cornerRadius: cardCornerRadius, style: .continuous)
+                .fill(AviationTheme.Colors.cardBackground(colorScheme).opacity(colorScheme == .dark ? 0.92 : 0.97))
         )
-        .clipShape(RoundedRectangle(cornerRadius: AviationTheme.CornerRadius.md))
+        .clipShape(RoundedRectangle(cornerRadius: cardCornerRadius, style: .continuous))
         .overlay(
-            RoundedRectangle(cornerRadius: AviationTheme.CornerRadius.md)
-                .stroke(
-                    isRedeemTransaction
-                        ? redeemAccentColor.opacity(colorScheme == .dark ? 0.35 : 0.22)
-                        : Color.clear,
-                    lineWidth: 1
-                )
+            RoundedRectangle(cornerRadius: cardCornerRadius, style: .continuous)
+                .stroke(cardBorderColor, lineWidth: 1.5)
         )
     }
 }
