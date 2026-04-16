@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		FA1000012F90000100AAA001 /* ReportIssueView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA1000032F90000100AAA001 /* ReportIssueView.swift */; };
+		FA1000022F90000100AAA001 /* IssueReportService.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA1000042F90000100AAA001 /* IssueReportService.swift */; };
 		FB0A20AA2F8A541E00405172 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FB0A20A92F8A541E00405172 /* WidgetKit.framework */; };
 		FB0A20AC2F8A541E00405172 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FB0A20AB2F8A541E00405172 /* SwiftUI.framework */; };
 		FB0A20C32F8A543100405172 /* HAPTIC_FEEDBACK_GUIDE.md in Resources */ = {isa = PBXBuildFile; fileRef = FB0A20C12F8A543100405172 /* HAPTIC_FEEDBACK_GUIDE.md */; };
@@ -114,13 +116,17 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		FB0A20A72F8A541E00405172 /* MileryWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; name = MileryWidgetExtension.appex; path = "/Users/rayhsu/Documents/milery/build/Debug-iphoneos/MileryWidgetExtension.appex"; sourceTree = "<absolute>"; };
+		FA1000032F90000100AAA001 /* ReportIssueView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReportIssueView.swift; sourceTree = "<group>"; };
+		FA1000042F90000100AAA001 /* IssueReportService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IssueReportService.swift; sourceTree = "<group>"; };
 		FB0A20A92F8A541E00405172 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
 		FB0A20AB2F8A541E00405172 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
 		FB0A20C12F8A543100405172 /* HAPTIC_FEEDBACK_GUIDE.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = HAPTIC_FEEDBACK_GUIDE.md; sourceTree = "<group>"; };
 		FB0A20C42F8A55E900405172 /* MileryWidgetExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = MileryWidgetExtension.entitlements; sourceTree = "<group>"; };
 		FB0A20C52F8CF45900405172 /* Friend_System_Roadmap.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = Friend_System_Roadmap.md; sourceTree = "<group>"; };
 		FB0A20C92F8E19DF00405172 /* DashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardView.swift; sourceTree = "<group>"; };
+		FB0A20CB2F8E78AE00405172 /* MileryWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = MileryWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		FB0A20CC2F8E78AE00405172 /* milery.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = milery.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		FB0A20CD2F8E78AE00405172 /* mileryTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = mileryTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		FB8547232F82C327007E3EC2 /* AppIcon-Blue-1-60@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "AppIcon-Blue-1-60@2x.png"; sourceTree = "<group>"; };
 		FB8547242F82C327007E3EC2 /* AppIcon-Blue-1-60@3x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "AppIcon-Blue-1-60@3x.png"; sourceTree = "<group>"; };
 		FB8547252F82C327007E3EC2 /* AppIcon-Dark-1-60@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "AppIcon-Dark-1-60@2x.png"; sourceTree = "<group>"; };
@@ -182,8 +188,6 @@
 		FB85479F2F82C367007E3EC2 /* FlightCalculatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlightCalculatorTests.swift; sourceTree = "<group>"; };
 		FB8547A02F82C367007E3EC2 /* FlightGoalTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlightGoalTests.swift; sourceTree = "<group>"; };
 		FB8547A12F82C367007E3EC2 /* MileageAccountTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MileageAccountTests.swift; sourceTree = "<group>"; };
-		FB8547A82F82C468007E3EC2 /* milery.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; name = milery.app; path = "/Users/rayhsu/Documents/milery/build/Debug-iphoneos/milery.app"; sourceTree = "<absolute>"; };
-		FB8547A92F840CD7007E3EC2 /* mileryTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; name = mileryTests.xctest; path = "/Users/rayhsu/Documents/milery/build/Debug-iphoneos/milery.app/PlugIns/mileryTests.xctest"; sourceTree = "<absolute>"; };
 		FB8547AA2F8614EC007E3EC2 /* SolidColorDefinition.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SolidColorDefinition.swift; sourceTree = "<group>"; };
 		FB8547AC2F8638AD007E3EC2 /* AppLockService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppLockService.swift; sourceTree = "<group>"; };
 		FB8547AE2F8638CA007E3EC2 /* AppLockView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppLockView.swift; sourceTree = "<group>"; };
@@ -319,6 +323,7 @@
 				FB8547AC2F8638AD007E3EC2 /* AppLockService.swift */,
 				FB8547B22F86582A007E3EC2 /* FriendService.swift */,
 				FB9314512F8972E5009F4A81 /* ProfileService.swift */,
+				FA1000042F90000100AAA001 /* IssueReportService.swift */,
 			);
 			path = Service;
 			sourceTree = "<group>";
@@ -376,6 +381,7 @@
 				FB8547AE2F8638CA007E3EC2 /* AppLockView.swift */,
 				FB9314532F8972F0009F4A81 /* ProfileAvatarView.swift */,
 				FB9314552F89730D009F4A81 /* ProfileEditView.swift */,
+				FA1000032F90000100AAA001 /* ReportIssueView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -421,6 +427,9 @@
 				FB0A20C42F8A55E900405172 /* MileryWidgetExtension.entitlements */,
 				FB0A20AD2F8A541E00405172 /* MileryWidget */,
 				FB0A20A82F8A541E00405172 /* Frameworks */,
+				FB0A20CB2F8E78AE00405172 /* MileryWidgetExtension.appex */,
+				FB0A20CC2F8E78AE00405172 /* milery.app */,
+				FB0A20CD2F8E78AE00405172 /* mileryTests.xctest */,
 			);
 			sourceTree = "<group>";
 		};
@@ -446,7 +455,7 @@
 			packageProductDependencies = (
 			);
 			productName = MileryWidgetExtension;
-			productReference = FB0A20A72F8A541E00405172 /* MileryWidgetExtension.appex */;
+			productReference = FB0A20CB2F8E78AE00405172 /* MileryWidgetExtension.appex */;
 			productType = "com.apple.product-type.app-extension";
 		};
 		FB900D012F90000100AAAAAA /* mileryTests */ = {
@@ -465,7 +474,7 @@
 			packageProductDependencies = (
 			);
 			productName = mileryTests;
-			productReference = FB8547A92F840CD7007E3EC2 /* mileryTests.xctest */;
+			productReference = FB0A20CD2F8E78AE00405172 /* mileryTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
 		FBB3ADD92F67A60600D7ADE3 /* milery */ = {
@@ -486,7 +495,7 @@
 			packageProductDependencies = (
 			);
 			productName = "73app-mid";
-			productReference = FB8547A82F82C468007E3EC2 /* milery.app */;
+			productReference = FB0A20CC2F8E78AE00405172 /* milery.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -580,9 +589,11 @@
 			buildActionMask = 2147483647;
 			files = (
 				FB8547632F82C327007E3EC2 /* MainTabView.swift in Sources */,
+				FA1000012F90000100AAA001 /* ReportIssueView.swift in Sources */,
 				FB8547642F82C327007E3EC2 /* MileageViewModel.swift in Sources */,
 				FB9314562F89730D009F4A81 /* ProfileEditView.swift in Sources */,
 				FB8547652F82C327007E3EC2 /* CloudBackupService.swift in Sources */,
+				FA1000022F90000100AAA001 /* IssueReportService.swift in Sources */,
 				FB9314542F8972F0009F4A81 /* ProfileAvatarView.swift in Sources */,
 				FB8547662F82C327007E3EC2 /* NotificationSettingsView.swift in Sources */,
 				FB8547672F82C327007E3EC2 /* MileageProgram.swift in Sources */,
@@ -902,7 +913,7 @@
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CODE_SIGN_ENTITLEMENTS = milery/milery.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 45;
+				CURRENT_PROJECT_VERSION = 48;
 				DEVELOPMENT_TEAM = 45SQT63B67;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -919,7 +930,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 0.0.15;
+				MARKETING_VERSION = 0.0.18;
 				PRODUCT_BUNDLE_IDENTIFIER = com.73app.milery;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -942,7 +953,7 @@
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CODE_SIGN_ENTITLEMENTS = milery/milery.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 45;
+				CURRENT_PROJECT_VERSION = 48;
 				DEVELOPMENT_TEAM = 45SQT63B67;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -959,7 +970,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 0.0.15;
+				MARKETING_VERSION = 0.0.18;
 				PRODUCT_BUNDLE_IDENTIFIER = com.73app.milery;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;

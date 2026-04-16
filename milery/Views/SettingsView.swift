@@ -357,6 +357,23 @@ struct SettingsView: View {
                             .background(AviationTheme.Colors.cardBackground(colorScheme))
                             .clipShape(RoundedRectangle(cornerRadius: AviationTheme.CornerRadius.lg))
                             .shadow(color: AviationTheme.Shadows.cardShadow(colorScheme).opacity(0.5), radius: 8, x: 0, y: 2)
+
+                            NavigationLink(destination: ReportIssueView()) {
+                                SettingRow(
+                                    icon: "exclamationmark.bubble.fill",
+                                    title: "問題回報",
+                                    subtitle: "回報錯誤或提供改進建議"
+                                ) {
+                                    Image(systemName: "chevron.right")
+                                        .foregroundColor(AviationTheme.Colors.tertiaryText(colorScheme))
+                                        .font(.subheadline)
+                                        .fontWeight(.semibold)
+                                }
+                            }
+                            .buttonStyle(.plain)
+                            .background(AviationTheme.Colors.cardBackground(colorScheme))
+                            .clipShape(RoundedRectangle(cornerRadius: AviationTheme.CornerRadius.lg))
+                            .shadow(color: AviationTheme.Shadows.cardShadow(colorScheme).opacity(0.5), radius: 8, x: 0, y: 2)
                         }
                         .padding(.horizontal, AviationTheme.Spacing.md)
                         
