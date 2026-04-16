@@ -184,7 +184,7 @@ mileryTests/
     * **iPhone**: 需為 **iOS 26.0** 或以上版本 (支援 iPhone 11/SE 2 及後續機型)。
     * **多平台相容性**: 本APP採 iOS 原生架構開發，可於下列裝置以 **iPhone 相容模式**執行：
         * **iPad**: 需運行 iPadOS 26.0 或以上版本。
-        * **Mac**: 僅支援搭載 **Apple Silicon** 晶片之機型，並且需運行 MacOS 26.0 或以上版本。
+        * **Mac**: 僅支援搭載 **Apple Silicon** 晶片之機型，並且需運行 MacOS Tahoe (26.0) 或以上版本。
         * **Apple Vision Pro**: 需運行 VisionOS 26.0 或以上版本。
         
 * **開發環境:** 你需要一台Mac！建議使用 Xcode 26.3 或以上版本進行編譯，並選擇或連接符合作業系統要求之裝置。
