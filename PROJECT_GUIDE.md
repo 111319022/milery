@@ -489,6 +489,110 @@ A 輸入 B 的好友碼
 
 刪除雙向的 `FriendRelation` 記錄（我→對方 + 對方→我）。由於 Public DB 權限限制，只有自己建立的 record 能成功刪除，對方建立的會靜默失敗。
 
+### IssueReportService
+
+用戶問題回報提交服務，使用 CloudKit **公開資料庫**（`publicCloudDatabase`）。
+
+- **容器**：`iCloud.com.73app.milery`
+- **架構**：單例 (`IssueReportService.shared`)
+- **返回值**：`submitReport(content:email:)` 為 async throwing 方法
+
+#### CloudKit Schema（Public Database）
+
+| Record Type | 欄位 | 型別 | 說明 |
+|-------------|------|------|------|
+| `IssueReport` | `content` | String | 問題描述（必填） |
+| | `contactEmail` | String | 聯絡信箱（可選，允許空字串） |
+| | `appVersion` | String | App 版本號（`CFBundleShortVersionString`） |
+| | `buildNumber` | String | Build 號碼（`CFBundleVersion`） |
+| | `iOSVersion` | String | iOS 系統版本（`UIDevice.current.systemVersion`） |
+| | `deviceModel` | String | 設備型號（`UIDevice.current.model`） |
+| | `submittedAt` | Date/Time | 提交時間戳 |
+
+#### 提交流程 (`submitReport`)
+
+```
+接收 content 和 email
+  ↓
+trim 並檢查 content 非空
+  ├── 空 → 回傳 .emptyContent 錯誤
+  └── 非空 → 繼續
+  ↓
+收集裝置資訊：appVersion、buildNumber、iOSVersion、deviceModel
+  ↓
+組合 CKRecord（recordType: "IssueReport"）
+  ↓
+上傳 CloudKit public DB
+  ↓
+標記 appLog("[IssueReport] 已送出問題回報")
+```
+
+#### 錯誤處理
+
+| 情況 | 錯誤型別 | 使用者訊息 |
+|------|---------|-----------|
+| 問題描述為空 | `.emptyContent` | "請先輸入問題描述。" |
+| CloudKit 不可用 | CKError | 系統預設錯誤訊息 |
+
+#### UI 整合
+
+- `ReportIssueView` 使用 `IssueReportService.shared.submitReport()` 提交
+- 回報表單禁止換行（按 Enter 鍵自動關閉鍵盤）
+- 提交成功顯示達成 Alert、清空表單欄位
+- 提交失敗顯示錯誤 Alert
+
+### IssueReportAdminService
+
+開發者專用，查看用戶提交的問題回報服務。
+
+- **容器**：`iCloud.com.73app.milery`
+- **架構**：單例 (`IssueReportAdminService.shared`)
+- **資料結構**：`IssueReportEntry` (Identifiable, Hashable)
+
+#### IssueReportEntry 結構
+
+| 欄位 | 型別 | 說明 |
+|------|------|------|
+| `id` | String | record 名稱（用於 Identifiable） |
+| `recordID` | CKRecord.ID | CloudKit record ID |
+| `submittedAt` | Date | 提交時間 |
+| `content` | String | 問題描述 |
+| `contactEmail` | String | 聯絡信箱 |
+| `appVersion` | String | App 版本 |
+| `buildNumber` | String | Build 號 |
+| `iOSVersion` | String | iOS 版本 |
+| `deviceModel` | String | 設備型號 |
+
+**計算屬性**：
+
+- `titleText`：取 content 前 36 字符作標題（超長加省略號）；內容空白時顯示「（沒有內容）」
+- `contactEmailDisplayText`：email 為空時顯示「未填」，否則顯示 email
+
+#### 查詢流程 (`fetchReports`)
+
+```
+建立 CKQuery，recordType="IssueReport"、predicate 查全部
+  ↓
+設定排序：submittedAt 降序（最新優先）
+  ↓
+查詢結果上限：傳入參數，預設 100
+  ↓
+逐筆轉換為 IssueReportEntry
+  (若欄位缺失，使用預設值：空字串或 distantPast)
+  ↓
+最後再按 submittedAt 排序確保順序正確
+  ↓
+回傳 [IssueReportEntry]
+```
+
+#### UI 整合
+
+- `IssueReportListView` 整合於 DevViews，在「開發者模式」啟用後可進入
+- List 顯示所有回報，含簡要內容、email、提交時間、版本/設備資訊
+- 點擊條目展開 Detail Sheet，顯示完整內容（可複製文字）
+- 上方提供「重新整理」按鈕手動拉取最新回報
+- 若查詢失敗顯示 error 訊息；無回報時顯示空狀態
+
 ---
 
 ## View 層
@@ -533,6 +637,30 @@ A 輸入 B 的好友碼
 | `CloudKitAdvancedView` | CloudKit 進階診斷 |
 | `AirportListView` | 機場資料庫瀏覽 |
 | `TabVisibilitySettingsView` | Tab 顯示控制 |
+| `IssueReportListView` | 用戶問題回報管理（開發者專用） |
+
+#### IssueReportListView
+
+```
+整體結構
+├── Loading indicator / Error alert
+├── 「重新整理」按鈕
+└── List
+    ├── 空狀態提示（無回報時）
+    └── IssueReportRow (foreach)
+        └── 點擊展開 Detail Sheet
+```
+
+**IssueReportRow**：顯示回報摘要
+- 信息圖：文字泡泡 icon
+- 左側：標題（content 前 36 字）
+- 右側：email + 時間戳
+- 次行：App 版本、Build、iOS、設備型號
+
+**IssueReportDetailView (Sheet)**：顯示完整回報
+- 標頭：提交時間、email
+- 中段：完整問題描述（可複製文字）
+- 底部：版本/設備/系統詳情
 
 ---
 
@@ -724,5 +852,22 @@ xcodebuild test -project milery.xcodeproj -scheme milery \
 1. 在 `Views/` 建立新頁面
 2. 若需全域狀態，在對應的 ViewModel extension 新增方法
 3. 驗證 CloudKit 同步 + 備份還原不受影響
+
+### 維護用戶回報系統（IssueReport）
+
+1. **CloudKit 部署**：確認 `IssueReport` Record Type 已在 CloudKit Dashboard Development 環境建立
+   - 部署到 Production 時需在 Dashboard 執行「Deploy to Production」
+2. **API 公開資料庫**：`IssueReportService` 與 `IssueReportAdminService` 同時使用公開資料庫
+   - Public DB 無需 iCloud 登入，任何用戶都可提交回報
+   - 開發者需登入 iCloud 才能查看回報
+3. **提交表單**：`ReportIssueView` 禁止換行（TextEditor.onChange 監聽並移除 `\n`）
+   - 防止用戶誤操作建立多行輸入
+   - 若未來需支援多行，需在 `IssueReportService` 驗證並提示用戶
+4. **回報清單查詢**：`IssueReportAdminService.fetchReports(limit:)` 預設上限 100 條
+   - 可調整上限，但需考慮查詢耗時與 UI 載入效能
+   - 未來可加入分頁或篩選功能
+5. **資料收集**：每份回報收集 8 項資訊（內容、email、版本、設備等）
+   - 建議定期回顧 CloudKit Dashboard 理解用戶回報型態
+   - 若需新增欄位，在 `IssueReportService.submitReport()` 新增，在 `IssueReportEntry` 加入對應欄位
 
 ---
