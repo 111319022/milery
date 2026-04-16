@@ -447,6 +447,22 @@ struct SettingsView: View {
 
                                     CustomDivider(colorScheme: colorScheme)
 
+                                    NavigationLink(destination: IssueReportListView()) {
+                                        SettingRow(
+                                            icon: "exclamationmark.bubble.fill",
+                                            title: "問題回報檢視",
+                                            subtitle: "查看使用者送出的回報內容"
+                                        ) {
+                                            Image(systemName: "chevron.right")
+                                                .foregroundColor(AviationTheme.Colors.tertiaryText(colorScheme))
+                                                .font(.subheadline)
+                                                .fontWeight(.semibold)
+                                        }
+                                    }
+                                    .buttonStyle(.plain)
+
+                                    CustomDivider(colorScheme: colorScheme)
+
                                     SettingToggleRow(
                                         icon: "gauge.with.dots.needle.bottom.50percent",
                                         title: "新版儀表板（測試中）",

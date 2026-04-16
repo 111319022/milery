@@ -112,6 +112,11 @@ struct ReportIssueView: View {
                                 .background(Color.clear)
                                 .foregroundColor(AviationTheme.Colors.primaryText(colorScheme))
                                 .focused($focusedField, equals: .content)
+                                .onChange(of: content) { _, newValue in
+                                    guard newValue.contains("\n") else { return }
+                                    content = newValue.replacingOccurrences(of: "\n", with: "")
+                                    dismissKeyboard()
+                                }
 
                             if isContentEmpty {
                                 Text("請描述你遇到的狀況與重現步驟")
