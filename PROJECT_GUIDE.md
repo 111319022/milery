@@ -57,7 +57,7 @@ Milery 採 SwiftUI + SwiftData + CloudKit 的 iOS 原生 MVVM 架構，使用 `@
 
 Milery 的狀態管理採用**「由近到遠 (Proximity-based)」**的分層設計原則。狀態被嚴格限制在最小必要的作用域 (Scope) 內，僅在需要跨頁面共享或持久化時才向外提升，以確保 App 的效能與可維護性。
 
----
+
 
 ### Layer 1: 局部 UI 狀態 (Local UI State)
 **「畫面的暫時記憶」**：僅影響目前單一畫面的互動與呈現，生命週期隨 View 銷毀。
@@ -108,7 +108,7 @@ Milery 的狀態管理採用**「由近到遠 (Proximity-based)」**的分層設
     * 單例僅負責提供「能力」，不應承載畫面的暫時性 UI 狀態。
     * 涉及 UI 觀測的屬性需標註 `@MainActor` 確保執行緒安全。
 
----
+
 
 ### 🛠️ 狀態選型決策表 (Decision Matrix)
 
