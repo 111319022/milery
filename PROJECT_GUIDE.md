@@ -55,99 +55,70 @@ Milery 採 SwiftUI + SwiftData + CloudKit 的 iOS 原生 MVVM 架構，使用 `@
 
 ## 狀態管理分層
 
-Milery 的狀態採用「由近到遠」的分層原則：先放在最小作用域，只有在跨頁共享或需要持久化時才往上提升。
+Milery 的狀態管理採用**「由近到遠 (Proximity-based)」**的分層設計原則。狀態被嚴格限制在最小必要的作用域 (Scope) 內，僅在需要跨頁面共享或持久化時才向外提升，以確保 App 的效能與可維護性。
 
-### Layer 1: Local UI 狀態（單一 View 內）
+---
 
-**用途**：僅影響目前畫面的互動與呈現。
+### Layer 1: 局部 UI 狀態 (Local UI State)
+**「畫面的暫時記憶」**：僅影響目前單一畫面的互動與呈現，生命週期隨 View 銷毀。
 
-**主要工具**：`@State`、`@FocusState`、`@Binding`
+* **主要工具**：`@State`、`@FocusState`、`@Binding`
+* **典型範例**：
+    * `MainTabView.selectedTab`：Tab 當前索引。
+    * `MainTabView.themeOverlayOpacity`：主題切換時的轉場遮罩透明度。
+    * 表單輸入中的暫存文字、Sheet/Alert 的顯示開關。
+* **規則**：
+    * 只在單一畫面使用的狀態，嚴禁提升至全域。
+    * 父子組件傳遞優先使用 `@Binding`，保持組件獨立性。
 
-**典型範例**：
+### Layer 2: 特性模組狀態 (Feature-level Shared State)
+**「功能群組的控制中心」**：當同一個功能模組（如「里程管理」）內的多個頁面需要共享業務邏輯時使用。
 
-- `MainTabView.selectedTab`：Tab 當前索引
-- `MainTabView.themeOverlayOpacity`：主題切換轉場遮罩
-- 表單輸入中的暫存文字、Sheet/Alert 顯示開關
+* **主要工具**：`@Observable` 類別 + 由上層 View 持有實例。
+* **典型範例**：
+    * `MileageViewModel`：由 `MainTabView` 持有，並共享給 `DashboardView`、`LedgerView`、`ProgressView` 等子頁面。
+    * 集中管理交易紀錄、里程目標、卡片切換與同步狀態。
+* **規則**：
+    * 同一功能群組統一經由對應的 ViewModel 存取數據，禁止維護多個數據副本。
+    * 儲存流程統一回到 `saveContext()`，確保數據一致性並統一處理錯誤。
 
-**規則**：
+### Layer 3: App 全域持久化狀態 (App-wide Persistent State)
+**「跨啟動的數據保存」**：存放跨畫面、跨 App 重啟仍需保留的使用者偏好與開關。
 
-1. 只在單一畫面使用的狀態，保持在該 View。
-2. 需要由父層控制子層時，優先使用 `@Binding` 傳遞，不要直接升級成全域狀態。
-3. local state 不做文件逐欄列舉，只記錄「模式」與代表範例。
+* **主要工具**：`@AppStorage`（底層對接 `UserDefaults`）
+* **關鍵分類 (Keys)**：
+    * **啟動與流程**：`hasCompletedOnboarding`、`cloudKitSyncEnabled`
+    * **安全性**：`appLockEnabled`、`appLockBiometricEnabled`
+    * **外觀個性化**：`userColorScheme`、`backgroundSelection`、`userName`
+    * **功能開關**：`useNewDashboard`、各 Tab 的可見性控制
+* **規則**：
+    * Key 名稱必須固定且集中管理，嚴禁將持久化儲存當作臨時變數緩衝區。
+    * 影響啟動流程的狀態變更時，必須確保邏輯連貫性。
 
-### Layer 2: 畫面群共享狀態（Feature-level Shared State）
+### Layer 4: 全域服務與單例 (Cross-feature Services)
+**「全系統的共享能力」**：負責跨功能模組的能力支持、具副作用的操作或系統資源管理。
 
-**用途**：同一個功能群（例如 Tab 內多頁）需要共享資料與業務行為。
+* **主要工具**：`static let shared` (Singleton Pattern)
+* **核心服務代表**：
+    * `AppLockService.shared`：全域安全鎖邏輯。
+    * `AirportDatabase.shared`：靜態機場資料庫查詢。
+    * `BackgroundImageManager.shared`：自定義背景圖片管理。
+    * `SyncDiagnosticsObserver.shared`：數據同步診斷服務。
+* **規則**：
+    * 單例僅負責提供「能力」，不應承載畫面的暫時性 UI 狀態。
+    * 涉及 UI 觀測的屬性需標註 `@MainActor` 確保執行緒安全。
 
-**主要工具**：`@Observable` 類別 + 由上層持有實例（例如 `@State private var viewModel = MileageViewModel()`）
+---
 
-**典型範例**：
+### 🛠️ 狀態選型決策表 (Decision Matrix)
 
-- `MainTabView` 建立 `MileageViewModel`，傳給 `DashboardView`、`ProgressView`、`LedgerView`、`MilestonesView`、`SettingsView`
-- `MileageViewModel` 內集中管理交易、目標、卡片、計畫切換與同步狀態
-
-**規則**：
-
-1. 同一功能群要共用資料時，統一經由對應 ViewModel 存取。
-2. 共享狀態不可在多個 View 各自維護副本，避免資料競態。
-3. 會觸發儲存失敗的流程，統一回到 `saveContext()`，讓 UI 用同一個 `showSaveError` / `saveError` 呈現。
-
-### Layer 3: App 全域持久化狀態（跨啟動）
-
-**用途**：跨畫面、跨 App 重啟仍需保留的使用者偏好與開關。
-
-**主要工具**：`@AppStorage`（底層 `UserDefaults`）
-
-**關鍵 key（代表）**：
-
-- 啟動/流程控制：`hasCompletedOnboarding`、`cloudKitSyncEnabled`
-- 安全：`appLockEnabled`、`appLockBiometricEnabled`
-- 外觀：`userColorScheme`、`backgroundSelection`
-- 個人化：`userName`、`preferredOrigin`
-- 功能開關：`useNewDashboard`、`tabVisible_dashboard`/`progress`/`ledger`/`milestones`
-- 通知與備份：`enableNotifications`、`notifyMilesExpiry`、`notifyRedemptionReady`、`lastBackupDate`
-
-**規則**：
-
-1. 使用 `@AppStorage` 的 key 必須固定且可追蹤，避免任意命名造成遷移成本。
-2. 同一個 key 在多個畫面讀寫時，語意必須一致（不得一處當功能開關、一處當暫存旗標）。
-3. 影響啟動流程的 key（如 `hasCompletedOnboarding`、`cloudKitSyncEnabled`）變更時要補測試流程。
-
-### Layer 4: 全域服務/單例（Cross-feature Services）
-
-**用途**：跨功能共享、具副作用或需要系統資源的能力。
-
-**主要工具**：`static let shared` 單例服務
-
-**目前服務（代表）**：
-
-- `AppLockService.shared`
-- `ProfileService.shared`
-- `FriendService.shared`
-- `IssueReportService.shared`
-- `IssueReportAdminService.shared`
-- `DeveloperAccessService.shared`
-- `AirportDatabase.shared`
-- `BackgroundImageManager.shared`
-- `AppConsoleStore.shared`
-- `SyncDiagnosticsObserver.shared`
-
-**規則**：
-
-1. 單例只承擔「能力」與「跨功能協作」，不要承接畫面暫態。
-2. 服務若含 UI 相關可觀測欄位，需標註執行緒語意（例如 `@MainActor`）。
-3. 對外介面優先提供明確方法（如 `syncLocalStatsToProfile()`），避免外部任意改寫內部狀態。
-
-### 狀態選型決策表
-
-| 問題 | 建議 |
-|------|------|
-| 只在單一畫面用到？ | `@State` / `@FocusState` |
-| 父子畫面共享同一值？ | `@Binding` |
-| 同一功能群多畫面共享資料？ | `@Observable` ViewModel（由上層持有） |
-| 需要跨啟動保留？ | `@AppStorage` / `UserDefaults` |
-| 需要跨功能共享能力、系統資源或雲端操作？ | 單例 Service (`shared`) |
-
+| 數據使用場景 | 建議工具 | 代表範例 |
+| :--- | :--- | :--- |
+| **僅在單一畫面用到？** | `@State` / `@FocusState` | `isSheetPresented` |
+| **父子畫面共享同一值？** | `@Binding` | 暫存文字傳遞 |
+| **同功能模組多畫面共享？** | `@Observable` ViewModel | `MileageViewModel` |
+| **需要跨啟動保留設置？** | `@AppStorage` | `userColorScheme` |
+| **跨功能、查資料庫、雲端同步？** | 單例 Service (`shared`) | `AirportDatabase` |
 ---
 
 ## App 啟動流程
