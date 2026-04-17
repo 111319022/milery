@@ -5,18 +5,19 @@
 ## 目錄
 
 1. [架構總覽](#架構總覽)
-2. [App 啟動流程](#app-啟動流程)
-3. [資料模型 (SwiftData)](#資料模型-swiftdata)
-4. [信用卡規則系統](#信用卡規則系統)
-5. [航線計算引擎](#航線計算引擎)
-6. [ViewModel 層](#viewmodel-層)
-7. [Service 層](#service-層)
-8. [View 層](#view-層)
-9. [主題與背景系統](#主題與背景系統)
-10. [同步與備份流程](#同步與備份流程)
-11. [測試](#測試)
-12. [已知限制與後續方向](#已知限制與後續方向)
-13. [日常維護](#日常維護)
+2. [狀態管理分層](#狀態管理分層)
+3. [App 啟動流程](#app-啟動流程)
+4. [資料模型 (SwiftData)](#資料模型-swiftdata)
+5. [信用卡規則系統](#信用卡規則系統)
+6. [航線計算引擎](#航線計算引擎)
+7. [ViewModel 層](#viewmodel-層)
+8. [Service 層](#service-層)
+9. [View 層](#view-層)
+10. [主題與背景系統](#主題與背景系統)
+11. [同步與備份流程](#同步與備份流程)
+12. [測試](#測試)
+13. [已知限制與後續方向](#已知限制與後續方向)
+14. [日常維護](#日常維護)
 
 ---
 
@@ -49,6 +50,103 @@ Milery 採 SwiftUI + SwiftData + CloudKit 的 iOS 原生 MVVM 架構，使用 `@
 | 持久層 | SwiftData | 原生 Swift ORM，自動 CloudKit 同步 |
 | 雲端 | CloudKit 私有資料庫 | 免後端、Apple 生態原生整合 |
 | 精度 | `Double` 儲存 + `Decimal` 運算 | 兼顧 CloudKit 相容與計算精度 |
+
+---
+
+## 狀態管理分層
+
+Milery 的狀態採用「由近到遠」的分層原則：先放在最小作用域，只有在跨頁共享或需要持久化時才往上提升。
+
+### Layer 1: Local UI 狀態（單一 View 內）
+
+**用途**：僅影響目前畫面的互動與呈現。
+
+**主要工具**：`@State`、`@FocusState`、`@Binding`
+
+**典型範例**：
+
+- `MainTabView.selectedTab`：Tab 當前索引
+- `MainTabView.themeOverlayOpacity`：主題切換轉場遮罩
+- 表單輸入中的暫存文字、Sheet/Alert 顯示開關
+
+**規則**：
+
+1. 只在單一畫面使用的狀態，保持在該 View。
+2. 需要由父層控制子層時，優先使用 `@Binding` 傳遞，不要直接升級成全域狀態。
+3. local state 不做文件逐欄列舉，只記錄「模式」與代表範例。
+
+### Layer 2: 畫面群共享狀態（Feature-level Shared State）
+
+**用途**：同一個功能群（例如 Tab 內多頁）需要共享資料與業務行為。
+
+**主要工具**：`@Observable` 類別 + 由上層持有實例（例如 `@State private var viewModel = MileageViewModel()`）
+
+**典型範例**：
+
+- `MainTabView` 建立 `MileageViewModel`，傳給 `DashboardView`、`ProgressView`、`LedgerView`、`MilestonesView`、`SettingsView`
+- `MileageViewModel` 內集中管理交易、目標、卡片、計畫切換與同步狀態
+
+**規則**：
+
+1. 同一功能群要共用資料時，統一經由對應 ViewModel 存取。
+2. 共享狀態不可在多個 View 各自維護副本，避免資料競態。
+3. 會觸發儲存失敗的流程，統一回到 `saveContext()`，讓 UI 用同一個 `showSaveError` / `saveError` 呈現。
+
+### Layer 3: App 全域持久化狀態（跨啟動）
+
+**用途**：跨畫面、跨 App 重啟仍需保留的使用者偏好與開關。
+
+**主要工具**：`@AppStorage`（底層 `UserDefaults`）
+
+**關鍵 key（代表）**：
+
+- 啟動/流程控制：`hasCompletedOnboarding`、`cloudKitSyncEnabled`
+- 安全：`appLockEnabled`、`appLockBiometricEnabled`
+- 外觀：`userColorScheme`、`backgroundSelection`
+- 個人化：`userName`、`preferredOrigin`
+- 功能開關：`useNewDashboard`、`tabVisible_dashboard`/`progress`/`ledger`/`milestones`
+- 通知與備份：`enableNotifications`、`notifyMilesExpiry`、`notifyRedemptionReady`、`lastBackupDate`
+
+**規則**：
+
+1. 使用 `@AppStorage` 的 key 必須固定且可追蹤，避免任意命名造成遷移成本。
+2. 同一個 key 在多個畫面讀寫時，語意必須一致（不得一處當功能開關、一處當暫存旗標）。
+3. 影響啟動流程的 key（如 `hasCompletedOnboarding`、`cloudKitSyncEnabled`）變更時要補測試流程。
+
+### Layer 4: 全域服務/單例（Cross-feature Services）
+
+**用途**：跨功能共享、具副作用或需要系統資源的能力。
+
+**主要工具**：`static let shared` 單例服務
+
+**目前服務（代表）**：
+
+- `AppLockService.shared`
+- `ProfileService.shared`
+- `FriendService.shared`
+- `IssueReportService.shared`
+- `IssueReportAdminService.shared`
+- `DeveloperAccessService.shared`
+- `AirportDatabase.shared`
+- `BackgroundImageManager.shared`
+- `AppConsoleStore.shared`
+- `SyncDiagnosticsObserver.shared`
+
+**規則**：
+
+1. 單例只承擔「能力」與「跨功能協作」，不要承接畫面暫態。
+2. 服務若含 UI 相關可觀測欄位，需標註執行緒語意（例如 `@MainActor`）。
+3. 對外介面優先提供明確方法（如 `syncLocalStatsToProfile()`），避免外部任意改寫內部狀態。
+
+### 狀態選型決策表
+
+| 問題 | 建議 |
+|------|------|
+| 只在單一畫面用到？ | `@State` / `@FocusState` |
+| 父子畫面共享同一值？ | `@Binding` |
+| 同一功能群多畫面共享資料？ | `@Observable` ViewModel（由上層持有） |
+| 需要跨啟動保留？ | `@AppStorage` / `UserDefaults` |
+| 需要跨功能共享能力、系統資源或雲端操作？ | 單例 Service (`shared`) |
 
 ---
 
