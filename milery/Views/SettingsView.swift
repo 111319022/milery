@@ -12,6 +12,7 @@ struct SettingsView: View {
     @AppStorage("backgroundSelection") private var backgroundSelection: BackgroundSelection = .none
     @AppStorage("enableNotifications") private var enableNotifications: Bool = true
     @AppStorage("appLockEnabled") private var appLockEnabled: Bool = false
+    @AppStorage("useNewDashboard") private var useNewDashboard: Bool = false
     
     @State private var showingAirportPicker = false
     @State private var versionTapCount = 0
@@ -356,6 +357,23 @@ struct SettingsView: View {
                             .background(AviationTheme.Colors.cardBackground(colorScheme))
                             .clipShape(RoundedRectangle(cornerRadius: AviationTheme.CornerRadius.lg))
                             .shadow(color: AviationTheme.Shadows.cardShadow(colorScheme).opacity(0.5), radius: 8, x: 0, y: 2)
+
+                            NavigationLink(destination: ReportIssueView()) {
+                                SettingRow(
+                                    icon: "exclamationmark.bubble.fill",
+                                    title: "問題回報",
+                                    subtitle: "回報錯誤或提供改進建議"
+                                ) {
+                                    Image(systemName: "chevron.right")
+                                        .foregroundColor(AviationTheme.Colors.tertiaryText(colorScheme))
+                                        .font(.subheadline)
+                                        .fontWeight(.semibold)
+                                }
+                            }
+                            .buttonStyle(.plain)
+                            .background(AviationTheme.Colors.cardBackground(colorScheme))
+                            .clipShape(RoundedRectangle(cornerRadius: AviationTheme.CornerRadius.lg))
+                            .shadow(color: AviationTheme.Shadows.cardShadow(colorScheme).opacity(0.5), radius: 8, x: 0, y: 2)
                         }
                         .padding(.horizontal, AviationTheme.Spacing.md)
                         
@@ -428,6 +446,31 @@ struct SettingsView: View {
                                     .buttonStyle(.plain)
 
                                     CustomDivider(colorScheme: colorScheme)
+
+                                    NavigationLink(destination: IssueReportListView()) {
+                                        SettingRow(
+                                            icon: "exclamationmark.bubble.fill",
+                                            title: "問題回報檢視",
+                                            subtitle: "查看使用者送出的回報內容"
+                                        ) {
+                                            Image(systemName: "chevron.right")
+                                                .foregroundColor(AviationTheme.Colors.tertiaryText(colorScheme))
+                                                .font(.subheadline)
+                                                .fontWeight(.semibold)
+                                        }
+                                    }
+                                    .buttonStyle(.plain)
+
+                                    CustomDivider(colorScheme: colorScheme)
+
+                                    SettingToggleRow(
+                                        icon: "gauge.with.dots.needle.bottom.50percent",
+                                        title: "新版儀表板（測試中）",
+                                        subtitle: "僅開發者可用，預設關閉",
+                                        isOn: $useNewDashboard
+                                    )
+
+                                    CustomDivider(colorScheme: colorScheme)
                                     
                                     Button {
                                         hasCompletedOnboarding = false
@@ -474,8 +517,8 @@ struct SettingsView: View {
                                     NavigationLink(destination: FriendsView()) {
                                         SettingRow(
                                             icon: "person.2.fill",
-                                            title: "好友（開發中）",
-                                            subtitle: "透過好友代碼加入好友"
+                                            title: "好友",
+                                            subtitle: "好友管理與動態排行"
                                         ) {
                                             Image(systemName: "chevron.right")
                                                 .foregroundColor(AviationTheme.Colors.tertiaryText(colorScheme))
@@ -489,6 +532,35 @@ struct SettingsView: View {
                                 .clipShape(RoundedRectangle(cornerRadius: AviationTheme.CornerRadius.lg))
                                 .shadow(color: AviationTheme.Shadows.cardShadow(colorScheme).opacity(0.5), radius: 8, x: 0, y: 2)
                             }
+                            .padding(.horizontal, AviationTheme.Spacing.md)
+
+                            // MARK: - 退出開發者模式
+                            Button {
+                                let hadNewDashboard = useNewDashboard
+                                isDeveloperModeEnabled = false
+                                useNewDashboard = false
+                                versionTapCount = 0
+                                let toastMsg = hadNewDashboard ? "開發者模式已關閉，已切回舊版儀表板" : "開發者模式已關閉"
+                                showDevToast(toastMsg)
+                            } label: {
+                                HStack {
+                                    Image(systemName: "xmark.circle.fill")
+                                        .font(.title3)
+                                    Text("退出開發者模式")
+                                        .font(AviationTheme.Typography.body)
+                                        .fontWeight(.medium)
+                                    Spacer()
+                                }
+                                .foregroundColor(.white)
+                                .padding(.vertical, 14)
+                                .padding(.horizontal, 16)
+                                .frame(maxWidth: .infinity)
+                                .background(
+                                    Capsule()
+                                        .fill(AviationTheme.Colors.danger)
+                                )
+                            }
+                            .buttonStyle(.plain)
                             .padding(.horizontal, AviationTheme.Spacing.md)
                         }
                     }
@@ -557,9 +629,12 @@ struct SettingsView: View {
         if isDeveloperModeEnabled {
             // 已啟用開發者模式，再點 10 次會隱藏
             if versionTapCount >= 10 {
+                let hadNewDashboard = useNewDashboard
                 isDeveloperModeEnabled = false
+                useNewDashboard = false
                 versionTapCount = 0
-                showDevToast("開發者模式已關閉")
+                let toastMsg = hadNewDashboard ? "開發者模式已關閉，已切回舊版儀表板" : "開發者模式已關閉"
+                showDevToast(toastMsg)
             }
         } else {
             // 未啟用開發者模式，點 10 次做 CloudKit 白名單驗證

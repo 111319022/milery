@@ -5,18 +5,19 @@
 ## 目錄
 
 1. [架構總覽](#架構總覽)
-2. [App 啟動流程](#app-啟動流程)
-3. [資料模型 (SwiftData)](#資料模型-swiftdata)
-4. [信用卡規則系統](#信用卡規則系統)
-5. [航線計算引擎](#航線計算引擎)
-6. [ViewModel 層](#viewmodel-層)
-7. [Service 層](#service-層)
-8. [View 層](#view-層)
-9. [主題與背景系統](#主題與背景系統)
-10. [同步與備份流程](#同步與備份流程)
-11. [測試](#測試)
-12. [已知限制與後續方向](#已知限制與後續方向)
-13. [日常維護](#日常維護)
+2. [狀態管理分層](#狀態管理分層)
+3. [App 啟動流程](#app-啟動流程)
+4. [資料模型 (SwiftData)](#資料模型-swiftdata)
+5. [信用卡規則系統](#信用卡規則系統)
+6. [航線計算引擎](#航線計算引擎)
+7. [ViewModel 層](#viewmodel-層)
+8. [Service 層](#service-層)
+9. [View 層](#view-層)
+10. [主題與背景系統](#主題與背景系統)
+11. [同步與備份流程](#同步與備份流程)
+12. [測試](#測試)
+13. [已知限制與後續方向](#已知限制與後續方向)
+14. [日常維護](#日常維護)
 
 ---
 
@@ -50,6 +51,74 @@ Milery 採 SwiftUI + SwiftData + CloudKit 的 iOS 原生 MVVM 架構，使用 `@
 | 雲端 | CloudKit 私有資料庫 | 免後端、Apple 生態原生整合 |
 | 精度 | `Double` 儲存 + `Decimal` 運算 | 兼顧 CloudKit 相容與計算精度 |
 
+---
+
+## 狀態管理分層
+
+Milery 的狀態管理採用**「由近到遠 (Proximity-based)」**的分層設計原則。狀態被嚴格限制在最小必要的作用域 (Scope) 內，僅在需要跨頁面共享或持久化時才向外提升，以確保 App 的效能與可維護性。
+
+
+
+### Layer 1: 局部 UI 狀態 (Local UI State)
+**「畫面的暫時記憶」**：僅影響目前單一畫面的互動與呈現，生命週期隨 View 銷毀。
+
+* **主要工具**：`@State`、`@FocusState`、`@Binding`
+* **典型範例**：
+    * `MainTabView.selectedTab`：Tab 當前索引。
+    * `MainTabView.themeOverlayOpacity`：主題切換時的轉場遮罩透明度。
+    * 表單輸入中的暫存文字、Sheet/Alert 的顯示開關。
+* **規則**：
+    * 只在單一畫面使用的狀態，嚴禁提升至全域。
+    * 父子組件傳遞優先使用 `@Binding`，保持組件獨立性。
+
+### Layer 2: 特性模組狀態 (Feature-level Shared State)
+**「功能群組的控制中心」**：當同一個功能模組（如「里程管理」）內的多個頁面需要共享業務邏輯時使用。
+
+* **主要工具**：`@Observable` 類別 + 由上層 View 持有實例。
+* **典型範例**：
+    * `MileageViewModel`：由 `MainTabView` 持有，並共享給 `DashboardView`、`LedgerView`、`ProgressView` 等子頁面。
+    * 集中管理交易紀錄、里程目標、卡片切換與同步狀態。
+* **規則**：
+    * 同一功能群組統一經由對應的 ViewModel 存取數據，禁止維護多個數據副本。
+    * 儲存流程統一回到 `saveContext()`，確保數據一致性並統一處理錯誤。
+
+### Layer 3: App 全域持久化狀態 (App-wide Persistent State)
+**「跨啟動的數據保存」**：存放跨畫面、跨 App 重啟仍需保留的使用者偏好與開關。
+
+* **主要工具**：`@AppStorage`（底層對接 `UserDefaults`）
+* **關鍵分類 (Keys)**：
+    * **啟動與流程**：`hasCompletedOnboarding`、`cloudKitSyncEnabled`
+    * **安全性**：`appLockEnabled`、`appLockBiometricEnabled`
+    * **外觀個性化**：`userColorScheme`、`backgroundSelection`、`userName`
+    * **功能開關**：`useNewDashboard`、各 Tab 的可見性控制
+* **規則**：
+    * Key 名稱必須固定且集中管理，嚴禁將持久化儲存當作臨時變數緩衝區。
+    * 影響啟動流程的狀態變更時，必須確保邏輯連貫性。
+
+### Layer 4: 全域服務與單例 (Cross-feature Services)
+**「全系統的共享能力」**：負責跨功能模組的能力支持、具副作用的操作或系統資源管理。
+
+* **主要工具**：`static let shared` (Singleton Pattern)
+* **核心服務代表**：
+    * `AppLockService.shared`：全域安全鎖邏輯。
+    * `AirportDatabase.shared`：靜態機場資料庫查詢。
+    * `BackgroundImageManager.shared`：自定義背景圖片管理。
+    * `SyncDiagnosticsObserver.shared`：數據同步診斷服務。
+* **規則**：
+    * 單例僅負責提供「能力」，不應承載畫面的暫時性 UI 狀態。
+    * 涉及 UI 觀測的屬性需標註 `@MainActor` 確保執行緒安全。
+
+
+
+### 🛠️ 狀態選型決策表 (Decision Matrix)
+
+| 數據使用場景 | 建議工具 | 代表範例 |
+| :--- | :--- | :--- |
+| **僅在單一畫面用到？** | `@State` / `@FocusState` | `isSheetPresented` |
+| **父子畫面共享同一值？** | `@Binding` | 暫存文字傳遞 |
+| **同功能模組多畫面共享？** | `@Observable` ViewModel | `MileageViewModel` |
+| **需要跨啟動保留設置？** | `@AppStorage` | `userColorScheme` |
+| **跨功能、查資料庫、雲端同步？** | 單例 Service (`shared`) | `AirportDatabase` |
 ---
 
 ## App 啟動流程
@@ -489,6 +558,110 @@ A 輸入 B 的好友碼
 
 刪除雙向的 `FriendRelation` 記錄（我→對方 + 對方→我）。由於 Public DB 權限限制，只有自己建立的 record 能成功刪除，對方建立的會靜默失敗。
 
+### IssueReportService
+
+用戶問題回報提交服務，使用 CloudKit **公開資料庫**（`publicCloudDatabase`）。
+
+- **容器**：`iCloud.com.73app.milery`
+- **架構**：單例 (`IssueReportService.shared`)
+- **返回值**：`submitReport(content:email:)` 為 async throwing 方法
+
+#### CloudKit Schema（Public Database）
+
+| Record Type | 欄位 | 型別 | 說明 |
+|-------------|------|------|------|
+| `IssueReport` | `content` | String | 問題描述（必填） |
+| | `contactEmail` | String | 聯絡信箱（可選，允許空字串） |
+| | `appVersion` | String | App 版本號（`CFBundleShortVersionString`） |
+| | `buildNumber` | String | Build 號碼（`CFBundleVersion`） |
+| | `iOSVersion` | String | iOS 系統版本（`UIDevice.current.systemVersion`） |
+| | `deviceModel` | String | 設備型號（`UIDevice.current.model`） |
+| | `submittedAt` | Date/Time | 提交時間戳 |
+
+#### 提交流程 (`submitReport`)
+
+```
+接收 content 和 email
+  ↓
+trim 並檢查 content 非空
+  ├── 空 → 回傳 .emptyContent 錯誤
+  └── 非空 → 繼續
+  ↓
+收集裝置資訊：appVersion、buildNumber、iOSVersion、deviceModel
+  ↓
+組合 CKRecord（recordType: "IssueReport"）
+  ↓
+上傳 CloudKit public DB
+  ↓
+標記 appLog("[IssueReport] 已送出問題回報")
+```
+
+#### 錯誤處理
+
+| 情況 | 錯誤型別 | 使用者訊息 |
+|------|---------|-----------|
+| 問題描述為空 | `.emptyContent` | "請先輸入問題描述。" |
+| CloudKit 不可用 | CKError | 系統預設錯誤訊息 |
+
+#### UI 整合
+
+- `ReportIssueView` 使用 `IssueReportService.shared.submitReport()` 提交
+- 回報表單禁止換行（按 Enter 鍵自動關閉鍵盤）
+- 提交成功顯示達成 Alert、清空表單欄位
+- 提交失敗顯示錯誤 Alert
+
+### IssueReportAdminService
+
+開發者專用，查看用戶提交的問題回報服務。
+
+- **容器**：`iCloud.com.73app.milery`
+- **架構**：單例 (`IssueReportAdminService.shared`)
+- **資料結構**：`IssueReportEntry` (Identifiable, Hashable)
+
+#### IssueReportEntry 結構
+
+| 欄位 | 型別 | 說明 |
+|------|------|------|
+| `id` | String | record 名稱（用於 Identifiable） |
+| `recordID` | CKRecord.ID | CloudKit record ID |
+| `submittedAt` | Date | 提交時間 |
+| `content` | String | 問題描述 |
+| `contactEmail` | String | 聯絡信箱 |
+| `appVersion` | String | App 版本 |
+| `buildNumber` | String | Build 號 |
+| `iOSVersion` | String | iOS 版本 |
+| `deviceModel` | String | 設備型號 |
+
+**計算屬性**：
+
+- `titleText`：取 content 前 36 字符作標題（超長加省略號）；內容空白時顯示「（沒有內容）」
+- `contactEmailDisplayText`：email 為空時顯示「未填」，否則顯示 email
+
+#### 查詢流程 (`fetchReports`)
+
+```
+建立 CKQuery，recordType="IssueReport"、predicate 查全部
+  ↓
+設定排序：submittedAt 降序（最新優先）
+  ↓
+查詢結果上限：傳入參數，預設 100
+  ↓
+逐筆轉換為 IssueReportEntry
+  (若欄位缺失，使用預設值：空字串或 distantPast)
+  ↓
+最後再按 submittedAt 排序確保順序正確
+  ↓
+回傳 [IssueReportEntry]
+```
+
+#### UI 整合
+
+- `IssueReportListView` 整合於 DevViews，在「開發者模式」啟用後可進入
+- List 顯示所有回報，含簡要內容、email、提交時間、版本/設備資訊
+- 點擊條目展開 Detail Sheet，顯示完整內容（可複製文字）
+- 上方提供「重新整理」按鈕手動拉取最新回報
+- 若查詢失敗顯示 error 訊息；無回報時顯示空狀態
+
 ---
 
 ## View 層
@@ -533,6 +706,30 @@ A 輸入 B 的好友碼
 | `CloudKitAdvancedView` | CloudKit 進階診斷 |
 | `AirportListView` | 機場資料庫瀏覽 |
 | `TabVisibilitySettingsView` | Tab 顯示控制 |
+| `IssueReportListView` | 用戶問題回報管理（開發者專用） |
+
+#### IssueReportListView
+
+```
+整體結構
+├── Loading indicator / Error alert
+├── 「重新整理」按鈕
+└── List
+    ├── 空狀態提示（無回報時）
+    └── IssueReportRow (foreach)
+        └── 點擊展開 Detail Sheet
+```
+
+**IssueReportRow**：顯示回報摘要
+- 信息圖：文字泡泡 icon
+- 左側：標題（content 前 36 字）
+- 右側：email + 時間戳
+- 次行：App 版本、Build、iOS、設備型號
+
+**IssueReportDetailView (Sheet)**：顯示完整回報
+- 標頭：提交時間、email
+- 中段：完整問題描述（可複製文字）
+- 底部：版本/設備/系統詳情
 
 ---
 
@@ -724,5 +921,22 @@ xcodebuild test -project milery.xcodeproj -scheme milery \
 1. 在 `Views/` 建立新頁面
 2. 若需全域狀態，在對應的 ViewModel extension 新增方法
 3. 驗證 CloudKit 同步 + 備份還原不受影響
+
+### 維護用戶回報系統（IssueReport）
+
+1. **CloudKit 部署**：確認 `IssueReport` Record Type 已在 CloudKit Dashboard Development 環境建立
+   - 部署到 Production 時需在 Dashboard 執行「Deploy to Production」
+2. **API 公開資料庫**：`IssueReportService` 與 `IssueReportAdminService` 同時使用公開資料庫
+   - Public DB 無需 iCloud 登入，任何用戶都可提交回報
+   - 開發者需登入 iCloud 才能查看回報
+3. **提交表單**：`ReportIssueView` 禁止換行（TextEditor.onChange 監聽並移除 `\n`）
+   - 防止用戶誤操作建立多行輸入
+   - 若未來需支援多行，需在 `IssueReportService` 驗證並提示用戶
+4. **回報清單查詢**：`IssueReportAdminService.fetchReports(limit:)` 預設上限 100 條
+   - 可調整上限，但需考慮查詢耗時與 UI 載入效能
+   - 未來可加入分頁或篩選功能
+5. **資料收集**：每份回報收集 8 項資訊（內容、email、版本、設備等）
+   - 建議定期回顧 CloudKit Dashboard 理解用戶回報型態
+   - 若需新增欄位，在 `IssueReportService.submitReport()` 新增，在 `IssueReportEntry` 加入對應欄位
 
 ---

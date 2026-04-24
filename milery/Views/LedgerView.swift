@@ -253,6 +253,12 @@ struct LedgerView: View {
                                             .tint(AviationTheme.Colors.danger)
                                         }
                                 }
+
+                                Color.clear
+                                    .frame(height: 5)
+                                    .listRowInsets(EdgeInsets())
+                                    .listRowSeparator(.hidden)
+                                    .listRowBackground(Color.clear)
                             }
                             .listStyle(.plain)
                             .scrollContentBackground(.hidden)
@@ -266,6 +272,13 @@ struct LedgerView: View {
                                     .frame(height: 12)
                                     
                                     Color.black
+                                    
+                                    LinearGradient(
+                                        colors: [.black, .clear],
+                                        startPoint: .top,
+                                        endPoint: .bottom
+                                    )
+                                    .frame(height: 40)
                                 }
                             )
                         }
@@ -756,6 +769,14 @@ struct TransactionDetailRow: View {
         colorScheme == .dark ? AviationTheme.Colors.starluxIndigoLight : AviationTheme.Colors.starluxIndigo
     }
 
+    private let cardCornerRadius: CGFloat = 28
+
+    var cardBorderColor: Color {
+        colorScheme == .dark
+            ? Color.white.opacity(0.28)
+            : Color.black.opacity(0.08)
+    }
+
     /// 根據來源類型回傳對應的明細文字
     var sourceDetail: String? {
         switch transaction.source {
@@ -798,13 +819,12 @@ struct TransactionDetailRow: View {
     
     var body: some View {
         HStack(alignment: .top, spacing: AviationTheme.Spacing.md) {
-            ZStack {
-                Circle()
-                    .fill(isRedeemTransaction ? redeemAccentColor : AviationTheme.Colors.brandColor(colorScheme))
-                    .frame(width: 44, height: 44)
-
-                transactionIconView
-            }
+            // 行李牌風格圖示
+            LuggageTagIcon(
+                iconView: transactionIconView,
+                tintColor: isRedeemTransaction ? redeemAccentColor : AviationTheme.Colors.brandColor(colorScheme),
+                colorScheme: colorScheme
+            )
 
             VStack(alignment: .leading, spacing: 6) {
                 Text(displayTitle)
@@ -888,18 +908,62 @@ struct TransactionDetailRow: View {
         }
         .padding(AviationTheme.Spacing.md)
         .background(
-            RoundedRectangle(cornerRadius: AviationTheme.CornerRadius.md)
-                .fill(AviationTheme.Colors.cardBackground(colorScheme))
+            RoundedRectangle(cornerRadius: cardCornerRadius, style: .continuous)
+                .fill(AviationTheme.Colors.cardBackground(colorScheme).opacity(colorScheme == .dark ? 0.92 : 0.97))
         )
-        .clipShape(RoundedRectangle(cornerRadius: AviationTheme.CornerRadius.md))
+        .clipShape(RoundedRectangle(cornerRadius: cardCornerRadius, style: .continuous))
         .overlay(
-            RoundedRectangle(cornerRadius: AviationTheme.CornerRadius.md)
-                .stroke(
-                    isRedeemTransaction
-                        ? redeemAccentColor.opacity(colorScheme == .dark ? 0.35 : 0.22)
-                        : Color.clear,
-                    lineWidth: 1
-                )
+            RoundedRectangle(cornerRadius: cardCornerRadius, style: .continuous)
+                .stroke(cardBorderColor, lineWidth: 1.5)
+        )
+    }
+}
+
+// MARK: - 行李牌風格圖示
+struct LuggageTagIcon<Icon: View>: View {
+    let iconView: Icon
+    let tintColor: Color
+    let colorScheme: ColorScheme
+
+    private let tagWidth: CGFloat = 44
+    private let tagHeight: CGFloat = 50
+    private let holeRadius: CGFloat = 4
+
+    var body: some View {
+        ZStack(alignment: .top) {
+            // 行李牌形狀：圓角矩形 + 頂部穿孔
+            UnevenRoundedRectangle(
+                topLeadingRadius: 6,
+                bottomLeadingRadius: 10,
+                bottomTrailingRadius: 10,
+                topTrailingRadius: 6
+            )
+            .fill(tintColor)
+            .frame(width: tagWidth, height: tagHeight)
+            .overlay(alignment: .top) {
+                // 穿孔
+                Circle()
+                    .fill(AviationTheme.Colors.cardBackground(colorScheme))
+                    .frame(width: holeRadius * 2, height: holeRadius * 2)
+                    .offset(y: 5)
+            }
+            .overlay(alignment: .top) {
+                // 穿孔環
+                Circle()
+                    .stroke(tintColor.opacity(0.5), lineWidth: 1)
+                    .frame(width: holeRadius * 2 + 2, height: holeRadius * 2 + 2)
+                    .offset(y: 4)
+            }
+
+            // 圖示居中偏下（避開穿孔區域）
+            iconView
+                .offset(y: 18)
+        }
+        .shadow(
+            color: tintColor.opacity(colorScheme == .dark ? 0.25 : 0.15),
+            radius: 4,
+            x: 0,
+            y: 2
         )
     }
 }

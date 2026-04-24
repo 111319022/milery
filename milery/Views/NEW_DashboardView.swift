@@ -2,13 +2,25 @@ import SwiftUI
 import SwiftData
 import Combine
 
-struct DashboardView: View {
+struct NEW_DashboardView: View {
     @Environment(\.colorScheme) var colorScheme
+    @Environment(\.modelContext) private var modelContext
     @Bindable var viewModel: MileageViewModel
     @AppStorage("backgroundSelection") private var backgroundSelection: BackgroundSelection = .none
+    @AppStorage("userName") private var userName: String = ""
     private let syncCheckTimer = Timer.publish(every: 20, on: .main, in: .common).autoconnect()
     var switchToProgress: (() -> Void)? = nil
     var switchToLedger: (() -> Void)? = nil
+    
+    // Friend services
+    private let friendService = FriendService.shared
+    private let profileService = ProfileService.shared
+    
+    @State private var profileInitialized = false
+    @State private var profileError: String?
+    @State private var friendAvatars: [String: UIImage] = [:]
+    @State private var showAddFriendSheet = false
+    @State private var showCopiedToast = false
     
     private var hasBackgroundImage: Bool {
         switch backgroundSelection {
@@ -26,7 +38,7 @@ struct DashboardView: View {
                     VStack(spacing: AviationTheme.Spacing.lg) {
                         // 同步提示 Banner
                         if viewModel.hasRemoteChanges {
-                            SyncBannerView {
+                            NEW_SyncBannerView {
                                 withAnimation(.easeInOut(duration: 0.3)) {
                                     viewModel.manualSyncNow()
                                 }
@@ -34,9 +46,9 @@ struct DashboardView: View {
                             .transition(.move(edge: .top).combined(with: .opacity))
                         }
                         
-                        // 英雄卡片 - 總哩程與到期
+                        // 英雄卡片 - 總哩程與到期資訊
                         if let account = viewModel.mileageAccount {
-                            HeroMilesCard(
+                            NEW_HeroMilesCard(
                                 totalMiles: account.totalMiles,
                                 latestActivityMonth: account.latestActivityMonthText(),
                                 expiryDate: account.expiryDate(),
@@ -47,38 +59,50 @@ struct DashboardView: View {
                         // 到期警示（< 90 天時顯示）
                         if let account = viewModel.mileageAccount,
                            account.daysUntilExpiry() < 90 {
-                            ExpiryAlertCard(
+                            NEW_ExpiryAlertCard(
                                 daysUntilExpiry: account.daysUntilExpiry(),
                                 expiryDate: account.expiryDate()
                             )
                         }
                         
-                        // 夢想雷達：里程足夠時顯示可兌換提醒，否則顯示最接近達成目標
-                        if let currentMiles = viewModel.mileageAccount?.totalMiles {
-                            let redeemable = viewModel.redeemableGoals(limit: 3)
-                            if !redeemable.isEmpty {
-                                RedeemReadyRadarCard(
-                                    goals: redeemable,
-                                    currentMiles: currentMiles,
-                                    onTap: switchToProgress
-                                )
-                            } else if let goal = viewModel.closestGoal() {
-                                DreamRadarCard(
-                                    goal: goal,
-                                    currentMiles: currentMiles,
-                                    onTap: switchToProgress
-                                )
-                            }
+                        // MARK: - 我的社群名片
+                        dashboardProfileCard
+                        
+                        // MARK: - 好友動態（橫向滾動卡片）
+                        if !friendService.friends.isEmpty {
+                            dashboardFriendActivitySection
                         }
                         
-                        // 本月累積
-                        MonthlyCockpitCard(viewModel: viewModel)
+                        // MARK: - 好友排行榜
+                        if friendService.friends.count >= 2 {
+                            dashboardLeaderboardSection
+                        }
                         
-                        // 最新動態
-                        RecentActivityCard(
-                            transactions: viewModel.transactions,
-                            onTap: switchToLedger
-                        )
+                        // MARK: - 好友快覽列表
+                        if !friendService.friends.isEmpty {
+                            dashboardFriendQuickList
+                        }
+                        
+                        // MARK: - 邀請通知
+                        if !friendService.pendingOutgoing.isEmpty || !friendService.pendingIncoming.isEmpty {
+                            dashboardPendingSection
+                        }
+                        
+                        // MARK: - 好友空狀態
+                        if friendService.friends.isEmpty
+                            && friendService.pendingOutgoing.isEmpty
+                            && friendService.pendingIncoming.isEmpty
+                            && profileInitialized
+                            && !friendService.isLoading {
+                            dashboardEmptyState
+                        }
+                        
+                        // Loading
+                        if friendService.isLoading && !profileInitialized {
+                            SwiftUI.ProgressView()
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, AviationTheme.Spacing.xxl)
+                        }
                     }
                     .padding(.horizontal, AviationTheme.Spacing.md)
                     .padding(.top, AviationTheme.Spacing.sm)
@@ -89,18 +113,631 @@ struct DashboardView: View {
             .navigationTitle("儀表板")
             .navigationBarTitleDisplayMode(.large)
             .toolbarBackgroundVisibility(hasBackgroundImage ? .visible : .automatic, for: .navigationBar)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button {
+                        showAddFriendSheet = true
+                    } label: {
+                        Image(systemName: "person.badge.plus")
+                            .foregroundColor(AviationTheme.Colors.cathayJade)
+                    }
+                }
+            }
+            .sheet(isPresented: $showAddFriendSheet) {
+                AddFriendSheet()
+                    .presentationDetents([.medium])
+            }
+            .overlay(alignment: .top) {
+                if showCopiedToast {
+                    dashboardCopiedToast
+                        .transition(.move(edge: .top).combined(with: .opacity))
+                        .onAppear {
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                                withAnimation { showCopiedToast = false }
+                            }
+                        }
+                }
+            }
             .onAppear {
                 viewModel.checkForRemoteChanges()
             }
             .onReceive(syncCheckTimer) { _ in
                 viewModel.checkForRemoteChanges()
             }
+            .task {
+                await initializeFriendProfile()
+                await friendService.syncLocalStatsToProfile(context: modelContext)
+                await friendService.fetchFriends()
+                await loadFriendAvatars()
+            }
+            .refreshable {
+                await friendService.fetchFriends()
+                await loadFriendAvatars()
+            }
+        }
+    }
+    
+    // MARK: - 我的社群名片
+    
+    @ViewBuilder
+    private var dashboardProfileCard: some View {
+        VStack(spacing: AviationTheme.Spacing.md) {
+            if let profile = friendService.currentUserProfile {
+                HStack(spacing: AviationTheme.Spacing.md) {
+                    ProfileAvatarView(image: profileService.avatarImage, size: 56)
+                    
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(profile.displayName)
+                            .font(AviationTheme.Typography.title3)
+                            .foregroundColor(AviationTheme.Colors.primaryText(colorScheme))
+                        
+                        HStack(spacing: 6) {
+                            Text(profile.friendCode)
+                                .font(.system(size: 16, weight: .bold, design: .monospaced))
+                                .foregroundColor(AviationTheme.Colors.brandColor(colorScheme))
+                                .tracking(2)
+                            
+                            Button {
+                                UIPasteboard.general.string = profile.friendCode
+                                let generator = UINotificationFeedbackGenerator()
+                                generator.notificationOccurred(.success)
+                                withAnimation { showCopiedToast = true }
+                            } label: {
+                                Image(systemName: "doc.on.doc")
+                                    .font(.caption)
+                                    .foregroundColor(AviationTheme.Colors.cathayJade)
+                            }
+                        }
+                    }
+                    
+                    Spacer()
+                    
+                    VStack(spacing: 4) {
+                        Text("\(friendService.friends.count)")
+                            .font(.system(size: 28, weight: .bold, design: .rounded))
+                            .foregroundColor(AviationTheme.Colors.brandColor(colorScheme))
+                        Text("好友")
+                            .font(AviationTheme.Typography.caption)
+                            .foregroundColor(AviationTheme.Colors.secondaryText(colorScheme))
+                    }
+                }
+            } else if friendService.isLoading {
+                SwiftUI.ProgressView()
+                    .frame(maxWidth: .infinity)
+                    .padding()
+            } else if let error = profileError {
+                VStack(spacing: 12) {
+                    Image(systemName: "exclamationmark.icloud")
+                        .font(.title2)
+                        .foregroundColor(AviationTheme.Colors.warning)
+                    Text(error)
+                        .font(AviationTheme.Typography.footnote)
+                        .foregroundColor(AviationTheme.Colors.secondaryText(colorScheme))
+                        .multilineTextAlignment(.center)
+                    Button {
+                        Task { await initializeFriendProfile() }
+                    } label: {
+                        Text("重試")
+                            .font(AviationTheme.Typography.caption)
+                            .fontWeight(.medium)
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 8)
+                            .background(Capsule().fill(AviationTheme.Colors.cathayJade))
+                    }
+                }
+                .frame(maxWidth: .infinity)
+                .padding()
+            }
+        }
+        .padding(AviationTheme.Spacing.lg)
+        .background(AviationTheme.Colors.cardBackground(colorScheme))
+        .clipShape(RoundedRectangle(cornerRadius: AviationTheme.CornerRadius.xl))
+        .shadow(color: AviationTheme.Shadows.cardShadow(colorScheme), radius: 8, x: 0, y: 3)
+    }
+    
+    // MARK: - 好友動態橫向卡片
+    
+    @ViewBuilder
+    private var dashboardFriendActivitySection: some View {
+        VStack(alignment: .leading, spacing: AviationTheme.Spacing.sm) {
+            HStack {
+                Image(systemName: "person.2.fill")
+                    .font(.body)
+                    .foregroundColor(AviationTheme.Colors.brandColor(colorScheme))
+                Text("好友動態")
+                    .font(AviationTheme.Typography.headline)
+                    .foregroundColor(AviationTheme.Colors.primaryText(colorScheme))
+                Spacer()
+                Text("\(friendService.friends.count) 位好友")
+                    .font(AviationTheme.Typography.caption)
+                    .foregroundColor(AviationTheme.Colors.tertiaryText(colorScheme))
+            }
+            .padding(.horizontal, 4)
+            
+            ScrollView(.horizontal, showsIndicators: false) {
+                LazyHStack(spacing: AviationTheme.Spacing.md) {
+                    ForEach(friendService.friends) { friend in
+                        NavigationLink(destination: FriendDetailView(friend: friend, avatar: friendAvatars[friend.userRecordName])) {
+                            DashboardFriendActivityCard(
+                                friend: friend,
+                                avatar: friendAvatars[friend.userRecordName]
+                            )
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+                .padding(.horizontal, 4)
+                .padding(.vertical, 4)
+            }
+        }
+    }
+    
+    // MARK: - 好友排行榜
+    
+    @ViewBuilder
+    private var dashboardLeaderboardSection: some View {
+        let sortedFriends = friendService.friends.sorted { $0.totalMiles > $1.totalMiles }
+        
+        VStack(alignment: .leading, spacing: AviationTheme.Spacing.sm) {
+            HStack {
+                Image(systemName: "trophy.fill")
+                    .font(.body)
+                    .foregroundColor(AviationTheme.Colors.starluxGold)
+                Text("哩程排行")
+                    .font(AviationTheme.Typography.headline)
+                    .foregroundColor(AviationTheme.Colors.primaryText(colorScheme))
+                Spacer()
+            }
+            
+            VStack(spacing: 0) {
+                ForEach(Array(sortedFriends.prefix(5).enumerated()), id: \.element.id) { index, friend in
+                    if index > 0 {
+                        Divider().padding(.leading, 52)
+                    }
+                    
+                    HStack(spacing: AviationTheme.Spacing.sm) {
+                        Text("\(index + 1)")
+                            .font(.system(size: 16, weight: .bold, design: .rounded))
+                            .foregroundColor(rankColor(for: index))
+                            .frame(width: 24)
+                        
+                        ProfileAvatarView(image: friendAvatars[friend.userRecordName], size: 32)
+                        
+                        Text(friend.displayName)
+                            .font(AviationTheme.Typography.body)
+                            .foregroundColor(AviationTheme.Colors.primaryText(colorScheme))
+                            .lineLimit(1)
+                        
+                        Spacer()
+                        
+                        Text("\(friend.totalMiles.formatted()) 哩")
+                            .font(AviationTheme.Typography.subheadline)
+                            .fontWeight(.semibold)
+                            .foregroundColor(AviationTheme.Colors.brandColor(colorScheme))
+                    }
+                    .padding(.horizontal, AviationTheme.Spacing.md)
+                    .padding(.vertical, 12)
+                }
+            }
+            .background(AviationTheme.Colors.cardBackground(colorScheme))
+            .clipShape(RoundedRectangle(cornerRadius: AviationTheme.CornerRadius.xl))
+            .shadow(color: AviationTheme.Shadows.cardShadow(colorScheme), radius: 8, x: 0, y: 3)
+        }
+    }
+    
+    // MARK: - 好友快覽列表
+    
+    @ViewBuilder
+    private var dashboardFriendQuickList: some View {
+        VStack(alignment: .leading, spacing: AviationTheme.Spacing.sm) {
+            HStack {
+                Image(systemName: "list.bullet")
+                    .font(.body)
+                    .foregroundColor(AviationTheme.Colors.brandColor(colorScheme))
+                Text("好友一覽")
+                    .font(AviationTheme.Typography.headline)
+                    .foregroundColor(AviationTheme.Colors.primaryText(colorScheme))
+                Spacer()
+                
+                NavigationLink(destination: FriendsView()) {
+                    HStack(spacing: 4) {
+                        Text("管理")
+                            .font(AviationTheme.Typography.caption)
+                        Image(systemName: "chevron.right")
+                            .font(.caption2)
+                    }
+                    .foregroundColor(AviationTheme.Colors.brandColor(colorScheme))
+                }
+            }
+            
+            VStack(spacing: 0) {
+                ForEach(Array(friendService.friends.enumerated()), id: \.element.id) { index, friend in
+                    if index > 0 {
+                        Divider().padding(.leading, 60)
+                    }
+                    
+                    NavigationLink(destination: FriendDetailView(friend: friend, avatar: friendAvatars[friend.userRecordName])) {
+                        HStack(spacing: 12) {
+                            ProfileAvatarView(image: friendAvatars[friend.userRecordName], size: 40)
+                            
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(friend.displayName)
+                                    .font(AviationTheme.Typography.body)
+                                    .foregroundColor(AviationTheme.Colors.primaryText(colorScheme))
+                                
+                                HStack(spacing: AviationTheme.Spacing.md) {
+                                    dashboardStatBadge(icon: "star.fill", value: "\(friend.totalMiles.formatted())")
+                                    dashboardStatBadge(icon: "flag.fill", value: "\(friend.goalCount)")
+                                    dashboardStatBadge(icon: "airplane", value: "\(friend.completedRoutesCount)")
+                                }
+                            }
+                            
+                            Spacer()
+                            
+                            Image(systemName: "chevron.right")
+                                .font(.caption)
+                                .foregroundColor(AviationTheme.Colors.tertiaryText(colorScheme))
+                        }
+                        .padding(.horizontal, AviationTheme.Spacing.md)
+                        .padding(.vertical, 12)
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .background(AviationTheme.Colors.cardBackground(colorScheme))
+            .clipShape(RoundedRectangle(cornerRadius: AviationTheme.CornerRadius.xl))
+            .shadow(color: AviationTheme.Shadows.cardShadow(colorScheme), radius: 8, x: 0, y: 3)
+        }
+    }
+    
+    // MARK: - 邀請通知
+    
+    @ViewBuilder
+    private var dashboardPendingSection: some View {
+        VStack(alignment: .leading, spacing: AviationTheme.Spacing.sm) {
+            HStack {
+                Image(systemName: "bell.badge.fill")
+                    .font(.body)
+                    .foregroundColor(AviationTheme.Colors.warning)
+                Text("邀請通知")
+                    .font(AviationTheme.Typography.headline)
+                    .foregroundColor(AviationTheme.Colors.primaryText(colorScheme))
+                Spacer()
+                
+                let total = friendService.pendingOutgoing.count + friendService.pendingIncoming.count
+                Text("\(total)")
+                    .font(AviationTheme.Typography.caption)
+                    .fontWeight(.bold)
+                    .foregroundColor(.white)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 2)
+                    .background(Capsule().fill(AviationTheme.Colors.warning))
+            }
+            
+            VStack(spacing: 0) {
+                // 收到的邀請
+                ForEach(Array(friendService.pendingIncoming.enumerated()), id: \.element.id) { index, friend in
+                    if index > 0 {
+                        Divider().padding(.leading, 60)
+                    }
+                    
+                    HStack(spacing: 12) {
+                        ProfileAvatarView(image: friendAvatars[friend.userRecordName], size: 40)
+                        
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(friend.displayName)
+                                .font(AviationTheme.Typography.body)
+                                .foregroundColor(AviationTheme.Colors.primaryText(colorScheme))
+                            Text("想加你為好友")
+                                .font(AviationTheme.Typography.caption)
+                                .foregroundColor(AviationTheme.Colors.secondaryText(colorScheme))
+                        }
+                        
+                        Spacer()
+                        
+                        HStack(spacing: 8) {
+                            Button {
+                                Task {
+                                    do {
+                                        try await friendService.addFriend(byCode: friend.friendCode)
+                                    } catch {
+                                        appLog("好友添加失敗: \(error.localizedDescription)")
+                                    }
+                                }
+                            } label: {
+                                Text("接受")
+                                    .font(AviationTheme.Typography.caption)
+                                    .fontWeight(.medium)
+                                    .foregroundColor(.white)
+                                    .padding(.horizontal, 12)
+                                    .padding(.vertical, 6)
+                                    .background(Capsule().fill(AviationTheme.Colors.cathayJade))
+                            }
+                            
+                            Button {
+                                Task {
+                                    do {
+                                        try await friendService.removeFriend(friendCode: friend.friendCode)
+                                    } catch {
+                                        appLog("拒絕邀請失敗: \(error.localizedDescription)")
+                                    }
+                                }
+                            } label: {
+                                Text("拒絕")
+                                    .font(AviationTheme.Typography.caption)
+                                    .foregroundColor(AviationTheme.Colors.danger)
+                                    .padding(.horizontal, 10)
+                                    .padding(.vertical, 4)
+                                    .background(
+                                        Capsule()
+                                            .strokeBorder(AviationTheme.Colors.danger.opacity(0.3))
+                                    )
+                            }
+                        }
+                    }
+                    .padding(.horizontal, AviationTheme.Spacing.md)
+                    .padding(.vertical, 12)
+                }
+                
+                // 分隔線
+                if !friendService.pendingIncoming.isEmpty && !friendService.pendingOutgoing.isEmpty {
+                    Divider().padding(.leading, 60)
+                }
+                
+                // 等待中
+                ForEach(Array(friendService.pendingOutgoing.enumerated()), id: \.element.id) { index, friend in
+                    if index > 0 {
+                        Divider().padding(.leading, 60)
+                    }
+                    
+                    HStack(spacing: 12) {
+                        ProfileAvatarView(image: friendAvatars[friend.userRecordName], size: 40)
+                        
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(friend.displayName)
+                                .font(AviationTheme.Typography.body)
+                                .foregroundColor(AviationTheme.Colors.primaryText(colorScheme))
+                            Text("等待對方確認")
+                                .font(AviationTheme.Typography.caption)
+                                .foregroundColor(AviationTheme.Colors.tertiaryText(colorScheme))
+                        }
+                        
+                        Spacer()
+                        
+                        Button {
+                            Task {
+                                do {
+                                    try await friendService.removeFriend(friendCode: friend.friendCode)
+                                } catch {
+                                    appLog("撤銷邀請失敗: \(error.localizedDescription)")
+                                }
+                            }
+                        } label: {
+                            Text("撤銷")
+                                .font(AviationTheme.Typography.caption)
+                                .foregroundColor(AviationTheme.Colors.danger)
+                                .padding(.horizontal, 10)
+                                .padding(.vertical, 4)
+                                .background(
+                                    Capsule()
+                                        .strokeBorder(AviationTheme.Colors.danger.opacity(0.3))
+                                )
+                        }
+                    }
+                    .padding(.horizontal, AviationTheme.Spacing.md)
+                    .padding(.vertical, 12)
+                }
+            }
+            .background(AviationTheme.Colors.cardBackground(colorScheme))
+            .clipShape(RoundedRectangle(cornerRadius: AviationTheme.CornerRadius.xl))
+            .shadow(color: AviationTheme.Shadows.cardShadow(colorScheme), radius: 8, x: 0, y: 3)
+        }
+    }
+    
+    // MARK: - 好友空狀態
+    
+    @ViewBuilder
+    private var dashboardEmptyState: some View {
+        VStack(spacing: AviationTheme.Spacing.lg) {
+            Image(systemName: "person.2.slash")
+                .font(.system(size: 56))
+                .foregroundColor(AviationTheme.Colors.tertiaryText(colorScheme))
+            
+            Text("還沒有好友")
+                .font(AviationTheme.Typography.title3)
+                .foregroundColor(AviationTheme.Colors.secondaryText(colorScheme))
+            
+            Text("分享你的好友代碼，或點擊右上角加入好友\n一起追蹤哩程進度")
+                .font(AviationTheme.Typography.footnote)
+                .foregroundColor(AviationTheme.Colors.tertiaryText(colorScheme))
+                .multilineTextAlignment(.center)
+            
+            Button {
+                showAddFriendSheet = true
+            } label: {
+                HStack(spacing: 8) {
+                    Image(systemName: "person.badge.plus")
+                    Text("加好友")
+                }
+                .font(AviationTheme.Typography.headline)
+                .foregroundColor(.white)
+                .padding(.horizontal, 24)
+                .padding(.vertical, 12)
+                .background(
+                    Capsule()
+                        .fill(AviationTheme.Colors.cathayJade)
+                )
+            }
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, AviationTheme.Spacing.xxl)
+    }
+    
+    // MARK: - 已複製 Toast
+    
+    private var dashboardCopiedToast: some View {
+        HStack(spacing: 8) {
+            Image(systemName: "checkmark.circle.fill")
+                .font(.subheadline)
+                .foregroundColor(.white)
+            Text("已複製好友代碼")
+                .font(.subheadline)
+                .fontWeight(.medium)
+                .foregroundColor(.white)
+        }
+        .padding(.horizontal, 20)
+        .padding(.vertical, 12)
+        .background(
+            Capsule()
+                .fill(Color.black.opacity(colorScheme == .dark ? 0.85 : 0.75))
+                .shadow(color: .black.opacity(0.2), radius: 10, x: 0, y: 4)
+        )
+        .padding(.top, 8)
+    }
+    
+    // MARK: - Helpers
+    
+    private func initializeFriendProfile() async {
+        profileError = nil
+        do {
+            _ = try await friendService.ensureUserProfile(defaultDisplayName: userName)
+            profileInitialized = true
+        } catch {
+            profileError = error.localizedDescription
+            profileInitialized = true
+            appLog("[DashboardView] Profile 初始化失敗: \(error.localizedDescription)")
+        }
+    }
+    
+    private func loadFriendAvatars() async {
+        let allFriends = friendService.friends + friendService.pendingOutgoing + friendService.pendingIncoming
+        for friend in allFriends {
+            guard friendAvatars[friend.userRecordName] == nil else { continue }
+            if let image = await profileService.loadFriendAvatar(for: friend.userRecordName) {
+                friendAvatars[friend.userRecordName] = image
+            }
+        }
+    }
+    
+    private func rankColor(for index: Int) -> Color {
+        switch index {
+        case 0: return AviationTheme.Colors.starluxGold
+        case 1: return AviationTheme.Colors.silver
+        case 2: return Color(red: 0.72, green: 0.45, blue: 0.2)
+        default: return AviationTheme.Colors.tertiaryText(colorScheme)
+        }
+    }
+    
+    @ViewBuilder
+    private func dashboardStatBadge(icon: String, value: String) -> some View {
+        HStack(spacing: 3) {
+            Image(systemName: icon)
+                .font(.system(size: 9))
+                .foregroundColor(AviationTheme.Colors.cathayJade)
+            Text(value)
+                .font(.system(size: 11, weight: .medium, design: .rounded))
+                .foregroundColor(AviationTheme.Colors.secondaryText(colorScheme))
         }
     }
 }
 
+// MARK: - 好友動態卡片（儀表板用）
+
+struct DashboardFriendActivityCard: View {
+    @Environment(\.colorScheme) var colorScheme
+    let friend: FriendService.FriendData
+    let avatar: UIImage?
+    
+    private var progressPercent: Double {
+        guard friend.totalMiles > 0 else { return 0 }
+        return min(1.0, Double(friend.totalMiles) / 30000.0)
+    }
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: AviationTheme.Spacing.sm) {
+            HStack(spacing: AviationTheme.Spacing.sm) {
+                ProfileAvatarView(image: avatar, size: 36)
+                
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(friend.displayName)
+                        .font(AviationTheme.Typography.subheadline)
+                        .fontWeight(.semibold)
+                        .foregroundColor(AviationTheme.Colors.primaryText(colorScheme))
+                        .lineLimit(1)
+                }
+            }
+            
+            HStack(alignment: .firstTextBaseline, spacing: 4) {
+                Text("\(friend.totalMiles.formatted())")
+                    .font(.system(size: 22, weight: .bold, design: .rounded))
+                    .monospacedDigit()
+                    .foregroundColor(AviationTheme.Colors.brandColor(colorScheme))
+                Text("哩")
+                    .font(AviationTheme.Typography.caption)
+                    .foregroundColor(AviationTheme.Colors.secondaryText(colorScheme))
+            }
+            
+            GeometryReader { geo in
+                ZStack(alignment: .leading) {
+                    RoundedRectangle(cornerRadius: 3)
+                        .fill(AviationTheme.Colors.tertiaryText(colorScheme).opacity(0.15))
+                    
+                    RoundedRectangle(cornerRadius: 3)
+                        .fill(
+                            LinearGradient(
+                                colors: [
+                                    AviationTheme.Colors.cathayJade,
+                                    AviationTheme.Colors.cathayJadeLight
+                                ],
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            )
+                        )
+                        .frame(width: geo.size.width * CGFloat(progressPercent))
+                }
+            }
+            .frame(height: 6)
+            
+            HStack(spacing: AviationTheme.Spacing.md) {
+                HStack(spacing: 3) {
+                    Image(systemName: "flag.fill")
+                        .font(.system(size: 9))
+                        .foregroundColor(AviationTheme.Colors.cathayJade)
+                    Text("\(friend.goalCount) 目標")
+                        .font(.system(size: 10, weight: .medium, design: .rounded))
+                        .foregroundColor(AviationTheme.Colors.secondaryText(colorScheme))
+                }
+                
+                HStack(spacing: 3) {
+                    Image(systemName: "airplane")
+                        .font(.system(size: 9))
+                        .foregroundColor(AviationTheme.Colors.cathayJade)
+                    Text("\(friend.completedRoutesCount) 完成")
+                        .font(.system(size: 10, weight: .medium, design: .rounded))
+                        .foregroundColor(AviationTheme.Colors.secondaryText(colorScheme))
+                }
+            }
+        }
+        .padding(AviationTheme.Spacing.md)
+        .frame(width: 180)
+        .background(
+            RoundedRectangle(cornerRadius: AviationTheme.CornerRadius.lg)
+                .fill(.ultraThinMaterial)
+                .overlay(
+                    RoundedRectangle(cornerRadius: AviationTheme.CornerRadius.lg)
+                        .stroke(
+                            AviationTheme.Colors.brandColor(colorScheme).opacity(0.15),
+                            lineWidth: 0.5
+                        )
+                )
+        )
+        .shadow(color: AviationTheme.Shadows.cardShadow(colorScheme).opacity(0.5), radius: 6, x: 0, y: 2)
+    }
+}
+
 // MARK: - 可兌換提醒卡片
-struct RedeemReadyRadarCard: View {
+struct NEW_RedeemReadyRadarCard: View {
     @Environment(\.colorScheme) var colorScheme
     let goals: [FlightGoal]
     let currentMiles: Int
@@ -184,8 +821,8 @@ struct RedeemReadyRadarCard: View {
     }
 }
 
-// MARK: - 英雄卡片（Premium Boarding Pass 風格）
-struct HeroMilesCard: View {
+// MARK: - 英雄卡片
+struct NEW_HeroMilesCard: View {
     @Environment(\.colorScheme) var colorScheme
     let totalMiles: Int
     let latestActivityMonth: String
@@ -206,27 +843,12 @@ struct HeroMilesCard: View {
             return AviationTheme.Colors.brandColor(colorScheme)
         }
     }
-
-    /// 金屬光澤邊框漸層
-    private var metallicBorderGradient: LinearGradient {
-        LinearGradient(
-            colors: [
-                AviationTheme.Colors.lightGold.opacity(0.7),
-                AviationTheme.Colors.gold.opacity(0.4),
-                Color.white.opacity(colorScheme == .dark ? 0.15 : 0.3),
-                AviationTheme.Colors.gold.opacity(0.5),
-                AviationTheme.Colors.lightGold.opacity(0.3)
-            ],
-            startPoint: .topLeading,
-            endPoint: .bottomTrailing
-        )
-    }
     
     var body: some View {
         VStack(spacing: 0) {
             // 主要哩程顯示區域
             VStack(spacing: AviationTheme.Spacing.md) {
-                // 標題列：模仿 Boarding Pass 頂部
+                // 標題
                 HStack {
                     HStack(spacing: 8) {
                         Image(systemName: "airplane")
@@ -243,7 +865,6 @@ struct HeroMilesCard: View {
                             Text("Asia Miles")
                                 .font(AviationTheme.Typography.caption)
                                 .foregroundColor(AviationTheme.Colors.brandColor(colorScheme))
-                                .tracking(1)
                             Text("可用哩程")
                                 .font(AviationTheme.Typography.subheadline)
                                 .fontWeight(.medium)
@@ -252,16 +873,6 @@ struct HeroMilesCard: View {
                     }
                     Spacer()
                 }
-                
-                // 虛線分隔 - 登機證撕裂線風格
-                HStack(spacing: 4) {
-                    ForEach(0..<40, id: \.self) { _ in
-                        Circle()
-                            .fill(AviationTheme.Colors.tertiaryText(colorScheme).opacity(0.2))
-                            .frame(width: 3, height: 3)
-                    }
-                }
-                .frame(maxWidth: .infinity)
                 
                 // 大數字哩程
                 HStack(alignment: .firstTextBaseline, spacing: 8) {
@@ -288,9 +899,9 @@ struct HeroMilesCard: View {
                 .accessibilityElement(children: .combine)
                 .accessibilityLabel("可用哩程 \(totalMiles) 哩")
                 .onAppear {
-                    if !HeroMilesCard.hasPlayedAnimation {
+                    if !NEW_HeroMilesCard.hasPlayedAnimation {
                         startCountAnimation(to: totalMiles)
-                        HeroMilesCard.hasPlayedAnimation = true
+                        NEW_HeroMilesCard.hasPlayedAnimation = true
                     } else {
                         displayedMiles = totalMiles
                     }
@@ -374,22 +985,12 @@ struct HeroMilesCard: View {
             .padding(AviationTheme.Spacing.md)
             .background(
                 colorScheme == .dark
-                    ? Color.white.opacity(0.04)
+                    ? Color.white.opacity(0.05)
                     : Color.black.opacity(0.02)
             )
         }
-        .background(.ultraThinMaterial)
+        .background(AviationTheme.Colors.cardBackground(colorScheme))
         .cornerRadius(AviationTheme.CornerRadius.xl)
-        .overlay(
-            RoundedRectangle(cornerRadius: AviationTheme.CornerRadius.xl)
-                .stroke(metallicBorderGradient, lineWidth: 1)
-        )
-        .shadow(
-            color: AviationTheme.Colors.gold.opacity(colorScheme == .dark ? 0.12 : 0.06),
-            radius: 16,
-            x: 0,
-            y: 6
-        )
         .shadow(
             color: AviationTheme.Shadows.cardShadow(colorScheme),
             radius: 8,
@@ -421,7 +1022,7 @@ struct HeroMilesCard: View {
 }
 
 // MARK: - 夢想雷達卡片
-struct DreamRadarCard: View {
+struct NEW_DreamRadarCard: View {
     @Environment(\.colorScheme) var colorScheme
     let goal: FlightGoal
     let currentMiles: Int
@@ -555,7 +1156,7 @@ struct DreamRadarCard: View {
 }
 
 // MARK: - 本月累積卡片
-struct MonthlyCockpitCard: View {
+struct NEW_MonthlyCockpitCard: View {
     @Environment(\.colorScheme) var colorScheme
     let viewModel: MileageViewModel
     
@@ -639,7 +1240,7 @@ struct MonthlyCockpitCard: View {
 }
 
 // MARK: - 最新動態卡片
-struct RecentActivityCard: View {
+struct NEW_RecentActivityCard: View {
     @Environment(\.colorScheme) var colorScheme
     let transactions: [Transaction]
     var onTap: (() -> Void)? = nil
@@ -753,7 +1354,7 @@ struct RecentActivityCard: View {
 }
 
 // MARK: - 到期警示卡片
-struct ExpiryAlertCard: View {
+struct NEW_ExpiryAlertCard: View {
     @Environment(\.colorScheme) var colorScheme
     let daysUntilExpiry: Int
     let expiryDate: Date
@@ -798,7 +1399,7 @@ struct ExpiryAlertCard: View {
 }
 
 // MARK: - 同步提示 Banner
-struct SyncBannerView: View {
+struct NEW_SyncBannerView: View {
     @Environment(\.colorScheme) var colorScheme
     var onSync: () -> Void
     
@@ -847,6 +1448,6 @@ struct SyncBannerView: View {
 }
 
 #Preview {
-    DashboardView(viewModel: MileageViewModel())
+    NEW_DashboardView(viewModel: MileageViewModel())
     .modelContainer(for: [MileageAccount.self, Transaction.self, FlightGoal.self, CreditCardRule.self, RedeemedTicket.self])
 }
