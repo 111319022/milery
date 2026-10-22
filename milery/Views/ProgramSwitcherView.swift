@@ -73,7 +73,7 @@ struct ProgramSwitcherView: View {
                 Button {
                     showingAddProgram = true
                 } label: {
-                    Image(systemName: "plus.circle.fill")
+                    Label("新增計劃", systemImage: "plus.circle.fill")
                         .foregroundStyle(AviationTheme.Colors.cathayJade)
                 }
             }

@@ -208,7 +208,7 @@ struct PasscodeSetupSheet: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("取消") {
+                    Button("取消", systemImage: "xmark") {
                         onComplete(false)
                     }
                     .foregroundColor(AviationTheme.Colors.secondaryText(colorScheme))

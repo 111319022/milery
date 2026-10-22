@@ -57,11 +57,11 @@ struct CalculatorLedgerView: View {
             .toolbarBackgroundVisibility(hasBackgroundImage ? .visible : .automatic, for: .navigationBar)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("取消") { dismiss() }
+                    Button("取消", systemImage: "xmark") { dismiss() }
                         .foregroundColor(AviationTheme.Colors.silver)
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("儲存") { saveNewTransaction() }
+                    Button("儲存", systemImage: "checkmark") { saveNewTransaction() }
                         .disabled(!formCanSave)
                         .foregroundColor(formCanSave ? AviationTheme.Colors.brandColor(colorScheme) : AviationTheme.Colors.silver.opacity(0.3))
                         .fontWeight(.bold)

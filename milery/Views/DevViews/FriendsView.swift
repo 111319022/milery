@@ -66,7 +66,7 @@ struct FriendsView: View {
                 Button {
                     showAddFriendSheet = true
                 } label: {
-                    Image(systemName: "person.badge.plus")
+                    Label("新增好友", systemImage: "person.badge.plus")
                         .foregroundColor(AviationTheme.Colors.cathayJade)
                 }
             }
@@ -427,7 +427,7 @@ struct AddFriendSheet: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("取消") { dismiss() }
+                    Button("取消", systemImage: "xmark") { dismiss() }
                         .foregroundColor(AviationTheme.Colors.secondaryText(colorScheme))
                 }
             }
