@@ -74,6 +74,7 @@ extension MileageViewModel {
                            promotionName: String? = nil) {
         guard let account = mileageAccount else { return }
         
+        let previousStatementBrand = transaction.source == .cardStatement ? transaction.cardBrand : nil
         let milesDiff = earnedMiles - transaction.earnedMiles
         account.updateMiles(amount: milesDiff, date: date)
         
@@ -95,6 +96,11 @@ extension MileageViewModel {
             transaction.costPerMile = 0
         }
         
+        if let brand = previousStatementBrand {
+            clearStatementFields(transaction)
+            recalculateStatementTransfers(for: brand)
+        }
+        
         saveContext()
         loadData()
     }
@@ -114,9 +120,177 @@ extension MileageViewModel {
             account.transactions?.remove(at: index)
         }
         
+        let statementBrand = transaction.source == .cardStatement ? transaction.cardBrand : nil
         context.delete(transaction)
+        if let brand = statementBrand {
+            recalculateStatementTransfers(for: brand)
+        }
         saveContext()
         loadData()
+    }
+    
+    // MARK: - 帳單哩程（每期帳單轉點）
+    
+    /// 新增一期帳單哩程：points 先進銀行端點數池，實際轉入里數由 recalculateStatementTransfers 決定
+    func addStatement(cardBrand: CardBrand,
+                      date: Date,
+                      baseMiles: Int,
+                      bonusMiles: Int,
+                      birthdayMiles: Int,
+                      notes: String = "") {
+        guard let context = modelContext, let account = mileageAccount else { return }
+        
+        let transaction = Transaction(
+            date: date,
+            amount: 0,
+            earnedMiles: 0,
+            source: .cardStatement,
+            cardBrand: cardBrand,
+            notes: notes
+        )
+        transaction.programID = activeProgram?.id
+        applyStatementFields(transaction, baseMiles: baseMiles, bonusMiles: bonusMiles, birthdayMiles: birthdayMiles)
+        
+        context.insert(transaction)
+        if account.transactions == nil { account.transactions = [] }
+        account.transactions?.append(transaction)
+        account.updateMiles(amount: 0, date: date)
+        recalculateStatementTransfers(for: cardBrand)
+        
+        saveContext()
+        loadData()
+    }
+    
+    /// 更新帳單哩程（也可把其他類型交易改成帳單哩程）
+    func updateStatement(_ transaction: Transaction,
+                         cardBrand: CardBrand,
+                         date: Date,
+                         baseMiles: Int,
+                         bonusMiles: Int,
+                         birthdayMiles: Int,
+                         notes: String = "") {
+        guard let account = mileageAccount else { return }
+        
+        let previousStatementBrand = transaction.source == .cardStatement ? transaction.cardBrand : nil
+        // 先扣回原本計入的里數，轉入量交給重算決定
+        account.updateMiles(amount: -transaction.earnedMiles, date: date)
+        transaction.earnedMiles = 0
+        
+        transaction.date = date
+        transaction.amount = 0
+        transaction.costPerMile = 0
+        transaction.source = .cardStatement
+        transaction.resolvedSubcategoryID = nil
+        transaction.cardBrand = cardBrand
+        transaction.notes = notes
+        transaction.flightRoute = nil
+        transaction.conversionSource = nil
+        transaction.merchantName = nil
+        transaction.promotionName = nil
+        applyStatementFields(transaction, baseMiles: baseMiles, bonusMiles: bonusMiles, birthdayMiles: birthdayMiles)
+        
+        recalculateStatementTransfers(for: cardBrand)
+        if let previousStatementBrand, previousStatementBrand != cardBrand {
+            recalculateStatementTransfers(for: previousStatementBrand)
+        }
+        
+        saveContext()
+        loadData()
+    }
+    
+    /// 依時間順序重跑銀行端點數池，更新每期轉入里數與帳戶總里程
+    func recalculateStatementTransfers(for brand: CardBrand) {
+        guard let account = mileageAccount,
+              let rule = CardBrandRegistry.statementPosting(for: brand) else { return }
+        
+        var balance = bankPointsOpeningBalance(for: brand)
+        for transaction in statementTransactions(for: brand, in: account.transactions ?? []) {
+            let result = StatementPostingCalculator.post(
+                points: transaction.statementPoints,
+                carryOver: balance,
+                transferUnit: rule.transferUnit
+            )
+            if transaction.earnedMiles != result.transferred {
+                account.totalMiles += result.transferred - transaction.earnedMiles
+                transaction.earnedMiles = result.transferred
+            }
+            transaction.statementBankBalance = result.balanceAfter
+            balance = result.balanceAfter
+        }
+    }
+    
+    /// 預覽一期帳單轉點結果（不寫入資料）
+    func previewStatement(cardBrand: CardBrand,
+                          date: Date,
+                          points: Int,
+                          excluding transactionID: UUID? = nil) -> (carryOver: Int, result: StatementPostingCalculator.Result)? {
+        guard let rule = CardBrandRegistry.statementPosting(for: cardBrand) else { return nil }
+        
+        var balance = bankPointsOpeningBalance(for: cardBrand)
+        let earlier = statementTransactions(for: cardBrand, in: transactions)
+            .filter { $0.id != transactionID && $0.date <= date }
+        for transaction in earlier {
+            balance = StatementPostingCalculator.post(
+                points: transaction.statementPoints,
+                carryOver: balance,
+                transferUnit: rule.transferUnit
+            ).balanceAfter
+        }
+        let result = StatementPostingCalculator.post(points: points, carryOver: balance, transferUnit: rule.transferUnit)
+        return (balance, result)
+    }
+    
+    /// 目前留在銀行端、尚未轉入的哩程點數
+    func bankPointsBalance(for brand: CardBrand) -> Int {
+        statementTransactions(for: brand, in: transactions).last?.statementBankBalance
+            ?? bankPointsOpeningBalance(for: brand)
+    }
+    
+    func bankPointsOpeningBalance(for brand: CardBrand) -> Int {
+        cardPreference(for: brand)?.bankPointsOpeningBalance ?? 0
+    }
+    
+    /// 設定銀行端起始點數（開始用帳單記錄前已累積的零頭），並重算所有帳單
+    func setBankPointsOpeningBalance(_ balance: Int, for brand: CardBrand) {
+        guard let context = modelContext else { return }
+        if let pref = cardPreference(for: brand) {
+            pref.bankPointsOpeningBalance = max(0, balance)
+        } else {
+            let pref = CardPreference(cardBrand: brand, isActive: creditCards.first { $0.cardBrand == brand }?.isActive ?? false)
+            pref.bankPointsOpeningBalance = max(0, balance)
+            context.insert(pref)
+        }
+        recalculateStatementTransfers(for: brand)
+        saveContext()
+        loadData()
+    }
+    
+    private func cardPreference(for brand: CardBrand) -> CardPreference? {
+        guard let context = modelContext else { return nil }
+        let prefs = (try? context.fetch(FetchDescriptor<CardPreference>())) ?? []
+        return prefs.first { $0.cardBrandRaw == brand.rawValue }
+    }
+    
+    /// 某品牌的帳單哩程，依帳單日期排序（同日以 id 決定順序，確保各裝置重算一致）
+    private func statementTransactions(for brand: CardBrand, in list: [Transaction]) -> [Transaction] {
+        list.filter { $0.source == .cardStatement && $0.cardBrand == brand }
+            .sorted {
+                if $0.date != $1.date { return $0.date < $1.date }
+                return $0.id.uuidString < $1.id.uuidString
+            }
+    }
+    
+    private func applyStatementFields(_ transaction: Transaction, baseMiles: Int, bonusMiles: Int, birthdayMiles: Int) {
+        transaction.statementBaseMiles = baseMiles
+        transaction.statementBonusMiles = bonusMiles
+        transaction.statementBirthdayMiles = birthdayMiles > 0 ? birthdayMiles : nil
+    }
+    
+    private func clearStatementFields(_ transaction: Transaction) {
+        transaction.statementBaseMiles = nil
+        transaction.statementBonusMiles = nil
+        transaction.statementBirthdayMiles = nil
+        transaction.statementBankBalance = nil
     }
     
     // MARK: - 飛行目標

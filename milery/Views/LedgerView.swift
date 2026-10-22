@@ -788,9 +788,20 @@ struct TransactionDetailRow: View {
             return transaction.conversionSource
         case .promotion:
             return transaction.promotionName
+        case .cardStatement:
+            var parts = ["基本 \((transaction.statementBaseMiles ?? 0).formatted())"]
+            parts.append("加碼 \((transaction.statementBonusMiles ?? 0).formatted())")
+            if let birthday = transaction.statementBirthdayMiles, birthday > 0 {
+                parts.append("生日 \(birthday.formatted())")
+            }
+            return parts.joined(separator: " ＋ ") + " 點"
         default:
             return nil
         }
+    }
+
+    var isStatement: Bool {
+        transaction.source == .cardStatement
     }
 
     var cleanedNoteText: String {
@@ -898,6 +909,12 @@ struct TransactionDetailRow: View {
                     Capsule()
                         .fill(milesTintColor.opacity(0.15))
                 )
+
+                if isStatement, let balance = transaction.statementBankBalance {
+                    Text(transaction.earnedMiles > 0 ? "銀行餘 \(balance.formatted()) 點" : "累積中 \(balance.formatted()) 點")
+                        .font(AviationTheme.Typography.caption)
+                        .foregroundColor(AviationTheme.Colors.tertiaryText(colorScheme))
+                }
 
                 if hasAmount && transaction.costPerMile > 0 {
                     Text("@\(String(format: "%.2f", transaction.costPerMile))")

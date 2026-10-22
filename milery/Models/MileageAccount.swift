@@ -23,7 +23,9 @@ final class MileageAccount {
     
     // 計算最近有記錄的月份(從交易記錄中取得)
     func latestTransactionMonth() -> Date? {
-        guard let latestTransaction = (transactions ?? []).max(by: { $0.date < $1.date }) else {
+        // 帳單點數未滿轉點單位時（earnedMiles == 0）不算亞洲萬里通帳戶活動
+        let activities = (transactions ?? []).filter { !($0.source == .cardStatement && $0.earnedMiles == 0) }
+        guard let latestTransaction = activities.max(by: { $0.date < $1.date }) else {
             return nil
         }
         let calendar = Calendar.current

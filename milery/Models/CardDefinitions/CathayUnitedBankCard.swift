@@ -12,6 +12,8 @@ struct CathayUnitedBankCard: CardBrandDefinition {
     let defaultRoundingMode: RoundingMode = .down
     let birthdayMultiplier: Decimal = 2.0
     let usesCardImage = true
+    // 每期帳單：一般消費基本哩程當期入帳、加速器加碼次期入帳；銀行端每滿 500 點自動轉入亞洲萬里通
+    let statementPosting: StatementPostingRule? = StatementPostingRule(transferUnit: 500)
     
     // MARK: - 等級定義
     

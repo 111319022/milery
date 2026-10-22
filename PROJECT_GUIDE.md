@@ -170,7 +170,7 @@ Milery 的狀態管理採用**「由近到遠 (Proximity-based)」**的分層設
 
 **向後相容**：保留 `acceleratorCategoryRaw` 和 `taishinDesignatedCategoryRaw` 舊欄位供 CloudKit 既有資料遷移。`resolvedSubcategoryID` computed property 自動從舊欄位 fallback。
 
-**MileageSource 列舉** (11 種)：`cardGeneral` / `cardAccelerator` / `taishinOverseas` / `taishinDesignated` / `specialMerchant` / `promotion` / `pointsConversion` / `pointsTransfer` / `flight` / `ticketRedemption` / `initialInput`
+**MileageSource 列舉** (12 種)：`cardGeneral` / `cardAccelerator` / `cardStatement` / `taishinOverseas` / `taishinDesignated` / `specialMerchant` / `promotion` / `pointsConversion` / `pointsTransfer` / `flight` / `ticketRedemption` / `initialInput`
 
 ### MileageAccount
 
@@ -272,6 +272,16 @@ CardBrandRegistry (Enum，中央查表)
 | 世界卡 | 22 元/哩 | 15 元/哩 | 5 元/哩 | 20,000 | 無 |
 | 翱翔鈦金卡 | 25 元/哩 | 15 元/哩 | 5 元/哩 | 2,400 | 無 |
 | 鈦金卡 | 30 元/哩 | 25 元/哩 | 5 元/哩 | 0 | 無 |
+
+### 帳單轉點（`statementPosting`）
+
+國泰世華亞萬卡的哩程是「每期帳單結算一次」：一般消費的基本哩程當期入帳、加速器加碼於次期帳單入帳，先累積在銀行端「哩程點數」，滿 500 點才以 500 為單位自動轉入亞洲萬里通。因此品牌定義 `statementPosting = StatementPostingRule(transferUnit: 500)` 時：
+
+- 記帳表單選該卡會進入 `.cardStatement`（帳單哩程）模式，直接輸入帳單上的基本哩程、加速器加碼、生日禮（選填）點數
+- `Transaction.statementBaseMiles / statementBonusMiles / statementBirthdayMiles` 存帳單點數；`earnedMiles` 為本期實際轉入里數，`statementBankBalance` 為轉點後銀行剩餘點數
+- `MileageViewModel.recalculateStatementTransfers(for:)` 依帳單日期重跑點數池（`StatementPostingCalculator`），新增／修改／刪除任一期都會連動調整後續各期與 `totalMiles`
+- 銀行端起始點數存在 `CardPreference.bankPointsOpeningBalance`，在「我的信用卡」頁設定
+- 舊的逐筆 `cardGeneral` / `cardAccelerator` 記錄維持原樣、照常計入總里程
 
 ### 新增銀行品牌步驟
 

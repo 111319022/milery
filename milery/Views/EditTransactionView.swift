@@ -26,6 +26,9 @@ struct EditTransactionView: View {
     @State private var conversionSource: String
     @State private var merchantName: String
     @State private var promotionName: String
+    @State private var statementBaseMiles: String
+    @State private var statementBonusMiles: String
+    @State private var statementBirthdayMiles: String
     @State private var showDeleteAlert = false
     @FocusState private var focusedField: TransactionFormView.TransactionField?
     
@@ -42,6 +45,9 @@ struct EditTransactionView: View {
         _conversionSource = State(initialValue: transaction.conversionSource ?? "")
         _merchantName = State(initialValue: transaction.merchantName ?? "")
         _promotionName = State(initialValue: transaction.promotionName ?? "")
+        _statementBaseMiles = State(initialValue: transaction.statementBaseMiles.map(String.init) ?? "")
+        _statementBonusMiles = State(initialValue: transaction.statementBonusMiles.map(String.init) ?? "")
+        _statementBirthdayMiles = State(initialValue: transaction.statementBirthdayMiles.map(String.init) ?? "")
     }
     
     var body: some View {
@@ -64,7 +70,11 @@ struct EditTransactionView: View {
                             conversionSource: $conversionSource,
                             merchantName: $merchantName,
                             promotionName: $promotionName,
-                            focusedField: $focusedField
+                            statementBaseMiles: $statementBaseMiles,
+                            statementBonusMiles: $statementBonusMiles,
+                            statementBirthdayMiles: $statementBirthdayMiles,
+                            focusedField: $focusedField,
+                            editingTransactionID: transaction.id
                         )
                         
                         // 刪除按鈕
@@ -93,8 +103,12 @@ struct EditTransactionView: View {
                 // 嘗試匹配已選擇的信用卡
                 let activeCards = viewModel.creditCards.filter { $0.isActive }
                 if CardBrandRegistry.sourceNeedsCard(selectedSource) && selectedCard == nil {
-                    // 先依據來源對應品牌選卡
-                    if let brandDef = CardBrandRegistry.brandForSource(selectedSource) {
+                    // 優先使用交易記錄的卡片品牌
+                    if let brand = transaction.cardBrand {
+                        selectedCard = viewModel.creditCards.first { $0.cardBrand == brand }
+                    }
+                    // 再依據來源對應品牌選卡
+                    if selectedCard == nil, let brandDef = CardBrandRegistry.brandForSource(selectedSource) {
                         selectedCard = activeCards.first { $0.cardBrand == brandDef.brandID }
                     }
                     // fallback: 若只有一張卡直接選
@@ -138,7 +152,14 @@ struct EditTransactionView: View {
     
     // MARK: - 邏輯
     
+    private var statementPoints: Int {
+        (Int(statementBaseMiles) ?? 0) + (Int(statementBonusMiles) ?? 0) + (Int(statementBirthdayMiles) ?? 0)
+    }
+    
     private var formCanSave: Bool {
+        if selectedSource == .cardStatement {
+            return selectedCard != nil && statementPoints > 0
+        }
         let needsAmount = CardBrandRegistry.sourceNeedsAmount(selectedSource)
         if needsAmount {
             guard let amountValue = Decimal(string: amount), amountValue > 0 else { return false }
@@ -153,6 +174,21 @@ struct EditTransactionView: View {
     }
     
     private func saveTransaction() {
+        if selectedSource == .cardStatement {
+            guard let card = selectedCard else { return }
+            viewModel.updateStatement(
+                transaction,
+                cardBrand: card.cardBrand,
+                date: date,
+                baseMiles: Int(statementBaseMiles) ?? 0,
+                bonusMiles: Int(statementBonusMiles) ?? 0,
+                birthdayMiles: Int(statementBirthdayMiles) ?? 0,
+                notes: notes
+            )
+            dismiss()
+            return
+        }
+        
         let miles: Int
         let finalAmount: Decimal
         let needsAmount = CardBrandRegistry.sourceNeedsAmount(selectedSource)

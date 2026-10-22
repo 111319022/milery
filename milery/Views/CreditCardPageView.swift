@@ -47,6 +47,8 @@ struct CreditCardCell: View {
     @Bindable var viewModel: MileageViewModel
     let colorScheme: ColorScheme
     @State private var showingCategoryInfo = false
+    @State private var showingOpeningBalanceEditor = false
+    @State private var openingBalanceText = ""
     
     /// 從 Registry 取得品牌定義
     var brandDef: CardBrandDefinition? {
@@ -91,6 +93,14 @@ struct CreditCardCell: View {
             // MARK: 費率資訊
             if let def = brandDef {
                 rateInfoSection(definition: def)
+            }
+            
+            // MARK: 銀行端哩程點數（帳單轉點卡片）
+            if let rule = brandDef?.statementPosting {
+                Divider()
+                    .background(AviationTheme.Colors.tertiaryText(colorScheme).opacity(0.2))
+                    .padding(.horizontal, AviationTheme.Spacing.md)
+                bankPointsSection(rule: rule)
             }
             
             Divider()
@@ -242,6 +252,51 @@ struct CreditCardCell: View {
         case .base: return card.baseRate
         case .secondary: return card.acceleratorRate
         case .tertiary: return card.specialMerchantRate
+        }
+    }
+    
+    // MARK: - 銀行端哩程點數
+    private func bankPointsSection(rule: StatementPostingRule) -> some View {
+        HStack {
+            VStack(alignment: .leading, spacing: 2) {
+                Text("銀行哩程點數")
+                    .font(AviationTheme.Typography.body)
+                    .fontWeight(.medium)
+                    .foregroundColor(AviationTheme.Colors.primaryText(colorScheme))
+                Text("每滿 \(rule.transferUnit) 點自動轉入，零頭保留於銀行")
+                    .font(AviationTheme.Typography.caption)
+                    .foregroundColor(AviationTheme.Colors.secondaryText(colorScheme))
+            }
+            
+            Spacer()
+            
+            Text("\(viewModel.bankPointsBalance(for: card.cardBrand).formatted()) 點")
+                .font(AviationTheme.Typography.subheadline)
+                .fontWeight(.semibold)
+                .foregroundColor(AviationTheme.Colors.cathayJade)
+            
+            Button {
+                openingBalanceText = "\(viewModel.bankPointsOpeningBalance(for: card.cardBrand))"
+                showingOpeningBalanceEditor = true
+            } label: {
+                Image(systemName: "pencil.circle")
+                    .font(.title3)
+                    .foregroundColor(AviationTheme.Colors.cathayJade)
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(.horizontal, AviationTheme.Spacing.md)
+        .padding(.vertical, AviationTheme.Spacing.md)
+        .alert("起始銀行點數", isPresented: $showingOpeningBalanceEditor) {
+            TextField("0", text: $openingBalanceText)
+                .keyboardType(.numberPad)
+            Button("取消", role: .cancel) { }
+            Button("儲存") {
+                let digits = openingBalanceText.filter { $0.isNumber }
+                viewModel.setBankPointsOpeningBalance(Int(digits) ?? 0, for: card.cardBrand)
+            }
+        } message: {
+            Text("開始用帳單記錄前，銀行端已累積但尚未轉入亞洲萬里通的點數（未滿 \(rule.transferUnit) 點的零頭）。")
         }
     }
     

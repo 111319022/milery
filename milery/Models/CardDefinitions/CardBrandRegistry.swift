@@ -73,8 +73,8 @@ enum CardBrandRegistry {
     
     /// 判斷某個 MileageSource 是否需要選擇信用卡
     static func sourceNeedsCard(_ source: MileageSource) -> Bool {
-        // cardGeneral 和所有卡片品牌專屬來源都需要選擇信用卡
-        if source == .cardGeneral { return true }
+        // cardGeneral、cardStatement 和所有卡片品牌專屬來源都需要選擇信用卡
+        if source == .cardGeneral || source == .cardStatement { return true }
         return allDefinitions.contains { def in
             def.sourceMappings.contains { $0.source == source }
         }
@@ -82,7 +82,17 @@ enum CardBrandRegistry {
     
     /// 判斷某個 MileageSource 是否需要金額輸入（可自動換算哩程）
     static func sourceNeedsAmount(_ source: MileageSource) -> Bool {
-        sourceNeedsCard(source)
+        source != .cardStatement && sourceNeedsCard(source)
+    }
+    
+    /// 品牌的帳單轉點規則（nil = 逐筆計算）
+    static func statementPosting(for brand: CardBrand) -> StatementPostingRule? {
+        definition(for: brand)?.statementPosting
+    }
+    
+    /// 選擇某張卡時預設的記帳來源：帳單轉點卡片用帳單哩程，其餘用一般消費
+    static func defaultCardSource(for brand: CardBrand) -> MileageSource {
+        statementPosting(for: brand) != nil ? .cardStatement : .cardGeneral
     }
     
     /// 判斷某個 MileageSource 是否支援生日月加碼（依品牌的 sourceMapping 定義）

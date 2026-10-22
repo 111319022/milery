@@ -9,6 +9,8 @@ final class CardPreference {
     var cardBrandRaw: String = ""
     var isActive: Bool = false
     var tierRaw: String = ""
+    /// 開始用帳單記錄前，銀行端已累積但未轉入的哩程點數
+    var bankPointsOpeningBalance: Int = 0
     
     init(cardBrand: CardBrand, isActive: Bool, tierID: String = "") {
         self.cardBrandRaw = cardBrand.rawValue

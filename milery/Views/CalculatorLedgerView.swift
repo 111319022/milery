@@ -25,6 +25,9 @@ struct CalculatorLedgerView: View {
     @State private var conversionSource: String = ""
     @State private var merchantName: String = ""
     @State private var promotionName: String = ""
+    @State private var statementBaseMiles: String = ""
+    @State private var statementBonusMiles: String = ""
+    @State private var statementBirthdayMiles: String = ""
     @FocusState private var focusedField: TransactionFormView.TransactionField?
     
     var body: some View {
@@ -46,6 +49,9 @@ struct CalculatorLedgerView: View {
                         conversionSource: $conversionSource,
                         merchantName: $merchantName,
                         promotionName: $promotionName,
+                        statementBaseMiles: $statementBaseMiles,
+                        statementBonusMiles: $statementBonusMiles,
+                        statementBirthdayMiles: $statementBirthdayMiles,
                         focusedField: $focusedField
                     )
                     .padding(.vertical, AviationTheme.Spacing.lg)
@@ -69,14 +75,22 @@ struct CalculatorLedgerView: View {
             }
             .onAppear {
                 let activeCards = viewModel.creditCards.filter { $0.isActive }
-                if activeCards.count == 1 {
-                    selectedCard = activeCards.first
+                if activeCards.count == 1, let card = activeCards.first {
+                    selectedCard = card
+                    selectedSource = CardBrandRegistry.defaultCardSource(for: card.cardBrand)
                 }
             }
         }
     }
     
+    private var statementPoints: Int {
+        (Int(statementBaseMiles) ?? 0) + (Int(statementBonusMiles) ?? 0) + (Int(statementBirthdayMiles) ?? 0)
+    }
+    
     private var formCanSave: Bool {
+        if selectedSource == .cardStatement {
+            return selectedCard != nil && statementPoints > 0
+        }
         let needsAmount = CardBrandRegistry.sourceNeedsAmount(selectedSource)
         if needsAmount {
             guard let amountValue = Decimal(string: amount), amountValue > 0 else { return false }
@@ -91,6 +105,20 @@ struct CalculatorLedgerView: View {
     }
     
     private func saveNewTransaction() {
+        if selectedSource == .cardStatement {
+            guard let card = selectedCard else { return }
+            viewModel.addStatement(
+                cardBrand: card.cardBrand,
+                date: date,
+                baseMiles: Int(statementBaseMiles) ?? 0,
+                bonusMiles: Int(statementBonusMiles) ?? 0,
+                birthdayMiles: Int(statementBirthdayMiles) ?? 0,
+                notes: notes
+            )
+            dismiss()
+            return
+        }
+        
         let miles: Int
         let finalAmount: Decimal
         let needsAmount = CardBrandRegistry.sourceNeedsAmount(selectedSource)

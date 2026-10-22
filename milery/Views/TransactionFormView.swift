@@ -25,10 +25,16 @@ struct TransactionFormView: View {
     @Binding var conversionSource: String
     @Binding var merchantName: String
     @Binding var promotionName: String
+    @Binding var statementBaseMiles: String
+    @Binding var statementBonusMiles: String
+    @Binding var statementBirthdayMiles: String
     @FocusState.Binding var focusedField: TransactionField?
+    /// 編輯中的交易 ID（帳單轉點預覽時排除自己）
+    var editingTransactionID: UUID? = nil
     
     enum TransactionField {
         case amount, miles
+        case statementBase, statementBonus, statementBirthday
     }
     
     // MARK: - 頂層類別
@@ -67,6 +73,11 @@ struct TransactionFormView: View {
         CardBrandRegistry.sourceNeedsAmount(selectedSource)
     }
     
+    /// 帳單哩程模式：直接輸入帳單上的基本／加碼哩程
+    var isStatementMode: Bool {
+        selectedSource == .cardStatement
+    }
+    
     var canCalculateMiles: Bool {
         isCardMode && selectedCard != nil && !amount.isEmpty
     }
@@ -82,12 +93,19 @@ struct TransactionFormView: View {
                     cardSelectionSection
                 }
                 
-                if selectedCard != nil {
-                    cardSourceSelector
-                }
-                
-                if let mapping = subcategoryMapping {
-                    subcategorySection(mapping: mapping)
+                if isStatementMode {
+                    // 帳單轉點卡片：輸入帳單上的哩程點數
+                    if selectedCard != nil {
+                        statementInputSection
+                    }
+                } else {
+                    if selectedCard != nil {
+                        cardSourceSelector
+                    }
+                    
+                    if let mapping = subcategoryMapping {
+                        subcategorySection(mapping: mapping)
+                    }
                 }
             } else {
                 // 2b. 非信用卡：直接顯示非卡來源
@@ -95,7 +113,9 @@ struct TransactionFormView: View {
             }
             
             // 3. 交易資訊（金額 / 哩程）
-            transactionInputSection
+            if !isStatementMode {
+                transactionInputSection
+            }
             
             // 4. 額外資訊
             if !isCardMode && (selectedSource == .flight || selectedSource == .pointsConversion || selectedSource == .pointsTransfer || selectedSource == .specialMerchant || selectedSource == .promotion) {
@@ -136,11 +156,11 @@ struct TransactionFormView: View {
                     isSelected: isCardMode
                 ) {
                     withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                        selectedSource = .cardGeneral
                         // 自動選卡（若只有一張）
                         if activeCards.count == 1, selectedCard == nil {
                             selectedCard = activeCards.first
                         }
+                        selectedSource = selectedCard.map { CardBrandRegistry.defaultCardSource(for: $0.cardBrand) } ?? .cardGeneral
                         selectedSubcategoryID = nil
                     }
                 }
@@ -202,9 +222,9 @@ struct TransactionFormView: View {
                         withAnimation(.easeInOut(duration: 0.2)) {
                             let previousBrand = selectedCard?.cardBrand
                             selectedCard = card
-                            // 切卡時：若品牌改變，重設來源為 .cardGeneral
+                            // 切卡時：若品牌改變，重設為該卡的預設來源
                             if card.cardBrand != previousBrand {
-                                selectedSource = .cardGeneral
+                                selectedSource = CardBrandRegistry.defaultCardSource(for: card.cardBrand)
                                 selectedSubcategoryID = nil
                             }
                         }
@@ -487,6 +507,108 @@ struct TransactionFormView: View {
         }
     }
     
+    // MARK: - 帳單哩程輸入
+    
+    var statementPoints: Int {
+        (Int(statementBaseMiles) ?? 0) + (Int(statementBonusMiles) ?? 0) + (Int(statementBirthdayMiles) ?? 0)
+    }
+    
+    private var statementInputSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            formSectionHeader("帳單哩程點數")
+            
+            VStack(spacing: 0) {
+                statementMilesRow(icon: "creditcard.fill", title: "基本哩程", text: $statementBaseMiles, field: .statementBase)
+                Divider().padding(.leading, 60)
+                statementMilesRow(icon: "bolt.fill", title: "加速器加碼", text: $statementBonusMiles, field: .statementBonus)
+                Divider().padding(.leading, 60)
+                statementMilesRow(icon: "gift.fill", title: "生日禮（選填）", text: $statementBirthdayMiles, field: .statementBirthday)
+                
+                if let card = selectedCard,
+                   let preview = viewModel.previewStatement(
+                    cardBrand: card.cardBrand,
+                    date: date,
+                    points: statementPoints,
+                    excluding: editingTransactionID
+                   ) {
+                    Divider().padding(.leading, 60)
+                    statementSummaryRow(title: "銀行端累積點數", value: "\((preview.carryOver + statementPoints).formatted()) 點")
+                    statementSummaryRow(title: "轉入亞洲萬里通", value: "+\(preview.result.transferred.formatted()) 哩", highlight: true)
+                    statementSummaryRow(title: "銀行剩餘點數", value: "\(preview.result.balanceAfter.formatted()) 點")
+                        .padding(.bottom, 6)
+                }
+            }
+            .background(AviationTheme.Colors.cardBackground(colorScheme))
+            .clipShape(RoundedRectangle(cornerRadius: AviationTheme.CornerRadius.lg))
+            .shadow(color: AviationTheme.Shadows.cardShadow(colorScheme).opacity(0.3), radius: 8, x: 0, y: 2)
+            .padding(.horizontal, AviationTheme.Spacing.md)
+            
+            Text("依帳單上本期新增的哩程點數填寫：基本哩程當期入帳，加速器加碼於次期帳單入帳。銀行端每滿 500 點自動轉入亞洲萬里通，零頭保留至下期。")
+                .font(AviationTheme.Typography.caption)
+                .foregroundColor(AviationTheme.Colors.secondaryText(colorScheme))
+                .padding(.horizontal, hasBackgroundImage ? 12 : 28)
+                .padding(.vertical, hasBackgroundImage ? 6 : 0)
+                .background {
+                    if hasBackgroundImage {
+                        RoundedRectangle(cornerRadius: AviationTheme.CornerRadius.md)
+                            .fill(.ultraThinMaterial)
+                    }
+                }
+                .padding(.horizontal, hasBackgroundImage ? 16 : 0)
+        }
+    }
+    
+    private func statementMilesRow(icon: String, title: String, text: Binding<String>, field: TransactionField) -> some View {
+        HStack {
+            Image(systemName: icon)
+                .font(.title3)
+                .foregroundColor(AviationTheme.Colors.cathayJade)
+                .frame(width: 28)
+            Text(title)
+                .font(AviationTheme.Typography.body)
+                .foregroundColor(AviationTheme.Colors.primaryText(colorScheme))
+            
+            Spacer()
+            
+            TextField("0", text: text)
+                .keyboardType(.numberPad)
+                .font(AviationTheme.Typography.title3)
+                .fontWeight(.semibold)
+                .foregroundColor(AviationTheme.Colors.primaryText(colorScheme))
+                .multilineTextAlignment(.trailing)
+                .frame(maxWidth: 120)
+                .focused($focusedField, equals: field)
+                .onChange(of: text.wrappedValue) { _, newValue in
+                    let filtered = newValue.filter { $0.isNumber }
+                    if filtered != newValue { text.wrappedValue = filtered }
+                }
+            Text("點")
+                .font(AviationTheme.Typography.body)
+                .foregroundColor(AviationTheme.Colors.tertiaryText(colorScheme))
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 14)
+        .contentShape(Rectangle())
+        .onTapGesture { focusedField = field }
+    }
+    
+    private func statementSummaryRow(title: String, value: String, highlight: Bool = false) -> some View {
+        HStack {
+            Text(title)
+                .font(highlight ? AviationTheme.Typography.body : AviationTheme.Typography.subheadline)
+                .fontWeight(highlight ? .semibold : .regular)
+                .foregroundColor(highlight ? AviationTheme.Colors.primaryText(colorScheme) : AviationTheme.Colors.secondaryText(colorScheme))
+            Spacer()
+            Text(value)
+                .font(highlight ? AviationTheme.Typography.title3 : AviationTheme.Typography.subheadline)
+                .fontWeight(highlight ? .bold : .medium)
+                .foregroundColor(highlight ? AviationTheme.Colors.cathayJade : AviationTheme.Colors.secondaryText(colorScheme))
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 6)
+        .padding(.leading, 44)
+    }
+    
     // MARK: - 額外資訊
     private var extraInfoSection: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -580,7 +702,7 @@ struct TransactionFormView: View {
                         .font(.title3)
                         .foregroundColor(AviationTheme.Colors.silver)
                         .frame(width: 28)
-                    Text("日期")
+                    Text(isStatementMode ? "帳單日期" : "日期")
                         .font(AviationTheme.Typography.body)
                         .foregroundColor(AviationTheme.Colors.primaryText(colorScheme))
                     Spacer()
@@ -638,6 +760,9 @@ struct TransactionFormView: View {
     }
     
     var canSave: Bool {
+        if isStatementMode {
+            return selectedCard != nil && statementPoints > 0
+        }
         if needsAmountInput {
             guard let amountValue = Decimal(string: amount), amountValue > 0 else { return false }
             guard selectedCard != nil else { return false }

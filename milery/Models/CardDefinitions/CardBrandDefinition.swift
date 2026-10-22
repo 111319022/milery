@@ -32,6 +32,8 @@ protocol CardBrandDefinition {
     
     /// 使用卡面圖片（true = 用 Image 顯示卡面圖，false = 用漸層色卡面）
     var usesCardImage: Bool { get }
+    /// 帳單轉點規則（nil = 逐筆消費計算哩程）
+    var statementPosting: StatementPostingRule? { get }
     
     /// 工廠方法：建立 CreditCardRule（in-memory，不存 SwiftData）
     func makeCard(tierID: String) -> CreditCardRule
@@ -42,6 +44,16 @@ extension CardBrandDefinition {
     func tier(for tierID: String) -> CardTierDefinition? {
         tiers.first { $0.id == tierID }
     }
+    
+    var statementPosting: StatementPostingRule? { nil }
+}
+
+// MARK: - 帳單轉點規則
+
+/// 每期帳單結算後才入帳的卡片：使用者直接輸入帳單上的基本／加碼哩程點數，
+/// 銀行端累積滿 transferUnit 的倍數才自動轉入航空公司帳戶。
+struct StatementPostingRule {
+    let transferUnit: Int
 }
 
 // MARK: - 卡片等級定義
