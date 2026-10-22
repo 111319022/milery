@@ -292,7 +292,7 @@ struct LedgerView: View {
                     Button {
                         showingAddTransaction = true
                     } label: {
-                        Image(systemName: "plus.circle.fill")
+                        Label("新增交易", systemImage: "plus.circle.fill")
                             .foregroundColor(AviationTheme.Colors.brandColor(colorScheme))
                     }
                 }
@@ -696,7 +696,7 @@ struct MonthSelectorSheet: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("完成") {
+                    Button("完成", systemImage: "checkmark") {
                         dismiss()
                     }
                     .foregroundColor(AviationTheme.Colors.brandColor(colorScheme))

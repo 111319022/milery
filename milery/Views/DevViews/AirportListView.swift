@@ -629,10 +629,10 @@ struct AirportImportEditForm: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("取消") { dismiss() }
+                    Button("取消", systemImage: "xmark") { dismiss() }
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("加入佇列") {
+                    Button("加入佇列", systemImage: "checkmark") {
                         var item = AirportImportItem(from: csvAirport)
                         item.cityName = cityName
                         item.cityNameEN = cityNameEN
@@ -786,7 +786,7 @@ struct AirportImportQueueView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("完成") { dismiss() }
+                    Button("完成", systemImage: "checkmark") { dismiss() }
                 }
             }
             .sheet(item: $editingItem) { item in
@@ -880,10 +880,10 @@ struct AirportImportItemEditForm: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("取消") { dismiss() }
+                    Button("取消", systemImage: "xmark") { dismiss() }
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("儲存") {
+                    Button("儲存", systemImage: "checkmark") {
                         if let index = importQueue.firstIndex(where: { $0.id == item.id }) {
                             importQueue[index].cityName = cityName
                             importQueue[index].cityNameEN = cityNameEN

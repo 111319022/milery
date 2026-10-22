@@ -118,7 +118,7 @@ struct NEW_DashboardView: View {
                     Button {
                         showAddFriendSheet = true
                     } label: {
-                        Image(systemName: "person.badge.plus")
+                        Label("新增好友", systemImage: "person.badge.plus")
                             .foregroundColor(AviationTheme.Colors.cathayJade)
                     }
                 }

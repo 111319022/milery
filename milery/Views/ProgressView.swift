@@ -71,7 +71,7 @@ struct ProgressView: View {
                     Button {
                         showingAddGoal = true
                     } label: {
-                        Image(systemName: "plus")
+                        Label("新增目標", systemImage: "plus")
                             .fontWeight(.semibold)
                     }
                 }
@@ -143,7 +143,7 @@ struct ProgressView: View {
             Image("CathayPacific_plane")
                 .resizable()
                 .scaledToFit()
-                .frame(width: 350)
+                .frame(maxWidth: 350)
                 .padding(.top, -25)
                 .padding(.bottom, 10)
         }
@@ -456,8 +456,8 @@ struct GoalReorderSheet: View {
             .navigationTitle("排列順序")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button("完成") {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("完成", systemImage: "checkmark") {
                         onDone()
                     }
                     .fontWeight(.semibold)
@@ -525,8 +525,6 @@ struct GoalProgressCard: View {
     @State private var showingDeleteAlert = false
     @State private var showingRedeemSheet = false
     @State private var showingActions = false
-    @State private var actionPopoverEdge: Edge = .top
-    @State private var actionButtonFrame: CGRect = .zero
     @State private var animatedProgress: Double = 0
     @State private var hasAppeared = false
     
@@ -576,12 +574,6 @@ struct GoalProgressCard: View {
                 .padding(.trailing, 36)
 
                 Button {
-                    let screenHeight = UIApplication.shared.connectedScenes
-                        .compactMap { $0 as? UIWindowScene }
-                        .first?.screen.bounds.height ?? 800
-                    let estimatedMenuHeight: CGFloat = 190
-                    let availableBelow = screenHeight - actionButtonFrame.maxY
-                    actionPopoverEdge = availableBelow < estimatedMenuHeight ? .bottom : .top
                     showingActions = true
                 } label: {
                     Image(systemName: "ellipsis.circle")
@@ -591,21 +583,11 @@ struct GoalProgressCard: View {
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
-                .background {
-                    GeometryReader { proxy in
-                        Color.clear
-                            .onAppear {
-                                actionButtonFrame = proxy.frame(in: .global)
-                            }
-                            .onChange(of: proxy.frame(in: .global)) { _, newFrame in
-                                actionButtonFrame = newFrame
-                            }
-                    }
-                }
                 .transaction { transaction in
                     transaction.animation = nil
                 }
-                .popover(isPresented: $showingActions, attachmentAnchor: .rect(.bounds), arrowEdge: actionPopoverEdge) {
+                // 不指定 arrowEdge，交由系統依可用空間決定方向（iPhone Duo 摺疊區／雙螢幕下不可假設螢幕尺寸）
+                .popover(isPresented: $showingActions, attachmentAnchor: .rect(.bounds)) {
                     VStack(spacing: 0) {
                         Button {
                             showingActions = false
@@ -850,14 +832,14 @@ struct RedeemTicketSheet: View {
             .navigationTitle("兌換機票")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    Button("取消") {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("取消", systemImage: "xmark") {
                         isPresented = false
                     }
                 }
 
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button("確認兌換") {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("確認兌換", systemImage: "checkmark") {
                         let taxPaid = Decimal(string: taxPaidText.replacingOccurrences(of: ",", with: "")) ?? 0
                         viewModel.redeemGoal(
                             goal: goal,

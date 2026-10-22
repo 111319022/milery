@@ -73,7 +73,7 @@ struct AllGoalsView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("完成") {
+                    Button("完成", systemImage: "checkmark") {
                         dismiss()
                     }
                 }
@@ -597,12 +597,12 @@ struct AddFlightGoalView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("取消") {
+                    Button("取消", systemImage: "xmark") {
                         dismiss()
                     }
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("儲存") {
+                    Button("儲存", systemImage: "checkmark") {
                         saveGoal()
                     }
                     .disabled(!canSave)
@@ -961,12 +961,12 @@ struct EditFlightGoalView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("取消") {
+                    Button("取消", systemImage: "xmark") {
                         dismiss()
                     }
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("儲存") {
+                    Button("儲存", systemImage: "checkmark") {
                         saveChanges()
                     }
                     .disabled(!canSave)
@@ -1098,7 +1098,7 @@ struct AirportPickerView: View {
             .autocorrectionDisabled()
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("取消") {
+                    Button("取消", systemImage: "xmark") {
                         dismiss()
                     }
                 }
@@ -1194,7 +1194,7 @@ struct PopularRoutesView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("完成") {
+                    Button("完成", systemImage: "checkmark") {
                         dismiss()
                     }
                 }
