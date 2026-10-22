@@ -32,6 +32,13 @@ final class Transaction {
     var programID: UUID?
     var account: MileageAccount?
 
+    // 帳單哩程（.cardStatement）：依帳單填寫的銀行哩程點數；earnedMiles 為本期實際轉入亞洲萬里通的里數
+    var statementBaseMiles: Int?
+    var statementBonusMiles: Int?
+    var statementBirthdayMiles: Int?
+    /// 本期轉點後留在銀行端的哩程點數（由 recalculateStatementTransfers 重算）
+    var statementBankBalance: Int?
+
     var amount: Decimal {
         get { Decimal(string: String(amountValue)) ?? Decimal(amountValue) }
         set { amountValue = (newValue as NSDecimalNumber).doubleValue }
@@ -68,6 +75,11 @@ final class Transaction {
                 taishinDesignatedCategoryRaw = newValue
             }
         }
+    }
+    
+    /// 本期帳單新增的銀行哩程點數（基本 + 加碼 + 生日禮）
+    var statementPoints: Int {
+        (statementBaseMiles ?? 0) + (statementBonusMiles ?? 0) + (statementBirthdayMiles ?? 0)
     }
     
     /// 使用的信用卡品牌（computed）
@@ -129,6 +141,7 @@ final class Transaction {
 enum MileageSource: String, Codable, CaseIterable {
     case cardGeneral = "刷卡一般消費"
     case cardAccelerator = "哩程加速器"
+    case cardStatement = "帳單哩程"
     case taishinOverseas = "國外一般消費"
     case taishinDesignated = "越飛越有哩"
     case specialMerchant = "特店消費累積"
@@ -143,6 +156,7 @@ enum MileageSource: String, Codable, CaseIterable {
         switch self {
         case .cardGeneral: return "creditcard"
         case .cardAccelerator: return "bolt.fill"
+        case .cardStatement: return "doc.text.fill"
         case .taishinOverseas: return "globe.asia.australia.fill"
         case .taishinDesignated: return "sparkles"
         case .specialMerchant: return "storefront"
@@ -160,6 +174,7 @@ enum MileageSource: String, Codable, CaseIterable {
         switch self {
         case .cardGeneral: return "ledgericon_一般消費"
         case .cardAccelerator: return "ledgericon_加速器"
+        case .cardStatement: return "ledgericon_一般消費"
         case .taishinOverseas: return "ledgericon_國外"
         case .taishinDesignated: return "ledgericon_越飛越有哩"
         case .specialMerchant: return "ledgericon_特店"
@@ -176,6 +191,7 @@ enum MileageSource: String, Codable, CaseIterable {
         switch self {
         case .cardGeneral: return "blue"
         case .cardAccelerator: return "orange"
+        case .cardStatement: return "blue"
         case .taishinOverseas: return "teal"
         case .taishinDesignated: return "orange"
         case .specialMerchant: return "purple"
@@ -186,5 +202,22 @@ enum MileageSource: String, Codable, CaseIterable {
         case .ticketRedemption: return "indigo"
         case .initialInput: return "mint"
         }
+    }
+}
+
+// MARK: - 帳單轉點計算
+
+/// 銀行端哩程點數池：每期帳單點數先進銀行，累積滿 transferUnit 的倍數才轉入航空公司帳戶，零頭留在銀行。
+enum StatementPostingCalculator {
+    struct Result: Equatable {
+        let transferred: Int
+        let balanceAfter: Int
+    }
+    
+    static func post(points: Int, carryOver: Int, transferUnit: Int) -> Result {
+        let pool = max(0, carryOver + points)
+        guard transferUnit > 0 else { return Result(transferred: pool, balanceAfter: 0) }
+        let transferred = pool / transferUnit * transferUnit
+        return Result(transferred: transferred, balanceAfter: pool - transferred)
     }
 }

@@ -30,6 +30,7 @@ struct CardPreferenceBackup: Codable {
     let cardBrandRaw: String
     let isActive: Bool
     let tierRaw: String
+    let bankPointsOpeningBalance: Int?
 }
 
 struct AccountBackup: Codable {
@@ -53,6 +54,10 @@ struct TransactionBackup: Codable {
     let promotionName: String?
     let linkedTicketID: UUID?
     let cardBrandRaw: String?
+    let statementBaseMiles: Int?
+    let statementBonusMiles: Int?
+    let statementBirthdayMiles: Int?
+    let statementBankBalance: Int?
 }
 
 struct FlightGoalBackup: Codable {
@@ -268,7 +273,11 @@ class CloudBackupService {
                     merchantName: t.merchantName,
                     promotionName: t.promotionName,
                     linkedTicketID: t.linkedTicketID,
-                    cardBrandRaw: t.cardBrandRaw
+                    cardBrandRaw: t.cardBrandRaw,
+                    statementBaseMiles: t.statementBaseMiles,
+                    statementBonusMiles: t.statementBonusMiles,
+                    statementBirthdayMiles: t.statementBirthdayMiles,
+                    statementBankBalance: t.statementBankBalance
                 )
             },
             flightGoals: flightGoals.map { g in
@@ -311,7 +320,8 @@ class CloudBackupService {
                 CardPreferenceBackup(
                     cardBrandRaw: p.cardBrandRaw,
                     isActive: p.isActive,
-                    tierRaw: p.tierRaw
+                    tierRaw: p.tierRaw,
+                    bankPointsOpeningBalance: p.bankPointsOpeningBalance
                 )
             },
             program: program.map { p in
@@ -535,6 +545,10 @@ class CloudBackupService {
             )
             transaction.id = t.id // 保留原始 UUID
             transaction.costPerMile = t.costPerMile
+            transaction.statementBaseMiles = t.statementBaseMiles
+            transaction.statementBonusMiles = t.statementBonusMiles
+            transaction.statementBirthdayMiles = t.statementBirthdayMiles
+            transaction.statementBankBalance = t.statementBankBalance
             transaction.programID = programID
             modelContext.insert(transaction)
             if newAccount.transactions == nil { newAccount.transactions = [] }
@@ -573,6 +587,7 @@ class CloudBackupService {
                         isActive: p.isActive,
                         tierID: p.tierRaw
                     )
+                    pref.bankPointsOpeningBalance = p.bankPointsOpeningBalance ?? 0
                     modelContext.insert(pref)
                 }
             }
